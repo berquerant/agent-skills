@@ -150,3 +150,12 @@ Verify: <How to confirm this step succeeded>
 
 > [!NOTE]
 > Skills take effect immediately. The agent will recognize the skill from the next conversation turn.
+
+---
+
+## Guidelines
+
+- **Never assume placement locations.** Always ask and confirm the target directory directly with the user before creating files.
+- **Third-person descriptions with triggers.** Ensure the `description` frontmatter states both when to use the skill and what it does.
+- **Explicit verification for every step.** Provide measurable `Verify:` checkpoints for all procedural steps.
+- **Concise core instructions.** Keep `SKILL.md` lean; extract expansive references or specs into `references/`.

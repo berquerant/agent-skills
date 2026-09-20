@@ -187,3 +187,12 @@ Verify: The host discovers the server, lists its capabilities (tools/resources/p
 > [!TIP]
 > Run `uv run mcp dev server.py` during development to interactively inspect
 > and test tools, resources, and prompts without a full host client.
+
+---
+
+## Guidelines
+
+- **Never pollute stdout in STDIO servers.** Writing non-JSON-RPC output to standard output breaks protocol framing; always send logs to stderr.
+- **Strict schema validation.** Always declare clear types and descriptions for tool inputs so host LLMs can invoke them accurately.
+- **Verify host compatibility.** Ensure registered tool and resource names are unique and match the transport specifications before deployment.
+- **Secure by default.** Validate and sanitize resource URIs and tool parameters to prevent path traversal or unauthorized access.
