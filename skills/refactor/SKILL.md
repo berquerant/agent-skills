@@ -20,25 +20,27 @@ Clarify the specific objective:
 
 - **Target**: Specific modules, classes, functions, or documentation files.
 - **Goals**:
-  - Code smell elimination (long functions, duplicated code, deep nesting).
-  - Modernization / idiom adoption (leveraging newer language features).
-  - Architectural / structural cleanup (separation of concerns, dependency injection).
+  - **Pragmatic DRY (Don't Repeat Yourself)**: Eliminate duplicate logic, repeated blocks, and redundant declarations to the extent reasonable, avoiding premature abstraction or over-engineering.
+  - Code smell elimination (long functions, deep nesting, dead code, excessive coupling).
+  - Modernization / idiom adoption (leveraging newer language features and conventions).
+  - Architectural / structural cleanup (separation of concerns, dependency injection, modularity).
   - Documentation reorganization (splitting large docs, standardizing structure).
-- **Invariants**: Explicitly list behaviors and interfaces that must NOT change.
+- **Invariants**: Explicitly list behaviors, public APIs, contracts, and interfaces that must NOT change.
 
-Verify: Invariants and goals are clearly defined.
+Verify: Invariants, DRY targets, and goals are clearly defined.
 
 ---
 
 ## Step 2: Establish Safety Baselines & Verification
 
-Before modifying anything, ensure you can verify behavior:
+Before modifying anything, detect and run the project's quality checks to ensure a working baseline:
 
-- Run existing test suites (e.g. `go test ./...`, `npm test`, `pytest`, `cargo test`).
+- Identify configured lint and test tasks (e.g. `go test ./...`, `npm run lint && npm test`, `pytest`, `cargo test`, `make test`, `pre-commit`).
+- Run the baseline test and lint suites.
 - If test coverage is insufficient for the target code, write characterization / baseline tests first.
 - For documentation, verify build/linting tools (e.g. markdown linter, doc generator).
 
-Verify: All baseline tests pass before any refactoring begins.
+Verify: Baseline tests and linters pass before any refactoring begins.
 
 ---
 
@@ -46,7 +48,7 @@ Verify: All baseline tests pass before any refactoring begins.
 
 Refactor in small, atomic steps:
 
-1. Apply **one** transformation at a time (e.g. Extract Function, Rename Variable, Replace Conditional with Polymorphism).
+1. Apply **one** transformation at a time (e.g. Extract Function/Class, Parameterize Method, De-duplicate logic, Rename Variable).
 2. Maintain existing coding style, naming conventions, and documentation comments.
 3. Run verification / tests after each individual step.
 4. If a step breaks tests or behavior, revert immediately and re-evaluate.
@@ -55,20 +57,37 @@ Verify: Tests pass after each atomic change.
 
 ---
 
-## Step 4: Final Verification & Review
+## Step 4: Diff Review & Iterative Refactoring
 
-1. Run the entire test suite and linters across the project.
-2. Inspect the overall diff (`git diff HEAD`) to ensure no unintended modifications or behavior changes occurred.
-3. Present the refactoring summary and diff highlights to the user.
+Engage in iterative review to guide and advance the refactoring:
 
-Verify: Zero functional regressions. Codebase is cleaner and tests are passing.
+1. Inspect the incremental or intermediate diff (`git diff HEAD`).
+2. Coordinate with the `code-review` skill (or apply its review criteria) to evaluate the diff for code quality, design cleanliness, residual duplication, and potential regressions.
+3. Incorporate review findings into subsequent incremental refactoring passes until the code is clean, cohesive, and sufficiently DRY.
+
+Verify: The diff has been reviewed against code-review standards and further refined.
+
+---
+
+## Step 5: Final Verification, Task Execution & Documentation Sync
+
+1. **Mandatory Lint & Test Success**: Run all lint, formatting, type-check, and test tasks configured in the project. **All tasks must pass cleanly (100% success)**; fix any lint warnings, formatting errors, or test failures before concluding.
+2. **Documentation & Spec Synchronization**:
+   - Inspect the codebase diff against project documentation.
+   - Check if `README.md`, agent guidance documents (`AGENTS.md`, prompt templates, skills), or API docs are affected by the changes or need clarification/updating.
+   - Update and correct any outdated explanations, configuration examples, or references to accurately reflect the current project state.
+3. **Final Presentation**: Present the refactoring summary, diff highlights, and documentation updates to the user.
+
+Verify: All configured lint and test tasks pass completely. Documentation (README and agent-facing docs) accurately reflects the current state of the project.
 
 ---
 
 ## Guidelines
 
-- **Behavior preservation first.** Never change external behavior or public APIs during a refactoring task.
-- **Safety baselines.** Never refactor without passing baseline tests or a reliable verification loop.
-- **Atomic steps.** Make one logical transformation at a time, testing immediately after each step.
-- **Stop and surface unexpected issues.** If tests fail or assumptions break, revert to the last working state before retrying.
+- **Behavior preservation first.** Never change external behavior, contracts, or public APIs during a refactoring task.
+- **Pragmatic DRY.** Maximize code reuse and eliminate duplicate logic within reasonable bounds; avoid over-complicating abstractions solely for DRY's sake.
+- **Mandatory green checks.** The project's configured lint and test tasks must pass with zero failures before completing the refactoring.
+- **Continuous diff review.** Leverage the `code-review` skill or its methodology on diffs to drive refactoring quality forward.
+- **Keep documentation in sync.** Always verify and update `README.md` and agent-facing docs (`AGENTS.md`, skill descriptions) whenever code changes affect them.
+- **Safety baselines & atomic steps.** Never refactor without passing baseline checks, and make one logical transformation at a time.
 
