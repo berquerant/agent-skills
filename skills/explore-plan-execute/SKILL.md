@@ -67,7 +67,35 @@ Construct a plan that includes:
 
 Keep the plan concise enough to present clearly in one message.
 
+### Decide Whether to Use `step-gate`
+
+Analyze the task's nature and determine whether to apply the
+[`step-gate`](../step-gate/SKILL.md) skill during execution.
+
+**Use `step-gate` when any of the following apply:**
+
+| Signal | Example |
+|--------|---------|
+| Low reversibility | Data deletion, DB migration, production deployment |
+| High cost of mid-task failure | Long multi-phase refactor, infrastructure change |
+| Many steps (≥ 5) with strong dependencies | Sequential setup with each step gating the next |
+| User explicitly asked for caution | "Be careful", "confirm with me", "step by step" |
+
+**Skip `step-gate` when:**
+
+- The task is read-only or exploratory (no file edits or state changes).
+- The task completes in 1–2 steps with negligible risk.
+- All actions are trivially reversible (e.g. editing a draft file).
+
+State the decision in the plan:
+
+> **Execution mode**: `step-gate` / standard
+
+If using `step-gate`, note that Step 5 will follow the step-gate protocol
+(per-step verification + user approval before continuing).
+
 Verify: Each step is actionable. Each success criterion is testable.
+Execution mode is explicitly stated in the plan.
 
 ---
 
@@ -89,15 +117,31 @@ changes).
 
 ---
 
-## Step 5: Execute with Verification Loops
+## Step 5: Execute
 
-Execute the approved plan step by step.
+Execute the approved plan according to the execution mode decided in Step 3.
 
-After each meaningful step:
-- Run the relevant verification (tests, linters, type-checkers, dry-runs, etc.)
+### Mode: `step-gate`
+
+Follow the [`step-gate`](../step-gate/SKILL.md) skill protocol:
+
+- Execute one step at a time.
+- Verify the completion criterion after each step.
+- Report results to the user and **request explicit approval** before
+  proceeding to the next step.
+- Stop and diagnose on any failure; do not continue unilaterally.
+
+### Mode: standard
+
+Execute the plan step by step with internal verification loops:
+
+- Run the relevant verification after each meaningful step (tests, linters,
+  type-checkers, dry-runs, etc.).
 - Confirm the success criterion for that step is met before continuing.
 - If a step fails, diagnose the issue and propose a fix — do **not** silently
   skip or work around it.
+
+### Completion (both modes)
 
 At the end:
 - Verify **all** success criteria from the plan.
@@ -112,6 +156,8 @@ Verify: All success criteria are satisfied. No regressions introduced.
 
 - **Read before writing.** Exploration (Step 2) is never optional.
 - **One approval gate.** Always pause at Step 4; never skip it.
+- **Declare execution mode.** Always state whether `step-gate` or standard
+  mode will be used, and why, before the user approves the plan.
 - **Small, verifiable steps.** Break large plans into checkpoints so errors are
   caught early.
 - **Surface surprises.** If you discover something unexpected during execution,
