@@ -20,6 +20,7 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 | [`project-status`](skills/project-status/SKILL.md) | Audits the current state of a project. | Git state inspection, file change analysis, test/lint result reporting, pass/fail judgments. |
 | [`skill-creator`](skills/skill-creator/SKILL.md) | Scaffolds and writes new agent skills. | Frontmatter quality checklist, progressive disclosure, standard directory templates. |
 | [`mcp-creator`](skills/mcp-creator/SKILL.md) | Scaffolds and implements Model Context Protocol (MCP) servers. | Python/TS templates, tool/resource/prompt support, host setup guides. |
+| [`scrutinize-plan-execute`](skills/scrutinize-plan-execute/SKILL.md) | Enforces critical obstacle review, user consultation, and archiving checks. | Self-critical risk scrutiny, remedy consultation, iterative refinement, no-default file archiving. |
 | [`step-gate`](skills/step-gate/SKILL.md) | Executes tasks incrementally with explicit user checkpoints. | Step decomposition, verification criteria, user approval gates between steps. |
 
 ## Project Structure
@@ -38,6 +39,7 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 │   │   └── references/          # Detailed MCP protocol specs
 │   ├── project-status/
 │   ├── refactor/
+│   ├── scrutinize-plan-execute/
 │   ├── skill-creator/
 │   │   └── references/          # Detailed Agent Skill specs
 │   └── step-gate/

@@ -67,6 +67,22 @@ Construct a plan that includes:
 
 Keep the plan concise enough to present clearly in one message.
 
+### Decide Whether to Use `scrutinize-plan-execute`
+
+Analyze whether the task requires deep upfront scrutiny, risk evaluation, or interactive refinement before execution.
+
+**Delegate to [`scrutinize-plan-execute`](../scrutinize-plan-execute/SKILL.md) when any of the following apply:**
+
+| Signal | Example |
+|---|---|
+| Ambiguous premises or conditions | Unverified environment behavior, incomplete requirements |
+| Unclear or subjective success criteria | "Improve performance", ambiguous verification logic |
+| High-impact execution obstacles | Potential breaking changes, complex multi-component interactions |
+| Need for deep user consultation | Multiple competing solutions with trade-offs requiring user dialogue |
+| Need for plan or report archiving | Long architecture plans or extensive reports requiring user-approved file archiving |
+
+If delegating to `scrutinize-plan-execute`, hand off the workflow to [`scrutinize-plan-execute`](../scrutinize-plan-execute/SKILL.md) to complete obstacle scrutiny, user consultation, archiving checks, and execution.
+
 ### Decide Whether to Use `step-gate`
 
 Analyze the task's nature and determine whether to apply the
@@ -95,7 +111,7 @@ If using `step-gate`, note that Step 5 will follow the step-gate protocol
 (per-step verification + user approval before continuing).
 
 Verify: Each step is actionable. Each success criterion is testable.
-Execution mode is explicitly stated in the plan.
+Execution mode is explicitly stated in the plan (or delegated to `scrutinize-plan-execute`).
 
 ---
 
