@@ -42,25 +42,25 @@ Skills in this repository follow a **loosely coupled, sequential hand-off archit
 
 ```mermaid
 flowchart TD
-    subgraph Meta [Meta & Skill Creation]
+    subgraph Meta ["Meta & Skill Creation"]
         SC[skill-creator]
         MC[mcp-creator]
     end
 
-    subgraph Planning [Planning & Workflow]
+    subgraph Planning ["Planning & Workflow"]
         EPE[explore-plan-execute]
         SPE[scrutinize-plan-execute]
         SG[step-gate]
         GW[git-worktree]
     end
 
-    subgraph Audit [Audit & Verification (Read-Only)]
+    subgraph Audit ["Audit & Verification - Read-Only"]
         PA["project-audit<br/>(Macro health, security, public release, tech debt)"]
         PS["project-status<br/>(Micro working-tree & drift check)"]
         CR["code-review<br/>(Meso diff/PR review & security audit)"]
     end
 
-    subgraph Remediation [Remediation & Action]
+    subgraph Remediation ["Remediation & Action"]
         RF[refactor]
         DC[diff-continue]
     end
