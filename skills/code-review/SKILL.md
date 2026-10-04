@@ -13,6 +13,9 @@ Use this skill to inspect code, configurations, or documentation.
 Provides clear feedback categorized by severity, covering maintainability,
 correctness, and security risks.
 
+For detailed vulnerability and public exposure audit criteria, refer to
+[references/security-checklist.md](references/security-checklist.md).
+
 ---
 
 ## Step 1: Identify Review Scope & Focus
@@ -25,8 +28,8 @@ Determine the target files and focus area:
 - **Review mode / focus**:
   - **General Review**: Readability, maintainability, consistency, logic bugs, adherence to conventions.
   - **Security & Public Release Audit**:
-    - Vulnerability assessment (OWASP Top 10, injection, auth/access control, memory safety/concurrency issues).
-    - **Public Exposure Safety**: Ensure the diff is completely safe to publish to the internet. Verify zero leaks of sensitive information (secrets, API keys, credentials, tokens, private keys), internal network details (intranet hostnames, internal IPs, staging endpoints), proprietary data, copyright/licensing conflicts, or temporary debug configurations.
+    - Vulnerability assessment (OWASP-aligned: injection, auth/access control, SSRF, memory safety/concurrency).
+    - **Public Exposure Safety**: Ensure the diff is completely safe to publish to the internet. Verify zero leaks of sensitive information (secrets, API keys, tokens, private keys), internal network details (intranet hostnames, internal IPs, staging endpoints), or proprietary data. (See [references/security-checklist.md](references/security-checklist.md)).
   - **Documentation Review**: Clarity, completeness, accuracy with code reality, formatting, broken links/examples.
   - **Comprehensive**: All of the above combined.
 
@@ -39,7 +42,7 @@ Verify: Target files, comparison base (e.g., default branch for topic branches),
 Run relevant read-only checks if tools are available:
 
 - Linters, format checkers, type-checkers (e.g., `golangci-lint`, `ruff`, `eslint`, `cargo check`).
-- Security tools or grep searches for secrets / insecure patterns (e.g., hardcoded keys, passwords, internal domains, SQL concatenation).
+- Security tools or grep searches for secrets / insecure patterns (cross-reference against [references/security-checklist.md](references/security-checklist.md)).
 - Inspect files and diffs thoroughly in context against the comparison base.
 - Specifically verify that no files or changes pose a risk if exposed publicly on the internet.
 

@@ -44,7 +44,8 @@ criteria based on contextual exploration.
 Perform a self-critical review of the draft plan to uncover potential failure
 points and ambiguities before presenting it to the user.
 
-Inspect the plan across the following dimensions:
+Inspect the plan across the following dimensions (refer to
+[references/scrutiny-checklist.md](references/scrutiny-checklist.md) for detailed checklists and remedy patterns):
 
 1. **Ambiguous Conditions & Premises**: Are any assumptions unverified? What
    happens if environment states or inputs differ from expectations?
@@ -115,30 +116,55 @@ architecture, or multi-phase steps):
     to save it.
   - If the user provides a path, write the plan to that exact file.
 
-### 2. Explicit Execution Permission
+### 2. Execution Mode Selection (`standard` vs. `step-gate`)
+Determine whether to apply the [`step-gate`](../step-gate/SKILL.md) skill
+protocol during execution:
+
+- **Use `step-gate` mode** if the plan involves:
+  - Destructive or low-reversibility operations (DB changes, file deletions).
+  - High blast-radius refactors or high failure costs.
+  - Multi-step dependencies where each step must be verified before proceeding.
+  - Explicit user preference for checkpointed, step-by-step approval.
+- **Use `standard` mode** if actions are easily reversible and safe to execute
+  as a single continuous batch with internal verification checks.
+
+State the chosen execution mode to the user:
+> **Execution mode**: `step-gate` / `standard`
+
+### 3. Explicit Execution Permission
 Confirm the user gives explicit approval to proceed with execution.
 
 Ask the user:
-> "Are you ready to proceed with executing this plan?"
+> "Are you ready to proceed with executing this plan in <standard/step-gate> mode?"
 
 Do **not** execute any modifications until the user explicitly approves.
 
-Verify: The user has given explicit permission to execute, and if requested, the
-plan has been saved to the user-specified file path.
+Verify: The execution mode is decided, the user has given explicit permission to
+execute, and if requested, the plan has been saved to the user-specified file path.
 
 ---
 
 ## Step 6: Execute the Plan
 
-Execute the approved plan step by step:
+Execute the approved plan according to the mode selected in Step 5:
 
+### Mode: `step-gate`
+Follow the [`step-gate`](../step-gate/SKILL.md) skill protocol:
+1. Execute **one step at a time**.
+2. Run the defined verification check for that step.
+3. Report the result to the user and **request explicit approval** before
+   advancing to the next step.
+4. If a step fails, stop immediately, diagnose the issue, and consult the user.
+
+### Mode: `standard`
+Execute the plan step by step with internal verification checks:
 1. Follow the sequenced steps agreed upon in Step 4.
 2. Apply verification checks after each step to ensure expected behavior.
 3. If an unforeseen error or roadblock arises, stop execution, diagnose the
    cause, and consult the user rather than making unilateral assumptions.
 
 Verify: All steps of the plan are executed and each step's verification check
-passes.
+passes under the selected execution mode.
 
 ---
 
@@ -173,6 +199,9 @@ report is saved to the user-specified file path.
   hidden edge cases in Step 2.
 - **No Unilateral Execution**: Never begin modifying code or state without
   explicit user approval in Step 5.
+- **Prefer `step-gate` for High Risk**: If the scrutinized plan carries low
+  reversibility, critical dependencies, or destructive operations, actively
+  recommend and use `step-gate` execution mode.
 - **Never Assume File Paths for Archiving**: When asking the user whether to
   save an extensive plan or report, never recommend or pick a default path.
   Always ask the user for their desired file path.

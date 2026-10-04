@@ -31,6 +31,7 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 │   └── skills -> ../skills/     # Symlink for agent auto-discovery
 ├── skills/
 │   ├── code-review/
+│   │   └── references/          # Security & public exposure checklists
 │   ├── diff-continue/
 │   ├── explore-plan-execute/
 │   ├── git-worktree/
@@ -40,6 +41,7 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 │   ├── project-status/
 │   ├── refactor/
 │   ├── scrutinize-plan-execute/
+│   │   └── references/          # Plan scrutiny & obstacle checklists
 │   ├── skill-creator/
 │   │   └── references/          # Detailed Agent Skill specs
 │   └── step-gate/
