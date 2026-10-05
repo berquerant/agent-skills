@@ -36,6 +36,11 @@ Skills in this repository must be portable across different AI agent platforms (
 - `.agents/skills` is a symlink to `skills/` enabling project-local agent discovery. Do not replace it with a regular directory.
 - Verify that markdown files are cleanly formatted and links use relative paths where appropriate.
 
+### 5. Cost-Aware Investigation & Resource Efficiency
+When conducting investigations or gathering information using high-cost methods (e.g. APIs, remote queries, heavy execution tools):
+- **Minimize Total Cost**: Strive to minimize overall cost across execution time, local/client resource usage, and server-side resource consumption.
+- **Cache and Reference Locally**: Fetch potentially needed contents or query results up front into a local file or temporary cache via the API, and reference that local file for subsequent analysis rather than repeatedly invoking the high-cost API.
+
 ## Skill Interoperability & Architecture
 
 Skills in this repository follow a **loosely coupled, sequential hand-off architecture**. Skills operate independently and do not hard-depend on or invoke each other as mandatory subroutines. Instead, they produce clear outputs and recommend the next appropriate skill upon user approval.

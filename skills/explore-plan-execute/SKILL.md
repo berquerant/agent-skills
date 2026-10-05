@@ -44,6 +44,7 @@ Before writing any code or making any changes, explore the relevant context.
   current state.
 - Check for existing patterns, naming conventions, and abstractions to follow.
 - Identify potential side-effects or impacted areas.
+- **Minimize investigation cost**: When using high-cost exploration methods (e.g. APIs, remote queries, heavy tool executions), minimize total cost across latency, local compute, and server-side resource consumption. Fetch potentially needed content into a local file or temporary cache up front and query the local file for subsequent exploration instead of making repetitive API calls.
 
 Do **not** modify any files during this step.
 
@@ -66,6 +67,20 @@ Construct a plan that includes:
    user input.
 
 Keep the plan concise enough to present clearly in one message.
+
+### Git Commits, Remotes, and Change Requests (PR / MR)
+
+If the plan involves creating git commits, interacting with remotes, or opening PRs/MRs, incorporate the following:
+
+- **Commit Author**: Determine the intended commit author `name` and `email` for commits created on the base/target branch. If not specified by the user, include an explicit question asking if referencing the global `$HOME/.gitconfig` (`git config --global user.name` and `user.email`) is permitted.
+- **Git `sshCommand`**: Check if remote operations (e.g. push, fetch) will use SSH. Confirm what `sshCommand` (`core.sshCommand` or `GIT_SSH_COMMAND`, specifying SSH key or parameters) should be used.
+- **PR / MR Assignee**: Determine who the `assignee` should be for any PR or MR to be created.
+
+### Git Worktree and Branch Isolation
+
+If the task involves modifying files in a git repository:
+- Plan to start work in an isolated worktree created from the latest default branch.
+- Include steps to fetch the latest remote changes (`git fetch origin`), create a new branch from the latest remote default branch (e.g. `origin/main`), and set up the worktree (following [`git-worktree`](../git-worktree/SKILL.md)).
 
 ### Decide Whether to Use `scrutinize-plan-execute`
 
@@ -122,6 +137,11 @@ Share the plan with the user before taking any action.
 Format the plan clearly (use numbered lists, code spans, or a markdown table as
 appropriate). Highlight the success criteria explicitly.
 
+When git commits, remotes, or PRs/MRs are involved, explicitly present the following for confirmation:
+- Commit author `name` and `email` to be used for the commits (if unspecified, ask: "May I reference your global `$HOME/.gitconfig`?")
+- Git `sshCommand` for remote operations (e.g. SSH key or options)
+- MR / PR `assignee`
+
 Ask the user:
 > "Does this plan look right? Should I proceed, or would you like to adjust
 > anything?"
@@ -129,7 +149,7 @@ Ask the user:
 Do **not** start executing until the user confirms.
 
 Verify: The user has read the plan and given explicit approval (or requested
-changes).
+changes), including author, sshCommand, and assignee confirmations if git operations are planned.
 
 ---
 
@@ -157,6 +177,20 @@ Execute the plan step by step with internal verification loops:
 - If a step fails, diagnose the issue and propose a fix — do **not** silently
   skip or work around it.
 
+### Worktree Setup Before Modification
+
+When modifying files in a git repository:
+- Fetch the latest changes from the remote repository (`git fetch origin`).
+- Create a new branch from the latest remote default branch and set up an isolated worktree (following [`git-worktree`](../git-worktree/SKILL.md)).
+- Switch to the newly created worktree directory and begin all file modifications there to keep the primary working tree clean.
+
+### Safeguards for Git Commits, Remotes, and PRs/MRs
+
+When execution involves modifying git history or remote hosting:
+- **Before creating commits**: Verify that the commit author `name` and `email` have been explicitly confirmed by the user. If unconfirmed and the user approved referencing `$HOME/.gitconfig`, inspect it (`git config --global user.name` / `user.email`) before committing. Never commit under an arbitrary or unverified author.
+- **Before pushing or remote operations**: Verify that the git `sshCommand` (e.g. `core.sshCommand` or `GIT_SSH_COMMAND`) has been confirmed with the user.
+- **Before opening PRs/MRs**: Verify that the `assignee` has been explicitly confirmed with the user.
+
 ### Completion (both modes)
 
 At the end:
@@ -180,3 +214,15 @@ Verify: All success criteria are satisfied. No regressions introduced.
   stop and tell the user instead of improvising.
 - **Prefer reversible actions.** When multiple approaches exist, prefer the one
   that is easiest to undo.
+- **Start work in a Git Worktree.** When modifying code in a git repository,
+  always fetch the latest remote default branch, create a new branch from it
+  using `git worktree`, and begin work inside the worktree before modifying
+  files.
+- **Pre-confirm commit author, `sshCommand`, and MR/PR assignee.** Never commit,
+  push via SSH, or open PRs/MRs with assumed identities or settings. Always
+  pre-confirm the commit author `name` and `email` (asking if referencing
+  `$HOME/.gitconfig` is allowed if unspecified), git `sshCommand`, and MR/PR
+  `assignee`.
+- **Cost-aware exploration.** When using APIs or expensive operations to
+  gather context, fetch data once into a local file or cache and reference it
+  locally to minimize latency, local resources, and server-side consumption.

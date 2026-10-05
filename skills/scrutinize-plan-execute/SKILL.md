@@ -25,7 +25,10 @@ Investigate the user's request and inspect relevant files, environment context,
 and constraints.
 
 1. **Investigate Context**: Read relevant files, configurations, documentation,
-   and git history. Do not modify files in this step.
+   and git history. Do not modify files in this step. When using high-cost
+   methods (such as APIs or remote queries), minimize total cost across time,
+   local compute, and server load by fetching content once to a local file/cache
+   and querying it locally for subsequent analysis.
 2. **Draft Plan**: Formulate an initial plan containing:
    - **Objective**: Clear restatement of the goal.
    - **Scope**: What will and will not be changed.
@@ -209,3 +212,6 @@ report is saved to the user-specified file path.
   before committing to execution.
 - **Transparent Reporting**: Report all deviations or unexpected findings
   encountered during execution.
+- **Cost-Aware Investigation**: When using APIs or expensive operations to
+  explore context, minimize total cost across time and resources by fetching
+  content once into a local file or cache and referencing it locally.
