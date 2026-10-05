@@ -39,6 +39,8 @@ If it is ambiguous, ask for the following information.
 6. **Authentication** — Does the server need auth? (relevant for HTTP
    transport; OAuth recommended)
 
+Verify: Server requirements (purpose, primitives, transport, runtime, and placement) are explicitly confirmed with the user.
+
 ---
 
 ## Step 2: Design the Interface
@@ -187,6 +189,8 @@ Verify: The host discovers the server, lists its capabilities (tools/resources/p
 > [!TIP]
 > Run `uv run mcp dev server.py` during development to interactively inspect
 > and test tools, resources, and prompts without a full host client.
+
+Verify: Generated files and host registration are confirmed, and next steps are presented to the user.
 
 ---
 

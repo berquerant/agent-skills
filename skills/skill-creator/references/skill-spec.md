@@ -32,8 +32,8 @@ description: >-
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `name` | string | ✅ | Unique identifier, lowercase and hyphen-separated |
-| `description` | string | ✅ | Explains when the agent should activate the skill. The most critical field. |
+| `name` | string | ✅ | 1–64 characters. Lowercase letters, numbers, and single hyphens only. Must not start or end with a hyphen, and consecutive hyphens (`--`) are forbidden. **Must match the parent directory name exactly.** Recommended 3–30 characters. |
+| `description` | string | ✅ | 1–1024 characters. Non-empty. Explains when the agent should activate the skill and what it does. Uses third-person conventions (recommended roughly 100–350 characters). |
 
 ---
 

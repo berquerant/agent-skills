@@ -36,6 +36,8 @@ If it is ambiguous, ask the user for the following information.
    - `examples/` : Reference implementations (when concrete examples are helpful)
    - `resources/` : Templates or assets (for reusable files)
 
+Verify: Skill purpose, concrete triggers, planned steps, placement preference, and auxiliary file requirements are collected and confirmed with the user.
+
 ---
 
 ## Step 2: Determine Placement
@@ -52,6 +54,8 @@ Present the following options and let the user choose:
 Check for name conflicts: verify that no skill with the same name already exists in the target directory.
 If one is found, notify the user and suggest an alternative name.
 
+Verify: Target directory is confirmed with the user, and no name conflict exists.
+
 ---
 
 ## Step 3: Generate SKILL.md
@@ -59,18 +63,19 @@ If one is found, notify the user and suggest an alternative name.
 ### 3.1 Quality Checklist for the `name` Field
 
 - Lowercase, hyphen-separated (e.g., `my-skill`, `deploy-checker`)
-- Short and unique (3–30 characters recommended)
-- Clearly conveys the purpose at a glance
+- 1–64 characters (3–30 characters recommended)
+- Must not start or end with a hyphen, and no consecutive hyphens (`--`)
+- Must match the parent directory name exactly
 
 ### 3.2 Quality Checklist for the `description` Field
 
 The `description` is the most critical field — it determines whether the agent activates the skill.
 All of the following must be satisfied:
 
-- [ ] Written in **third person** ("Use this skill when..." / "Guides the agent to...")
+- [ ] Written in **third person** (convention: starts with "Use this skill when..." followed by effects like "Guides the agent to...", "Analyzes...")
 - [ ] Clearly states **when to use it** (trigger conditions)
 - [ ] Clearly states **what it does** (effect or output)
-- [ ] Roughly 50–200 characters
+- [ ] Non-empty and under 1024 characters (recommended roughly 100–350 characters)
 - [ ] Avoids vague language ("various tasks", "helps with things")
 
 **Good example:**
@@ -125,6 +130,8 @@ Verify: <How to confirm this step succeeded>
 - Include a verification method for each step
 - Move heavy documentation to `references/` and link to it from SKILL.md
 
+Verify: Generated `SKILL.md` strictly adheres to the frontmatter specification, includes explicit `Verify:` checkpoints in every step, and keeps core instructions concise.
+
 ---
 
 ## Step 4: Scaffold Directory Structure
@@ -136,6 +143,8 @@ Verify: <How to confirm this step succeeded>
    - `references/` — Reference documentation stubs
    - `examples/` — Reference implementation stubs
    - `resources/` — Directory for templates and assets
+
+Verify: Target directory layout is created with correct permissions, and all relative links resolve.
 
 ---
 
@@ -150,6 +159,8 @@ Verify: <How to confirm this step succeeded>
 
 > [!NOTE]
 > Skills take effect immediately. The agent will recognize the skill from the next conversation turn.
+
+Verify: File manifest and invocation instructions are presented to the user, and user confirmation is received.
 
 ---
 

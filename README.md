@@ -20,9 +20,11 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 | [`project-status`](skills/project-status/SKILL.md) | Audits the current state of a project. | Git state inspection, file change analysis, test/lint result reporting, pass/fail judgments. |
 | [`project-audit`](skills/project-audit/SKILL.md) | Comprehensive health check, security, public release readiness, and maintainability audit. | Read-only whole-project diagnostics, exposure risk ratings, dynamic commit window, maintainability metrics, hand-off to refactor/step-gate. |
 | [`skill-creator`](skills/skill-creator/SKILL.md) | Scaffolds and writes new agent skills. | Frontmatter quality checklist, progressive disclosure, standard directory templates. |
+| [`skill-review`](skills/skill-review/SKILL.md) | Reviews agent skills against the Agent Skills Specification and repository conventions. | Read-only, automated shell checks, six-dimension verdict rules, batch cross-skill summary, hand-off to step-gate/refactor. |
 | [`mcp-creator`](skills/mcp-creator/SKILL.md) | Scaffolds and implements Model Context Protocol (MCP) servers. | Python/TS templates, tool/resource/prompt support, host setup guides. |
 | [`scrutinize-plan-execute`](skills/scrutinize-plan-execute/SKILL.md) | Enforces critical obstacle review, user consultation, and archiving checks. | Self-critical risk scrutiny, remedy consultation, iterative refinement, no-default file archiving. |
 | [`step-gate`](skills/step-gate/SKILL.md) | Executes tasks incrementally with explicit user checkpoints. | Step decomposition, verification criteria, user approval gates between steps. |
+| [`multi-repo-change`](skills/multi-repo-change/SKILL.md) | Coordinates multi-repository changes with approval gates and linked PRs/MRs. | Isolated worktrees, pre-flight clean checks, approval gates, draft PR/MR cross-linking. |
 
 ## Project Structure
 
@@ -39,6 +41,8 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 │   │   └── references/          # Git worktree workflow references
 │   ├── mcp-creator/
 │   │   └── references/          # Detailed MCP protocol specs
+│   ├── multi-repo-change/
+│   │   └── references/          # Approval gates, platform tools, safeguards
 │   ├── project-audit/
 │   │   └── references/          # Maintainability & debt metrics
 │   ├── project-status/
@@ -47,6 +51,8 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 │   │   └── references/          # Plan scrutiny & obstacle checklists
 │   ├── skill-creator/
 │   │   └── references/          # Detailed Agent Skill specs
+│   ├── skill-review/
+│   │   └── references/          # Review checklist, automated checks, report templates
 │   └── step-gate/
 ├── AGENTS.md                    # Operational guidelines & context for AI agents
 └── README.md

@@ -44,6 +44,7 @@ Skills in this repository follow a **loosely coupled, sequential hand-off archit
 flowchart TD
     subgraph Meta ["Meta & Skill Creation"]
         SC[skill-creator]
+        SR["skill-review<br/>(Read-only skill audit)"]
         MC[mcp-creator]
     end
 
@@ -52,6 +53,7 @@ flowchart TD
         SPE[scrutinize-plan-execute]
         SG[step-gate]
         GW[git-worktree]
+        MRC[multi-repo-change]
     end
 
     subgraph Audit ["Audit & Verification - Read-Only"]
@@ -78,10 +80,15 @@ flowchart TD
     RF -.->|consults review criteria| CR
 
     PS -.->|diff drift verification| DC
+
+    SC -->|new skill reviewed by| SR
+    SR -.->|shares skill spec| SC
+    SR -->|suggests phased fixes| SG
+    SR -->|suggests remediation| RF
 ```
 
 ### Interoperability Principles
-- **Read-Only vs. Mutation Separation**: Audit skills (`project-audit`, `project-status`, `code-review`) are strictly read-only and never mutate files. When changes are required, they suggest mutation skills (`refactor`, `step-gate`, `diff-continue`).
+- **Read-Only vs. Mutation Separation**: Audit skills (`project-audit`, `project-status`, `code-review`, `skill-review`) are strictly read-only and never mutate files. When changes are required, they suggest mutation skills (`refactor`, `step-gate`, `diff-continue`).
 - **Sequential Hand-off (User-in-the-Loop)**: Rather than calling other skills directly in a deep nested chain, skills present findings and recommend the next skill for the user to approve.
 - **Reference Sharing over Duplication**: When audit standards overlap (such as security and public release checklists), skills share references (e.g. `../code-review/references/security-checklist.md`) via relative links instead of duplicating checklist content.
 

@@ -64,9 +64,11 @@ Structure the review feedback by severity levels:
 - 💡 **Positive Notes**: Well-structured code or good patterns worth acknowledging.
 
 Format each finding with:
-1. **File and Line Reference** (relative path, e.g. `[path/to/filename.ext:L10-L15](path/to/filename.ext#L10-L15)`)
+1. **File and Line Reference** (relative path, e.g. `path/to/filename.ext#L10-L15`)
 2. **Issue Description** (what is wrong and why)
 3. **Recommended Fix / Concrete Code Example**
+
+Verify: All findings are categorized by severity levels (Critical, Warnings, Suggestions) with file:line references and actionable remedies.
 
 ---
 
