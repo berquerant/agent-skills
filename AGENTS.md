@@ -59,6 +59,7 @@ flowchart TD
         SG[step-gate]
         GW[git-worktree]
         MRC[multi-repo-change]
+        CM["change-message<br/>(Commit & PR/MR messages)"]
     end
 
     subgraph Audit ["Audit & Verification - Read-Only"]
@@ -77,6 +78,8 @@ flowchart TD
     SPE -->|sequential hand-off| SG
     GW -.->|worktree isolation| EPE
     GW -.->|worktree isolation| SPE
+    EPE -.->|message guidelines| CM
+    MRC -.->|message guidelines| CM
 
     PA -->|suggests remediation| RF
     PA -->|suggests phased fixes| SG
@@ -96,5 +99,6 @@ flowchart TD
 - **Read-Only vs. Mutation Separation**: Audit skills (`project-audit`, `project-status`, `code-review`, `skill-review`) are strictly read-only and never mutate files. When changes are required, they suggest mutation skills (`refactor`, `step-gate`, `diff-continue`).
 - **Sequential Hand-off (User-in-the-Loop)**: Rather than calling other skills directly in a deep nested chain, skills present findings and recommend the next skill for the user to approve.
 - **Reference Sharing over Duplication**: When audit standards overlap (such as security and public release checklists), skills share references (e.g. `../code-review/references/security-checklist.md`) via relative links instead of duplicating checklist content.
+- **Gate Ownership**: When a skill's guidance or artifact is used inside another workflow, the calling workflow owns the approval gates; avoid introducing duplicate or redundant approval checkpoints.
 
 

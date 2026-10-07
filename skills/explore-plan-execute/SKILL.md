@@ -75,6 +75,7 @@ If the plan involves creating git commits, interacting with remotes, or opening 
 - **Commit Author**: Determine the intended commit author `name` and `email` for commits created on the base/target branch. If not specified by the user, include an explicit question asking if referencing the global `$HOME/.gitconfig` (`git config --global user.name` and `user.email`) is permitted.
 - **Git `sshCommand`**: Check if remote operations (e.g. push, fetch) will use SSH. Confirm what `sshCommand` (`core.sshCommand` or `GIT_SSH_COMMAND`, specifying SSH key or parameters) should be used.
 - **PR / MR Assignee**: Determine who the `assignee` should be for any PR or MR to be created.
+- **Messages**: Draft commit messages and PR/MR titles/descriptions following [`change-message`](../change-message/SKILL.md), and include them in the plan or confirmation for user review.
 
 ### Git Worktree and Branch Isolation
 

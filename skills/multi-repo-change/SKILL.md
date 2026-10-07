@@ -90,7 +90,7 @@ Verify: All planned changes are applied and local verification commands pass in 
    git -C <worktree-path> status --short
    git -C <worktree-path> diff HEAD
    ```
-2. Prepare commit messages matching repository conventions.
+2. Prepare commit messages matching repository conventions, following [`change-message`](../change-message/SKILL.md) (Conventional Commits and English by default).
 3. Present the **Gate 2: Commit Review** report as defined in [references/approval-gates.md](references/approval-gates.md).
 
 > [!IMPORTANT]
@@ -130,7 +130,7 @@ Verify: Remote branches pushed successfully and tracking upstream is established
 
 1. Determine the hosting platform (GitHub or GitLab) and available integration tools (MCP server or official CLI) as described in [references/platform-tools.md](references/platform-tools.md).
 2. Check for existing Change Requests on the branch to avoid duplicates.
-3. Prepare titles, descriptions, and labels according to repository templates.
+3. Prepare titles, descriptions, and labels according to repository templates, following [`change-message`](../change-message/SKILL.md) for title and description content.
 4. Present the **Gate 4: Change Request Approval** report as defined in [references/approval-gates.md](references/approval-gates.md).
 
 > [!IMPORTANT]

@@ -43,7 +43,7 @@ Always confirm the placement location with the user. Never assume a default.
 
 ### Workspace (Project-Specific)
 
-The agent scans the following directories from the repository root:
+Standard discovery paths vary by agent platform. Common conventions include:
 
 ```
 <workspace_root>/.agents/skills/<name>/
@@ -58,39 +58,12 @@ The agent scans the following directories from the repository root:
 
 Committing to VCS (Git) allows sharing with the team.
 
-
 ### Global (Machine-Wide)
 
-Place the skill under `skills/<name>/` inside the global configuration directory.
-The exact path varies by agent tool and environment — always ask the user directly.
+Place the skill inside the agent's global configuration directory.
+The exact path varies by agent tool and environment — always confirm with the user or check the agent platform's documentation.
 
 Applies across all projects.
-
-### Explicit Registration (skills.json)
-
-For placement outside standard paths, register with `skills.json`:
-
-```json
-{
-  "entries": [
-    { "path": "tools/agents/skills" }
-  ]
-}
-```
-
-Place `skills.json` in a customization root (`.agents/`) or the global configuration directory.
-
----
-
-## Priority Order (Highest to Lowest)
-
-1. Workspace project (hierarchical scan from CWD to repository root)
-2. Declared configurations (`skills.json` / `plugins.json`)
-3. Global discovery
-4. Built-in
-5. Global declared configurations
-
-In case of name conflicts, the higher-priority entry wins.
 
 ---
 

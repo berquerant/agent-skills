@@ -141,7 +141,7 @@ Present this review after remote branches have been pushed successfully.
 - **Labels**: `<labels or none>`
 - **Description Preview**:
   ```markdown
-  <description content including checklist and related PR placeholder>
+  <description per ../../change-message/references/pr-description.md (Summary, Background, Changes, Impact & Risks, Verification) plus a Related PRs/MRs placeholder>
   ```
 
 ### `<repo-2>`

@@ -25,6 +25,7 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 | [`scrutinize-plan-execute`](skills/scrutinize-plan-execute/SKILL.md) | Enforces critical obstacle review, user consultation, and archiving checks. | Self-critical risk scrutiny, remedy consultation, iterative refinement, no-default file archiving. |
 | [`step-gate`](skills/step-gate/SKILL.md) | Executes tasks incrementally with explicit user checkpoints. | Step decomposition, verification criteria, user approval gates between steps. |
 | [`multi-repo-change`](skills/multi-repo-change/SKILL.md) | Coordinates multi-repository changes with approval gates and linked PRs/MRs. | Isolated worktrees, pre-flight clean checks, approval gates, draft PR/MR cross-linking. |
+| [`change-message`](skills/change-message/SKILL.md) | Writes concise commit messages and PR/MR descriptions. | Repository convention detection, Conventional Commits default, summary-first PR template, self-check list. |
 
 ## Project Structure
 
@@ -33,6 +34,8 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 ├── .agents/
 │   └── skills -> ../skills/     # Symlink for agent auto-discovery
 ├── skills/
+│   ├── change-message/
+│   │   └── references/          # Commit message & PR/MR description guides
 │   ├── code-review/
 │   │   └── references/          # Security & public exposure checklists
 │   ├── diff-continue/
