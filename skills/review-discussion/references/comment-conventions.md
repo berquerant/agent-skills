@@ -2,7 +2,7 @@
 
 This reference defines conventions for drafting clear, constructive, and actionable review comments and notes on Pull Requests (PRs) and Merge Requests (MRs).
 
-Default standard: [Conventional Comments](https://conventionalcomments.org/). Follow repository-specific conventions (e.g. `CONTRIBUTING.md`) if established.
+Default standard: [Conventional Comments](conventional-comments-spec.md). Follow repository-specific conventions (e.g. `CONTRIBUTING.md`) if established.
 
 ---
 
