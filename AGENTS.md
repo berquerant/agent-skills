@@ -4,7 +4,7 @@ Operational guidelines and conventions for AI agents operating within this repos
 
 ## Repository Purpose
 
-This repository hosts agent skills following the [Agent Skills Specification](https://agentskills.io/specification).
+This repository hosts agent skills following the [Agent Skills Specification](skills/skill-creator/references/agent-skills-spec.md).
 Each skill defines clear triggers, procedures, step-by-step verification methods, and guidelines.
 
 ## Development & Maintenance Rules
@@ -40,6 +40,12 @@ Skills in this repository must be portable across different AI agent platforms (
 When conducting investigations or gathering information using high-cost methods (e.g. APIs, remote queries, heavy execution tools):
 - **Minimize Total Cost**: Strive to minimize overall cost across execution time, local/client resource usage, and server-side resource consumption.
 - **Cache and Reference Locally**: Fetch potentially needed contents or query results up front into a local file or temporary cache via the API, and reference that local file for subsequent analysis rather than repeatedly invoking the high-cost API.
+
+### 6. Offline & Self-Contained References (No Autonomous External Access)
+Skills and agent operations in this repository are strictly self-contained and offline-capable:
+- **No Autonomous URL Fetching**: AI agents MUST NOT autonomously fetch, crawl, or query external HTTP/HTTPS URLs to retrieve guidelines, schemas, or instructions.
+- **Local References as Single Source of Truth**: All specifications, checklists, and conventions originally derived from external sources are maintained locally under `skills/<skill>/references/`. Agents must strictly rely on these local files.
+- **Human-Only Citation Links**: Any external URLs retained in references are strictly for human reference and citation purposes only.
 
 ## Skill Interoperability & Architecture
 
