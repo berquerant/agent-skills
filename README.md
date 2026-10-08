@@ -27,6 +27,7 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 | [`multi-repo-change`](skills/multi-repo-change/SKILL.md) | Coordinates multi-repository changes with approval gates and linked PRs/MRs. | Isolated worktrees, pre-flight clean checks, approval gates, draft PR/MR cross-linking. |
 | [`change-message`](skills/change-message/SKILL.md) | Writes concise commit messages and PR/MR descriptions. | Repository convention detection, Conventional Commits default, summary-first PR template, self-check list. |
 | [`review-discussion`](skills/review-discussion/SKILL.md) | Guides PR/MR review comments, discussions, and thread resolutions. | Conventional Comments, constructive ethos, actionable replies, resolution ownership rules. |
+| [`edit-paced-execution`](skills/edit-paced-execution/SKILL.md) | Paces execution intervals between file edits with dynamic pauses. | Adaptive thresholds, non-edit tool call tracking, obstacle reporting, user check-in. |
 
 ## Project Structure
 
@@ -42,6 +43,8 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 │   ├── code-review/
 │   │   └── references/          # Security & public exposure checklists
 │   ├── diff-continue/
+│   ├── edit-paced-execution/
+│   │   └── references/          # Pacing thresholds & checkpoint report guide
 │   ├── explore-plan-execute/
 │   ├── git-worktree/
 │   │   └── references/          # Git worktree workflow references

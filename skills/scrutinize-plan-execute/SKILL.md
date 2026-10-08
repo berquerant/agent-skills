@@ -134,7 +134,12 @@ protocol during execution:
 State the chosen execution mode to the user:
 > **Execution mode**: `step-gate` / `standard`
 
-### 3. Explicit Execution Permission
+### 3. Pacing Guard Proposal (`edit-paced-execution`)
+Assess if unexpected investigation delays or trial-and-error loops risk stalling execution between file edits.
+If appropriate, recommend [`edit-paced-execution`](../edit-paced-execution/SKILL.md) alongside the plan:
+> **Pacing guard**: Recommend [`edit-paced-execution`](../edit-paced-execution/SKILL.md) (threshold: <X minutes / Y non-edit calls>) to halt and consult if file edits are delayed.
+
+### 4. Explicit Execution Permission
 Confirm the user gives explicit approval to proceed with execution.
 
 Ask the user:
@@ -142,7 +147,7 @@ Ask the user:
 
 Do **not** execute any modifications until the user explicitly approves.
 
-Verify: The execution mode is decided, the user has given explicit permission to
+Verify: The execution mode is decided, pacing guard proposals are stated if applicable, the user has given explicit permission to
 execute, and if requested, the plan has been saved to the user-specified file path.
 
 ---

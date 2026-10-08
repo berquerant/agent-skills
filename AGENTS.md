@@ -63,6 +63,7 @@ flowchart TD
         EPE[explore-plan-execute]
         SPE[scrutinize-plan-execute]
         SG[step-gate]
+        EPE_PACE["edit-paced-execution<br/>(Pacing interval & checkpoint)"]
         GW[git-worktree]
         MRC[multi-repo-change]
         CM["change-message<br/>(Commit & PR/MR messages)"]
@@ -83,6 +84,8 @@ flowchart TD
     %% Workflows & Hand-offs
     EPE -->|sequential hand-off| SG
     SPE -->|sequential hand-off| SG
+    EPE -.->|proposes pacing guard| EPE_PACE
+    SPE -.->|proposes pacing guard| EPE_PACE
     GW -.->|worktree isolation| EPE
     GW -.->|worktree isolation| SPE
     EPE -.->|message guidelines| CM

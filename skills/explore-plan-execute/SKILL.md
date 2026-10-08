@@ -126,8 +126,19 @@ State the decision in the plan:
 If using `step-gate`, note that Step 5 will follow the step-gate protocol
 (per-step verification + user approval before continuing).
 
+### Propose `edit-paced-execution` for Extended Tasks
+
+Evaluate whether the task risks long investigation delays, troubleshooting loops, or silent stalls between file modifications.
+
+**Propose [`edit-paced-execution`](../edit-paced-execution/SKILL.md) when:**
+- The task requires non-trivial trial-and-error, unfamiliar library exploration, or multi-step debugging before reaching file edits.
+- The user expressed concern about long autonomous pauses or requested regular progress checkpoints.
+
+If applicable, include the proposed pacing thresholds (e.g. 3 minutes or 20 non-edit tool calls) in the plan presented to the user:
+> **Pacing guard**: Recommend [`edit-paced-execution`](../edit-paced-execution/SKILL.md) (threshold: <X minutes / Y non-edit calls>) to halt and check in if progress stalls between file edits.
+
 Verify: Each step is actionable. Each success criterion is testable.
-Execution mode is explicitly stated in the plan (or delegated to `scrutinize-plan-execute`).
+Execution mode and any recommended pacing guard are explicitly stated in the plan (or delegated to `scrutinize-plan-execute`).
 
 ---
 
