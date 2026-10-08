@@ -26,6 +26,7 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 | [`step-gate`](skills/step-gate/SKILL.md) | Executes tasks incrementally with explicit user checkpoints. | Step decomposition, verification criteria, user approval gates between steps. |
 | [`multi-repo-change`](skills/multi-repo-change/SKILL.md) | Coordinates multi-repository changes with approval gates and linked PRs/MRs. | Isolated worktrees, pre-flight clean checks, approval gates, draft PR/MR cross-linking. |
 | [`change-message`](skills/change-message/SKILL.md) | Writes concise commit messages and PR/MR descriptions. | Repository convention detection, Conventional Commits default, summary-first PR template, self-check list. |
+| [`review-discussion`](skills/review-discussion/SKILL.md) | Guides PR/MR review comments, discussions, and thread resolutions. | Conventional Comments, constructive ethos, actionable replies, resolution ownership rules. |
 
 ## Project Structure
 
@@ -50,6 +51,8 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 │   │   └── references/          # Maintainability & debt metrics
 │   ├── project-status/
 │   ├── refactor/
+│   ├── review-discussion/
+│   │   └── references/          # Comment conventions & resolution rules
 │   ├── scrutinize-plan-execute/
 │   │   └── references/          # Plan scrutiny & obstacle checklists
 │   ├── skill-creator/

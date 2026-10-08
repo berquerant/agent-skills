@@ -66,6 +66,7 @@ flowchart TD
         PA["project-audit<br/>(Macro health, security, public release, tech debt)"]
         PS["project-status<br/>(Micro working-tree & drift check)"]
         CR["code-review<br/>(Meso diff/PR review & security audit)"]
+        RD["review-discussion<br/>(PR/MR comments & thread resolution)"]
     end
 
     subgraph Remediation ["Remediation & Action"]
@@ -80,6 +81,7 @@ flowchart TD
     GW -.->|worktree isolation| SPE
     EPE -.->|message guidelines| CM
     MRC -.->|message guidelines| CM
+    CR -.->|comment guidelines| RD
 
     PA -->|suggests remediation| RF
     PA -->|suggests phased fixes| SG
