@@ -34,6 +34,8 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 .
 ├── .agents/
 │   └── skills -> ../skills/     # Symlink for agent auto-discovery
+├── bin/
+│   └── install.sh               # Symlinks skills to a target directory
 ├── skills/
 │   ├── change-message/
 │   │   └── references/          # Commit message & PR/MR description guides
@@ -61,10 +63,28 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 │   │   └── references/          # Review checklist, automated checks, report templates
 │   └── step-gate/
 ├── AGENTS.md                    # Operational guidelines & context for AI agents
+├── Makefile                     # Helper tasks (e.g. make install)
 └── README.md
 ```
 
 ## Setup & Usage
+
+### Installing Skills into a Target Directory
+
+Use `make install` or `bin/install.sh` to create symbolic links pointing to each skill in your target directory:
+
+```bash
+# Interactive prompt if target directory is not specified
+make install
+
+# Or specify TARGET_DIR directly
+make install TARGET_DIR=/path/to/skills
+
+# Alternatively, invoke the script directly
+./bin/install.sh /path/to/skills
+```
+
+The installer displays all planned actions and asks for confirmation (`[Y/n]`) before creating symlinks.
 
 ### Project-local usage
 Clone or submodule this repository into your workspace, and ensure `.agents/skills` points to `skills/`:
