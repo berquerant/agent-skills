@@ -136,3 +136,15 @@ awk '
 ```
 
 This only flags candidates. Confirm real duplication by comparing the content side by side.
+
+## J. External Hyperlinks & Self-Containment (Dimension 2 & 5)
+
+Scan for external HTTP/HTTPS hyperlinks in markdown files. Fenced code examples and git remote regexes may produce false positives and should be triaged:
+
+```sh
+grep -rnE 'https?://' "$SKILL_DIR"
+```
+
+Verify that:
+- Core procedures, checklists, and specifications do not delegate to external URLs [F].
+- Any remaining external URLs are strictly non-essential human citations accompanied by an explicit note forbidding autonomous agent access [W].

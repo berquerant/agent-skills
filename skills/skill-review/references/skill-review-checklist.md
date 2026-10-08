@@ -6,7 +6,7 @@ This file is the single source of truth for skill review criteria. Each item is 
 - **[W]**: violating it makes the dimension at worst **Warn**. These are conventions and best practices.
 
 Authoritative sources:
-- Agent Skills Specification: https://agentskills.io/specification
+- Agent Skills Specification: [../../skill-creator/references/agent-skills-spec.md](../../skill-creator/references/agent-skills-spec.md)
 - Authoring conventions: [../../skill-creator/references/skill-spec.md](../../skill-creator/references/skill-spec.md)
 - The repository's own agent guidelines, such as `AGENTS.md`, if present.
 
@@ -47,6 +47,8 @@ When a criterion is ambiguous for a particular skill, record the interpretation 
   - Reference implementations live in `examples/`.
 - [ ] **[W] Shallow references**: Referenced files sit one level deep from `SKILL.md`, with no long chains of reference files pointing to further reference files.
 - [ ] **[F] Valid relative links**: Internal links use relative paths that resolve. There are no broken links and no absolute or machine-specific paths.
+- [ ] **[F] Offline & self-contained**: Skills must not depend on runtime network fetches for instructions or schemas. Core procedures, checklists, and specifications must be self-contained in local `references/`.
+- [ ] **[W] No autonomous external URL access**: Any external hyperlinks must be strictly non-essential citations for human reference and accompanied by an explicit note forbidding autonomous agent access.
 - [ ] **[W] Executable scripts**: Every file in `scripts/` has execute permission.
 
 ---
