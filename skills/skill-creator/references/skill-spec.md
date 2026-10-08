@@ -97,12 +97,8 @@ Applies across all projects.
 
 ## Reference Documentation
 
-Refer to the official documentation for the latest specification:
+For the core specification, refer to the local specification snapshot:
+- [agent-skills-spec.md](agent-skills-spec.md)
 
-- Home / Overview: https://agentskills.io/home
-- Specification: https://agentskills.io/specification
-- Quickstart: https://agentskills.io/skill-creation/quickstart
-- Best practices: https://agentskills.io/skill-creation/best-practices
-- Optimizing descriptions: https://agentskills.io/skill-creation/optimizing-descriptions
-- Evaluating skills: https://agentskills.io/skill-creation/evaluating-skills
-- Using scripts: https://agentskills.io/skill-creation/using-scripts
+> [!NOTE]
+> AI agents must rely strictly on local references and must not fetch or access external URLs autonomously.

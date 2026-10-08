@@ -66,6 +66,7 @@ A standard `SKILL.md` adheres to the following structure:
 
 ## 4. Self-Containment and Portability
 
-- **Offline-capable**: Skills must not depend on runtime network fetches for instructions or schemas.
-- **Platform-agnostic**: Prefer standard shell commands (`git`, `grep`, `find`) and avoid hardcoded vendor-locked tools unless labeled as non-exclusive examples.
-- **Relative linking**: Internal cross-references must use relative file paths (e.g. `[references/foo.md](references/foo.md)`).
+- **Relative linking**: Internal cross-references must use relative file paths to real files:
+  ```text
+  [link text](references/spec.md)
+  ```
