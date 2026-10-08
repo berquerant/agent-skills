@@ -37,7 +37,7 @@ confirm_proceed() {
   local answer
   read -r answer
   case "$answer" in
-    [yY][eE][sS]|[yY]|"")
+    [yY][eE][sS] | [yY] | "")
       return 0
       ;;
     *)
@@ -66,7 +66,7 @@ main() {
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
-      -h|--help)
+      -h | --help)
         usage
         exit 0
         ;;

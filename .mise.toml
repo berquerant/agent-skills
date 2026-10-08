@@ -1,0 +1,19 @@
+[tools]
+shellcheck = "0.11.0"
+shfmt = "3.14.1"
+
+[tasks.install]
+description = "Install skills into target directory"
+run = "./bin/install.sh"
+
+[tasks.lint]
+description = "Run shellcheck and shfmt checks"
+run = "./bin/lint.sh check"
+
+[tasks.fmt]
+description = "Format shell scripts with shfmt"
+run = "./bin/lint.sh fmt"
+
+[tasks.check]
+description = "Run all checks"
+depends = ["lint"]

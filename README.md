@@ -63,7 +63,7 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 │   │   └── references/          # Review checklist, automated checks, report templates
 │   └── step-gate/
 ├── AGENTS.md                    # Operational guidelines & context for AI agents
-├── Makefile                     # Helper tasks (e.g. make install)
+├── .mise.toml                   # Tool configuration and mise tasks
 └── README.md
 ```
 
@@ -71,14 +71,14 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 
 ### Installing Skills into a Target Directory
 
-Use `make install` or `bin/install.sh` to create symbolic links pointing to each skill in your target directory:
+Use `mise run install` or `bin/install.sh` to create symbolic links pointing to each skill in your target directory:
 
 ```bash
 # Interactive prompt if target directory is not specified
-make install
+mise run install
 
 # Or specify TARGET_DIR directly
-make install TARGET_DIR=/path/to/skills
+TARGET_DIR=/path/to/skills mise run install
 
 # Alternatively, invoke the script directly
 ./bin/install.sh /path/to/skills
@@ -94,3 +94,18 @@ ln -s skills .agents/skills
 ```
 
 AI agents that scan `.agents/skills` will automatically discover and activate these skills when triggered.
+
+## Development
+
+This repository uses [mise](https://mise.jdx.dev/) to manage development tools (`shellcheck`, `shfmt`).
+
+```bash
+# Install development tools
+mise install
+
+# Run linter checks (shellcheck & shfmt)
+mise run lint
+
+# Format shell scripts
+mise run fmt
+```
