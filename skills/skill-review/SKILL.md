@@ -45,13 +45,14 @@ Verify: Every target has a `SKILL.md`, all of its files are listed, and the base
 
 ## Step 2: Run Automated Checks
 
-Run the commands in [references/automated-checks.md](references/automated-checks.md) for each target and record the raw results:
+Run the automated checks via `scripts/run-checks.sh <target-skill>` (or follow [references/automated-checks.md](references/automated-checks.md)) for each target and record the raw results:
 
 - File inventory and `SKILL.md` line count
 - Frontmatter `name` rules (pattern, length, match with the directory name) and `description` length
 - Section headings, plus `## Step` sections that lack a `Verify:` checkpoint
 - Broken or absolute links, and scripts that are not executable
 - References to sibling skills, and registration in repository-level docs
+- External hyperlinks and self-containment status
 
 Verify: Every automated check has a recorded result. False positives, such as links inside code examples, have been triaged and annotated.
 
