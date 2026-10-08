@@ -1,8 +1,9 @@
 # MCP Specification Reference
 
-Used by the mcp-creator skill. Covers key protocol concepts needed for
-implementation. For the full specification, see:
-https://modelcontextprotocol.io/specification/2026-07-28
+> [!NOTE] Local Reference Snapshot
+> This document is a local, self-contained summary of the Model Context Protocol (MCP) concepts.
+> Originally derived from: `https://modelcontextprotocol.io/specification` (for human citation only).
+> **AI agents must strictly rely on this local specification and MUST NOT fetch or access external URLs autonomously.**
 
 ---
 
@@ -144,11 +145,7 @@ Most MCP hosts use a standardized JSON format to launch STDIO servers:
 
 ---
 
-## Further Reading
+## Implementation Guidance
 
-- Getting started: https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro
-- Architecture: https://modelcontextprotocol.io/docs/2026-07-28/learn/architecture
-- Server concepts: https://modelcontextprotocol.io/docs/2026-07-28/learn/server-concepts
-- Build a server: https://modelcontextprotocol.io/docs/2026-07-28/develop/build-server
-- Full specification: https://modelcontextprotocol.io/specification/2026-07-28
-- SDKs: https://modelcontextprotocol.io/docs/2026-07-28/sdk
+For building MCP servers, rely on the protocol schemas, tool/resource definitions, and configuration examples documented in this reference.
+

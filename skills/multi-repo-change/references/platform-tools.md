@@ -22,9 +22,6 @@ For remote platform operations (fetching project info, opening Pull/Merge Reques
 ## 2. Platform Adapters
 
 ### 2.1 GitHub (`github.com` or GitHub Enterprise)
-
-- **Reference Documentation**:
-  - [GitHub CLI Reference](https://docs.github.com/en/github-cli/github-cli/github-cli-reference)
 - **Detection**:
   - Remote URL points to `github.com` or an enterprise GitHub host.
 - **MCP Tools**:
@@ -51,9 +48,6 @@ For remote platform operations (fetching project info, opening Pull/Merge Reques
 ---
 
 ### 2.2 GitLab (`gitlab.com` or Self-hosted GitLab)
-
-- **Reference Documentation**:
-  - [GitLab CLI Reference](https://docs.gitlab.com/cli/commands/)
 - **Detection**:
   - Remote URL points to `gitlab.com` or a self-hosted GitLab domain.
 - **MCP Tools**:

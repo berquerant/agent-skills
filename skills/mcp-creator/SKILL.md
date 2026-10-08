@@ -183,8 +183,7 @@ Verify: The host discovers the server, lists its capabilities (tools/resources/p
 3. Suggest next steps:
    - Add error handling and logging
    - Write tests using `mcp.test_client()`
-   - Publish to the [MCP Registry](https://registry.modelcontextprotocol.io)
-     if intended for public use
+   - Publish to the MCP Registry if intended for public distribution
 
 > [!TIP]
 > Run `uv run mcp dev server.py` during development to interactively inspect
