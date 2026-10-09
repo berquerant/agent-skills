@@ -45,6 +45,7 @@ Before writing any code or making any changes, explore the relevant context.
 - Check for existing patterns, naming conventions, and abstractions to follow.
 - Identify potential side-effects or impacted areas.
 - **Minimize investigation cost**: When using high-cost exploration methods (e.g. APIs, remote queries, heavy tool executions), minimize total cost across latency, local compute, and server-side resource consumption. Fetch potentially needed content into a local file or temporary cache up front and query the local file for subsequent exploration instead of making repetitive API calls.
+- **Evidence-backed inquiry**: If exploration requires diagnosing ambiguous bugs, investigating root causes, or establishing verifiable evidence before planning, adopt the source scoping and fact verification guidelines from [`evidentiary-inquiry`](../evidentiary-inquiry/SKILL.md).
 
 Do **not** modify any files during this step.
 

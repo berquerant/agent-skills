@@ -51,7 +51,7 @@ Inspect the plan across the following dimensions (refer to
 [references/scrutiny-checklist.md](references/scrutiny-checklist.md) for detailed checklists and remedy patterns):
 
 1. **Ambiguous Conditions & Premises**: Are any assumptions unverified? What
-   happens if environment states or inputs differ from expectations?
+   happens if environment states or inputs differ from expectations? (When core premises lack verifiable evidence, consult [`evidentiary-inquiry`](../evidentiary-inquiry/SKILL.md) to validate them before finalizing the plan.)
 2. **Vague Verification Criteria**: Is any success criterion subjective or hard
    to measure? How exactly will success or failure be confirmed?
 3. **Execution Obstacles & Side Effects**: What could fail during execution?

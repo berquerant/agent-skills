@@ -28,6 +28,7 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 | [`change-message`](skills/change-message/SKILL.md) | Writes concise commit messages and PR/MR descriptions. | Repository convention detection, Conventional Commits default, summary-first PR template, self-check list. |
 | [`review-discussion`](skills/review-discussion/SKILL.md) | Guides PR/MR review comments, discussions, and thread resolutions. | Conventional Comments, constructive ethos, actionable replies, resolution ownership rules. |
 | [`edit-paced-execution`](skills/edit-paced-execution/SKILL.md) | Paces execution intervals between file edits with dynamic pauses. | Adaptive thresholds, non-edit tool call tracking, obstacle reporting, user check-in. |
+| [`evidentiary-inquiry`](skills/evidentiary-inquiry/SKILL.md) | Conducts evidence-backed investigations with source scoping and fact verification. | Pre-exploration source scoping, pre-report fact checks, separation of facts and inferences, deductive explanations. |
 
 ## Project Structure
 
@@ -45,6 +46,8 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 │   ├── diff-continue/
 │   ├── edit-paced-execution/
 │   │   └── references/          # Pacing thresholds & checkpoint report guide
+│   ├── evidentiary-inquiry/
+│   │   └── references/          # Source scoping templates & verification checklist
 │   ├── explore-plan-execute/
 │   ├── git-worktree/
 │   │   └── references/          # Git worktree workflow references
