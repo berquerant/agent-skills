@@ -97,7 +97,8 @@ flowchart TD
     EPE -.->|message guidelines| CM
     MRC -.->|message guidelines| CM
     RDP -.->|message guidelines| CM
-    RDP -.->|approval gate pattern| SG
+    RDP -.->|planning & approval gate| EPE
+    RDP -.->|remediation gate pattern| SG
     RDP -.->|complex fix hand-off| RF
     CR -.->|comment guidelines| RD
     CR -.->|suggests doc improvements| DR

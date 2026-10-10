@@ -20,7 +20,8 @@ Track each repository's progress in a state table:
 | State | Description | Next Action |
 |---|---|---|
 | `QUEUED` | Candidate repository identified; PRs not yet triaged. | Fetch PR list in batch and triage candidates. |
-| `TRIAGING` | Inspecting PR metadata, security, and context. | Filter and run security audit. |
+| `TRIAGING` | Inspecting PR metadata, security, and context. | Filter, audit security, and formulate plan. |
+| `PLANNING` | Presenting resolution plan to user (EPE Gate). | Await user approval on execution plan & order. |
 | `CHECKOUT` | Creating isolated worktree and syncing branch. | Rebase and run local checks. |
 | `LOCAL_VERIFY` | Running local build/test checks inside worktree. | If pass -> push and transition to `WAITING_CI`. |
 | `WAITING_CI` | Remote CI checks are in-flight. **(IDLE WAIT)** | Switch focus to next runnable repository! |
