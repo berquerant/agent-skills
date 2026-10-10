@@ -25,6 +25,7 @@ Clarify the specific objective:
   - Modernization / idiom adoption (leveraging newer language features and conventions).
   - Architectural / structural cleanup (separation of concerns, dependency injection, modularity).
   - Documentation reorganization (splitting large docs, standardizing structure).
+  - *Pure documentation & comment refinement*: When refining explanations, docstrings, or code comments without modifying any code or losing existing rationale, prefer [`doc-refactor`](../doc-refactor/SKILL.md).
 - **Invariants**: Explicitly list behaviors, public APIs, contracts, and interfaces that must NOT change.
 
 Verify: Invariants, DRY targets, and goals are clearly defined.

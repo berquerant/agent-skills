@@ -89,6 +89,7 @@ Present the structured investigation report to the user with full traceability.
      - **Conclusions / Judgments**: Explicit verdict, root cause, or architectural decision.
 2. **Recommend Sequential Handoff**:
    - For remediation or code modification, recommend [`step-gate`](../step-gate/SKILL.md) or [`refactor`](../refactor/SKILL.md).
+   - For documentation or comment refinement based on findings, recommend [`doc-refactor`](../doc-refactor/SKILL.md).
    - For planning large feature additions based on findings, recommend [`explore-plan-execute`](../explore-plan-execute/SKILL.md).
    - For further adversarial scrutiny of complex trade-offs, recommend [`scrutinize-plan-execute`](../scrutinize-plan-execute/SKILL.md).
 

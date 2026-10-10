@@ -15,6 +15,7 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 | [`explore-plan-execute`](skills/explore-plan-execute/SKILL.md) | Enforces structured workflows on non-trivial tasks. | Read before writing, user approval gate, verification loops. |
 | [`code-review`](skills/code-review/SKILL.md) | Inspects code and documentation quality, security, and public release safety. | Default branch diff check, public exposure hazard alerts, severity categorization, read-only audit. |
 | [`refactor`](skills/refactor/SKILL.md) | Safely transforms code and docs without changing behavior. | Baseline tests, pragmatic DRY, code-review integration, mandatory lint/test passing, doc synchronization. |
+| [`doc-refactor`](skills/doc-refactor/SKILL.md) | Refines documentation and code comments with zero code mutation. | Information preservation, clarity & logical depth, zero code diff verification, Why-first explanations. |
 | [`diff-continue`](skills/diff-continue/SKILL.md) | Continues work-in-progress git diffs across other files. | Pattern extraction, style preservation, scope detection. |
 | [`git-worktree`](skills/git-worktree/SKILL.md) | Manages git worktrees for parallel branch work. | WORKTREE_ROOT organization, subagent parallelism, cleanup on request. |
 | [`project-status`](skills/project-status/SKILL.md) | Audits the current state of a project. | Git state inspection, file change analysis, test/lint result reporting, pass/fail judgments. |
@@ -44,6 +45,8 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 │   ├── code-review/
 │   │   └── references/          # Security & public exposure checklists
 │   ├── diff-continue/
+│   ├── doc-refactor/
+│   │   └── references/          # Information inventory & zero-code-diff guide
 │   ├── edit-paced-execution/
 │   │   └── references/          # Pacing thresholds & checkpoint report guide
 │   ├── evidentiary-inquiry/
