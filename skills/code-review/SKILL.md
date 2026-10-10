@@ -15,6 +15,8 @@ correctness, and security risks.
 
 For detailed vulnerability and public exposure audit criteria, refer to
 [references/security-checklist.md](references/security-checklist.md).
+For OWASP-aligned secure coding standards and remediation patterns, refer to
+[references/owasp-secure-coding-guide.md](references/owasp-secure-coding-guide.md).
 
 ---
 
@@ -27,6 +29,9 @@ Determine the target files and focus area:
   - **Topic branch review**: When reviewing a topic branch or pull request, compare the branch against the repository's default branch (e.g. `git diff origin/main...HEAD` or `git diff main...HEAD`).
 - **Review mode / focus**:
   - **General Review**: Readability, maintainability, consistency, logic bugs, adherence to conventions.
+  - **Secure Coding & Vulnerability Audit**:
+    - Audit existing code against [references/owasp-secure-coding-guide.md](references/owasp-secure-coding-guide.md) (input validation, output encoding, injection defense, access control, crypto practices, error handling).
+    - Assess compliance: identify where, why, and how non-compliant code should be remediated.
   - **Security & Public Release Audit**:
     - Vulnerability assessment (OWASP-aligned: injection, auth/access control, SSRF, memory safety/concurrency).
     - **Public Exposure Safety**: Ensure the diff is completely safe to publish to the internet. Verify zero leaks of sensitive information (secrets, API keys, tokens, private keys), internal network details (intranet hostnames, internal IPs, staging endpoints), or proprietary data. (See [references/security-checklist.md](references/security-checklist.md)).
@@ -42,7 +47,7 @@ Verify: Target files, comparison base (e.g., default branch for topic branches),
 Run relevant read-only checks if tools are available:
 
 - Linters, format checkers, type-checkers (e.g., `golangci-lint`, `ruff`, `eslint`, `cargo check`).
-- Security tools or grep searches for secrets / insecure patterns (cross-reference against [references/security-checklist.md](references/security-checklist.md)).
+- Security tools or grep searches for secrets / insecure patterns (cross-reference against [references/security-checklist.md](references/security-checklist.md) and [references/owasp-secure-coding-guide.md](references/owasp-secure-coding-guide.md)).
 - Inspect files and diffs thoroughly in context against the comparison base.
 - Specifically verify that no files or changes pose a risk if exposed publicly on the internet.
 
@@ -58,17 +63,19 @@ Structure the review feedback by severity levels:
 
 - 🔴 **Critical / Security Vulnerabilities & Public Exposure Risks**:
   - Direct security risks (secret leaks, injection, auth bypass) or severe bugs causing crashes/data loss.
+  - Non-compliance with core secure coding controls (unvalidated inputs, raw queries, broken access controls).
   - **Public Release Hazards**: Any leak of credentials, internal infrastructure identifiers, or unapproved confidential artifacts. **If there is even the slightest risk, prominently alert and warn the user.**
 - 🟡 **Warnings / Improvements**: Suboptimal design, performance bottlenecks, edge-case bugs, maintainability debt.
 - 🟢 **Suggestions / Nitpicks**: Style consistency, doc typos, minor refactoring ideas.
 - 💡 **Positive Notes**: Well-structured code or good patterns worth acknowledging.
 
 Format each finding with:
-1. **File and Line Reference** (relative path, e.g. `path/to/filename.ext#L10-L15`)
-2. **Issue Description** (what is wrong and why)
-3. **Recommended Fix / Concrete Code Example**
+1. **Where (Location)**: Relative file and line reference (e.g. `path/to/filename.ext#L10-L15`).
+2. **Rule & Principle**: Applicable standard or guideline from [references/owasp-secure-coding-guide.md](references/owasp-secure-coding-guide.md).
+3. **Why (Rationale & Threat)**: Detailed explanation of what is vulnerable/suboptimal, the associated attack vector or failure mode, and why the current logic is unsafe.
+4. **How (Recommended Fix)**: Concrete, language-idiomatic code example illustrating how to fix the issue securely.
 
-Verify: All findings are categorized by severity levels (Critical, Warnings, Suggestions) with file:line references and actionable remedies.
+Verify: All findings are categorized by severity levels (Critical, Warnings, Suggestions) with Where, Rule, Why, and How actionable remedies.
 
 ---
 

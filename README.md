@@ -43,7 +43,7 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 │   ├── change-message/
 │   │   └── references/          # Commit message & PR/MR description guides
 │   ├── code-review/
-│   │   └── references/          # Security & public exposure checklists
+│   │   └── references/          # Security checklists & OWASP secure coding guide
 │   ├── diff-continue/
 │   ├── doc-refactor/
 │   │   └── references/          # Information inventory & zero-code-diff guide
