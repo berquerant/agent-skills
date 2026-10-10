@@ -81,6 +81,7 @@ flowchart TD
         RF[refactor]
         DR["doc-refactor<br/>(Doc & comment refinement, zero code change)"]
         DC[diff-continue]
+        RDP["resolve-dependency-prs<br/>(Triage, test & merge deps/security PRs)"]
     end
 
     %% Workflows & Hand-offs
@@ -92,8 +93,12 @@ flowchart TD
     SPE -.->|structured evidence inquiry| EI
     GW -.->|worktree isolation| EPE
     GW -.->|worktree isolation| SPE
+    GW -.->|worktree isolation| RDP
     EPE -.->|message guidelines| CM
     MRC -.->|message guidelines| CM
+    RDP -.->|message guidelines| CM
+    RDP -.->|approval gate pattern| SG
+    RDP -.->|complex fix hand-off| RF
     CR -.->|comment guidelines| RD
     CR -.->|suggests doc improvements| DR
 
