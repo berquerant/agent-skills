@@ -87,12 +87,14 @@ flowchart TD
     %% Workflows & Hand-offs
     EPE -->|sequential hand-off| SG
     SPE -->|sequential hand-off| SG
+    EPE -.->|delegates complex risk| SPE
     EPE -.->|proposes pacing guard| EPE_PACE
     SPE -.->|proposes pacing guard| EPE_PACE
     EPE -.->|structured evidence inquiry| EI
     SPE -.->|structured evidence inquiry| EI
     GW -.->|worktree isolation| EPE
     GW -.->|worktree isolation| SPE
+    GW -.->|worktree isolation| MRC
     GW -.->|worktree isolation| RDP
     EPE -.->|message guidelines| CM
     MRC -.->|message guidelines| CM
@@ -111,6 +113,7 @@ flowchart TD
 
     PA -->|suggests remediation| RF
     PA -->|suggests phased fixes| SG
+    PA -.->|post-remediation verification| PS
 
     CR -.->|shares security checklist| PA
     RF -.->|consults review criteria| CR
