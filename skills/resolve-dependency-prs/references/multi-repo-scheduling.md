@@ -49,11 +49,16 @@ An idle wait state occurs when:
    - Execute the next logical step.
 
 ### 3.3 Batch Status Check (Anti-Polling Rule)
-- Do NOT poll remote CI in a short loop (e.g. `while true; do gh pr checks; sleep 5; done`).
+- Do NOT poll remote CI in a short loop or streaming monitor:
+  - Anti-pattern: `while true; do gh pr checks; sleep 5; done`
+  - Anti-pattern: `gh pr checks <id> --watch`
+  - Anti-pattern: `glab ci trace` (streaming continuous output)
 - Check remote CI status only when:
   - Transitioning between repository tasks.
   - Or after a pacing interval has elapsed (e.g., at least 2–3 minutes between remote checks).
-  - Use single-shot check commands (e.g. `gh pr checks <id>` without `--watch` loop, or query pipeline status once).
+- Use single-shot check commands:
+  - **GitHub**: `gh pr checks <id>` (runs once and exits immediately)
+  - **GitLab**: `glab ci status` or `glab mr view <id>` (runs once and exits immediately)
 
 ---
 

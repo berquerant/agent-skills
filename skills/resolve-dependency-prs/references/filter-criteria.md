@@ -52,7 +52,15 @@ If the PR/MR diff touches **any** of the following, disqualify it and leave it f
 ## 3. Cost-Aware Batch Filtering
 
 To minimize API consumption and tool latency:
-- Fetch candidate metadata and changed file lists in a single batch query (e.g., `gh pr list --state open --json number,title,headRefName,author,labels,files`).
-- Filter candidates in memory or against a locally saved snapshot instead of querying file diffs one PR at a time.
+- Fetch candidate metadata and changed file lists in a single batch query and redirect to a local file:
+  - **GitHub**:
+    ```bash
+    gh pr list --state open --json number,title,headRefName,author,labels,files,body > candidate_prs.json
+    ```
+  - **GitLab**:
+    ```bash
+    glab api "projects/:id/merge_requests?state=opened" > candidate_mrs.json
+    ```
+- Filter candidates in memory or against the locally saved snapshot (`candidate_prs.json` / `candidate_mrs.json`) instead of querying file diffs or details one PR at a time via remote CLI commands (e.g. avoid running `gh pr diff <id>` or `gh pr view <id>` in loops).
 - For all qualified candidates, proceed to [security-and-reputation-check.md](security-and-reputation-check.md) for context and legitimacy verification before checkout.
 

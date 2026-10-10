@@ -7,7 +7,20 @@ Guidelines and checklist for auditing dependency update and security patch PRs/M
 ## 1. Cost-Aware Investigation Protocol
 
 Per repository conventions (`AGENTS.md` Rule 5 & Rule 6):
-- **Batch Metadata Collection**: Retrieve PR/MR details, body/description, labels, and file lists in a single platform query (e.g. `gh pr view <id> --json number,title,body,files,labels,commits`) and save or cache locally rather than issuing repetitive API queries.
+- **Batch Metadata Collection**: If not already retrieved during Step 1.1's batch query (`gh pr list --json ... > candidate_prs.json`), retrieve PR/MR details in a single query and save/cache locally:
+  - **GitHub**:
+    ```bash
+    # Single command to dump full PR context to a local file
+    gh pr view <id> --json number,title,body,files,labels,commits > pr_<id>.json
+    ```
+  - **GitLab**:
+    ```bash
+    # Single command to dump MR details locally
+    glab mr view <id> > mr_<id>.txt
+    # Or fetch JSON payload via glab api
+    glab api "projects/:id/merge_requests/<id>" > mr_<id>.json
+    ```
+  Read and audit the saved local file (`pr_<id>.json` / `mr_<id>.txt`) for changelog, release notes, and commit details rather than issuing repetitive API queries.
 - **Local-First History Check**: Use local git history (`git log -S "<package>"`, `git log -G "<package>"`) to inspect historical versions and update frequency rather than querying remote repository APIs.
 - **Strictly Offline References**: Rely exclusively on PR body notes, local commit history, and bundled manifests. Do not autonomously crawl external package registries or websites.
 

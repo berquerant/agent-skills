@@ -28,17 +28,21 @@ This workflow coordinates existing platform conventions, [`git-worktree`](../git
 ## Step 1: Collect, Filter, and Audit Candidate PRs/MRs
 
 ### 1.1 Cost-Aware Batch Collection
-Retrieve open PRs/MRs along with files and body in a single query to avoid repetitive platform API calls:
+Retrieve open PRs/MRs along with files and body in a single query to avoid repetitive platform API calls. Save candidate metadata into a local JSON file or cache first, and inspect candidate details from that local file rather than calling remote APIs per candidate:
 - **GitHub**:
   ```bash
-  gh pr list --state open --json number,title,headRefName,author,labels,files,body
+  # Query all candidate PRs in a single API call and save locally
+  gh pr list --state open --json number,title,headRefName,author,labels,files,body > candidate_prs.json
   ```
 - **GitLab**:
   ```bash
-  glab mr list --state opened
+  # Query candidate MRs via glab and save locally (glab api / glab mr list)
+  glab mr list --state opened > candidate_mrs.txt
+  # Or fetch JSON payload via glab api
+  glab api "projects/:id/merge_requests?state=opened" > candidate_mrs.json
   ```
 
-Save or cache results locally before inspecting details.
+Inspect, filter, and audit candidates against the saved file (`candidate_prs.json` / `candidate_mrs.json`) locally. Avoid issuing separate API queries for each candidate PR.
 
 ### 1.2 File-Level Exclusivity Check
 Filter PRs according to [references/filter-criteria.md](references/filter-criteria.md):
@@ -109,15 +113,25 @@ Verify: The branch contains the latest default branch commits and is pushed clea
 Follow [references/ci-detection.md](references/ci-detection.md) to detect and execute project test/lint commands locally inside the worktree if runtime dependencies are available. Running local checks first prevents triggering unnecessary remote CI pipelines on obvious syntax or lockfile errors.
 
 ### 4.2 Remote CI Verification & Idle Wait Handling
-1. Check remote CI status:
-   - **GitHub**: `gh pr checks <number>` (use single query without tight `--watch` polling).
-   - **GitLab**: `glab mr view <id>`
+1. Check remote CI status via single-shot queries (never use streaming or loop-polling commands like `--watch`):
+   - **GitHub**:
+     ```bash
+     # Single-shot check; do NOT use `gh pr checks <number> --watch`
+     gh pr checks <number>
+     ```
+   - **GitLab**:
+     ```bash
+     # Single-shot check; query pipeline status once
+     glab ci status
+     # Or view MR pipeline details once
+     glab mr view <id>
+     ```
 2. **Idle Wait Switching across Repositories**:
    - If processing across multiple repositories (or multiple PRs) and a repository enters an idle wait state (waiting for remote CI checks, build completion, or approval):
      - Follow [references/multi-repo-scheduling.md](references/multi-repo-scheduling.md).
      - Save the repository's state as `WAITING_CI`.
      - **Immediately switch focus to the next queued or pending repository** to begin or resume its triage, checkout, or local verification.
-     - Avoid blocking loops; re-check pending CI status only upon transitioning between repository tasks or after an appropriate interval.
+     - Avoid blocking loops (e.g. `while true; do ...; sleep 10; done`); re-check pending CI status only upon transitioning between repository tasks or after an appropriate interval.
 
 Verify: Verification results from both local execution and remote CI are evaluated without idle blocking.
 
@@ -176,7 +190,7 @@ Verify: The PR/MR is merged (or queued for auto-merge), and the temporary worktr
 
 ## Guidelines
 
-- **Minimize Total Cost**: Batch API requests upfront, cache candidate metadata locally, prioritize fast local checks over remote CI runs, and avoid tight polling loops.
+- **Minimize Total Cost**: Batch API requests upfront (`gh pr list --json ... > prs.json`), cache candidate metadata locally, inspect details locally rather than querying remote APIs per PR, prioritize fast local checks over remote CI runs, and strictly avoid tight polling loops (`--watch` or sleep loops).
 - **Safety First on Doubts**: If there is any suspicion regarding package identity, registry URLs, unexpected dependencies, or security advisories, halt and request user confirmation immediately.
 - **No Idle Blocking in Multi-Repo Tasks**: When waiting for CI or user input in one repository, switch to another repository to continue work.
 - **Never Force Without Lease**: Always use `--force-with-lease` when updating rebased remote branches.
