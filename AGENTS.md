@@ -119,6 +119,7 @@ flowchart TD
     RF -.->|consults review criteria| CR
 
     PS -.->|diff drift verification| DC
+    DC -.->|planning & approval gate| EPE
 
     SC -->|new skill reviewed by| SR
     SR -.->|shares skill spec| SC

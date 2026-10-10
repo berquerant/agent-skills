@@ -12,6 +12,15 @@ Use this skill to extend a work-in-progress change set.
 Read the existing `git diff`, extract the intent and patterns, then
 apply those patterns to the files or sections that haven't been touched yet.
 
+This workflow coordinates [`explore-plan-execute`](../explore-plan-execute/SKILL.md) to explore the diff, extract patterns, identify targets, and establish an agreed continuation plan before applying edits to remaining files.
+
+---
+
+## Prerequisites
+
+- Working directory is inside a git repository with an active uncommitted diff or specified base diff.
+- **Explore & Plan First**: Do not immediately edit files upon invocation. Adhere to [`explore-plan-execute`](../explore-plan-execute/SKILL.md) by analyzing the existing diff, cataloging remaining target locations, and presenting a concrete continuation plan for user approval before modifying files.
+
 ---
 
 ## Step 1: Capture the Current Diff
@@ -74,11 +83,52 @@ Build a list of remaining targets: files, functions, structs, lines — wherever
 the pattern should be applied but hasn't been yet.
 
 Verify: The remaining-targets list is complete and correct.
-Confirm with the user if the scope is large or unclear.
 
 ---
 
-## Step 4: Apply the Pattern
+## Step 4: Formulate and Present Continuation Plan (Explore-Plan-Execute Gate)
+
+Following [`explore-plan-execute`](../explore-plan-execute/SKILL.md), synthesize the findings into a structured continuation plan before modifying any files:
+
+1. **Construct the Continuation Plan**:
+   - **Inferred Transformation Rule**: Concise description of the rule extracted from existing diff hunks.
+   - **Remaining Target Locations**: Exact list of files, functions, or lines to be modified.
+   - **Excluded / Ambiguous Locations**: Files or areas intentionally excluded (e.g., test mocks, generated files) or requiring user confirmation.
+   - **Verification Strategy**: Project-specific build/test/lint commands to validate correctness after edits.
+
+2. **Present Plan to the User**:
+   ```markdown
+   ### Diff Continuation Plan
+
+   #### Inferred Transformation Rule
+   <Describe the exact rule, e.g. "Add ctx context.Context as first parameter to all exported handler functions and propagate to caller.">
+
+   #### Already Changed Files
+   - `pkg/api/user.go`
+   - `pkg/api/auth.go`
+
+   #### Remaining Target Files
+   - `pkg/api/order.go` (methods: `CreateOrder`, `GetOrder`)
+   - `pkg/api/payment.go` (methods: `ProcessPayment`)
+
+   #### Ambiguous / Excluded Scope (if any)
+   - `pkg/api/*_test.go`: <Confirm whether unit test signatures should also be updated in this pass>
+
+   #### Planned Verification
+   - Run tests: `<test command>`
+   - Inspect full diff: `git diff HEAD`
+
+   May I proceed with applying this pattern to the remaining targets?
+   ```
+
+3. **Await Explicit User Confirmation**:
+   - Do NOT proceed to Step 5 until the user explicitly approves the continuation plan.
+
+Verify: The user has reviewed and approved the continuation plan, target scope, and verification strategy.
+
+---
+
+## Step 5: Apply the Pattern
 
 Work through the remaining targets one file at a time (or one logical group
 at a time for large changes).
@@ -100,7 +150,7 @@ Verify: Each change looks identical in style to the ones in the original diff.
 
 ---
 
-## Step 5: Verify the Result
+## Step 6: Verify the Result
 
 After all targets are done:
 
@@ -125,6 +175,7 @@ Verify: Build/tests pass. Diff is consistent end-to-end. No regressions.
 
 ## Guidelines
 
+- **Explore & Plan First.** Never modify code immediately upon receiving a WIP diff. Thoroughly extract patterns, catalogue remaining files, formulate a clear continuation plan with success criteria, and get user approval first.
 - **Pattern first, code second.** Always write down the rule (Step 2) before
   editing files. This prevents drift as you go through many files.
 - **Preserve style exactly.** Micro-differences in indentation, spacing, or
