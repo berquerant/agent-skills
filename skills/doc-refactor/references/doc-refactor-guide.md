@@ -52,3 +52,22 @@ When editing inline comments in source code files, confirm zero mutation to exec
    - All tests must pass with identical status.
 3. **AST / Semantic Invariance**:
    - Verify that compiled binaries or interpreted outputs produce zero functional divergence.
+
+---
+
+## 4. Complex Code Commenting Heuristics
+
+When operating in `comprehensive` mode and identifying code blocks that warrant new explanatory comments:
+
+### Where to Add Comments
+- **Non-Obvious Branching**: Edge-case guards whose failure condition is counter-intuitive.
+- **Complex Expressions**: Regex patterns, bitwise masks, pointer arithmetic, or multi-condition boolean logic.
+- **Hidden Invariants**: Ordering dependencies (e.g. "Lock A must precede Lock B", "Cleaned up by defer/finally").
+- **Workarounds**: Quirks working around third-party bugs or platform-specific behaviors.
+
+### Comment Construction Template (Why-first)
+```
+// Rationale: <Why this specific check/algorithm is used instead of the naive alternative>
+// Invariant: <What condition must be guaranteed before or after this block>
+// Warning/Caveat: <Non-obvious side effect or edge case to be aware of>
+```
