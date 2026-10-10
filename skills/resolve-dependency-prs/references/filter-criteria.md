@@ -46,3 +46,13 @@ If the PR/MR diff touches **any** of the following, disqualify it and leave it f
 - Test suites or test mocks (e.g. `*_test.go`, `*.test.ts`, `tests/`)
 - CI / workflow files (e.g. `.github/workflows/*`, `.gitlab-ci.yml`) unless the update bot exclusively bumped an action version (still recommend manual review)
 - Documentation or general configs (`README.md`, `Dockerfile`, Makefile)
+
+---
+
+## 3. Cost-Aware Batch Filtering
+
+To minimize API consumption and tool latency:
+- Fetch candidate metadata and changed file lists in a single batch query (e.g., `gh pr list --state open --json number,title,headRefName,author,labels,files`).
+- Filter candidates in memory or against a locally saved snapshot instead of querying file diffs one PR at a time.
+- For all qualified candidates, proceed to [security-and-reputation-check.md](security-and-reputation-check.md) for context and legitimacy verification before checkout.
+

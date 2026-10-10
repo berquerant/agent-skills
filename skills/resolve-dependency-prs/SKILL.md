@@ -1,15 +1,15 @@
 ---
 name: resolve-dependency-prs
 description: >-
-  Use this skill to triage, update, verify, and merge dependency update or
-  security advisory Pull Requests / Merge Requests on GitHub or GitLab. Filters
-  for pure manifest bumps, checks out via git-worktree, rebases onto default,
-  verifies via local/remote CI, plans remediation gates upon failure, and merges.
+  Use this skill to triage, audit, verify, and merge dependency update or
+  security advisory Pull Requests / Merge Requests on GitHub or GitLab. Enforces
+  cost-aware local batching, legitimacy & security audits, safety halt on doubts,
+  idle-wait switching across repositories, worktree isolation, and CI verification.
 ---
 
 # Resolve Dependency PRs
 
-Triage open dependency update and security patch PRs/MRs, verify them in isolated worktrees, ensure they are up to date with the default branch, validate through CI, remediate failures under user approval, and safely merge.
+Triage open dependency update and security patch PRs/MRs, audit their legitimacy and security safety, verify them in isolated worktrees, ensure they are up to date with the default branch, validate through CI, remediate failures under user approval, manage multi-repository pipelines without idle waiting, and safely merge.
 
 This workflow coordinates existing platform conventions, [`git-worktree`](../git-worktree/SKILL.md) for branch isolation, and [`step-gate`](../step-gate/SKILL.md) for remediation approval gates without duplicating procedures.
 
@@ -17,37 +17,56 @@ This workflow coordinates existing platform conventions, [`git-worktree`](../git
 
 ## Prerequisites
 
-- `git` is installed and the current directory is inside a git repository.
+- `git` is installed and the current directory is inside a git repository (or target repositories are available locally).
 - A supported platform tool is authenticated:
   - GitHub: `gh` CLI (or `github` MCP server) as described in [`multi-repo-change/references/platform-tools.md`](../multi-repo-change/references/platform-tools.md).
   - GitLab: `glab` CLI (or `gitlab` MCP server) as described in [`multi-repo-change/references/platform-tools.md`](../multi-repo-change/references/platform-tools.md).
+- Follow cost-aware principles (`AGENTS.md` Rule 5): batch API queries, cache candidate state locally, avoid excessive CI polling, and rely strictly on local references and PR descriptions.
 
 ---
 
-## Step 1: List and Filter Candidate PRs/MRs
+## Step 1: Collect, Filter, and Audit Candidate PRs/MRs
 
-1. Detect the remote platform host via `git remote get-url origin`.
-2. Retrieve open PRs/MRs:
-   - **GitHub**:
-     ```bash
-     gh pr list --state open --json number,title,headRefName,author,labels
-     ```
-   - **GitLab**:
-     ```bash
-     glab mr list --state opened
-     ```
-3. Apply metadata and strict file-level filtering according to [references/filter-criteria.md](references/filter-criteria.md):
-   - Check author, labels, and title for dependency/security patterns.
-   - Inspect changed files for each candidate PR (`gh pr diff <num> --name-only` or `glab mr diff <id> --raw`).
-   - **Exclude immediately** any PR modifying application code, test logic, or general workflows. Only retain changes restricted to package manager manifest and lockfiles.
+### 1.1 Cost-Aware Batch Collection
+Retrieve open PRs/MRs along with files and body in a single query to avoid repetitive platform API calls:
+- **GitHub**:
+  ```bash
+  gh pr list --state open --json number,title,headRefName,author,labels,files,body
+  ```
+- **GitLab**:
+  ```bash
+  glab mr list --state opened
+  ```
 
-Verify: The list of candidate PR/MR numbers and branches is filtered to pure dependency/security updates.
+Save or cache results locally before inspecting details.
+
+### 1.2 File-Level Exclusivity Check
+Filter PRs according to [references/filter-criteria.md](references/filter-criteria.md):
+- Ensure changes are strictly confined to package manager manifests and lockfiles.
+- **Immediately exclude** any PR modifying application code, test logic, CI configurations, or general project files.
+
+### 1.3 Context, Legitimacy & Security Audit
+Audit each remaining candidate against [references/security-and-reputation-check.md](references/security-and-reputation-check.md):
+1. **Context & SemVer Check**: Check version delta (patch, minor, major) and verify past repository context via local git history (e.g. `git log -S "<pkg>"`).
+2. **PR Description & Changelog Review**: Confirm release notes or changelogs are referenced, and check for deprecations or license alterations.
+3. **Security & Supply Chain Audit**:
+   - Check exact package name match (guard against typosquatting).
+   - Check lockfile download URLs to confirm official package registry endpoints (guard against arbitrary git URLs or unvetted hosts).
+   - Confirm security vulnerability alignment (CVE / GHSA patched version matches declared bump).
+
+### 1.4 Safety Halt on Doubts
+If ANY warning signal is detected (typosquatting risk, unknown registry URL, unannounced major breaking change, sudden dependency tree bloat, missing changelog):
+1. **Halt processing immediately** for that PR.
+2. Present a **Safety Halt Report** to the user with specific diff/metadata evidence.
+3. Do not proceed with that PR until explicit user confirmation is received.
+
+Verify: The candidate PRs are filtered, audited for security/legitimacy, and cleared for checkout (or halted pending user review).
 
 ---
 
 ## Step 2: Check Out Branch Using git-worktree
 
-For each candidate PR/MR, isolate the worktree following [`git-worktree`](../git-worktree/SKILL.md):
+For each approved candidate PR/MR, isolate the worktree following [`git-worktree`](../git-worktree/SKILL.md):
 
 1. Fetch the remote branch and latest default branch:
    ```bash
@@ -79,25 +98,28 @@ Verify: The worktree is successfully created, clean, and checked out to the targ
      ```bash
      git push --force-with-lease origin <head-branch>
      ```
-   - Wait for the remote CI checks to trigger.
 
 Verify: The branch contains the latest default branch commits and is pushed cleanly.
 
 ---
 
-## Step 4: CI Verification (Remote and Local)
+## Step 4: Verification & Multi-Repo Scheduling
 
-Follow [references/ci-detection.md](references/ci-detection.md) to dynamically inspect project test/lint commands without assuming fixed toolchains:
+### 4.1 Local-First Verification
+Follow [references/ci-detection.md](references/ci-detection.md) to detect and execute project test/lint commands locally inside the worktree if runtime dependencies are available. Running local checks first prevents triggering unnecessary remote CI pipelines on obvious syntax or lockfile errors.
 
-1. **Local Verification (if feasible)**:
-   - Detect project test commands from `.github/workflows/`, `.gitlab-ci.yml`, `Makefile`, `mise.toml`, `package.json`, etc.
-   - If the required runtime is available locally, run the fast verification commands inside the worktree.
-2. **Remote Verification**:
-   - Check or watch remote CI status:
-     - **GitHub**: `gh pr checks <number> --watch`
-     - **GitLab**: `glab mr view <id>` (inspect pipeline status)
+### 4.2 Remote CI Verification & Idle Wait Handling
+1. Check remote CI status:
+   - **GitHub**: `gh pr checks <number>` (use single query without tight `--watch` polling).
+   - **GitLab**: `glab mr view <id>`
+2. **Idle Wait Switching across Repositories**:
+   - If processing across multiple repositories (or multiple PRs) and a repository enters an idle wait state (waiting for remote CI checks, build completion, or approval):
+     - Follow [references/multi-repo-scheduling.md](references/multi-repo-scheduling.md).
+     - Save the repository's state as `WAITING_CI`.
+     - **Immediately switch focus to the next queued or pending repository** to begin or resume its triage, checkout, or local verification.
+     - Avoid blocking loops; re-check pending CI status only upon transitioning between repository tasks or after an appropriate interval.
 
-Verify: Verification results from both local execution (if applicable) and remote CI are collected and evaluated.
+Verify: Verification results from both local execution and remote CI are evaluated without idle blocking.
 
 ---
 
@@ -154,6 +176,9 @@ Verify: The PR/MR is merged (or queued for auto-merge), and the temporary worktr
 
 ## Guidelines
 
+- **Minimize Total Cost**: Batch API requests upfront, cache candidate metadata locally, prioritize fast local checks over remote CI runs, and avoid tight polling loops.
+- **Safety First on Doubts**: If there is any suspicion regarding package identity, registry URLs, unexpected dependencies, or security advisories, halt and request user confirmation immediately.
+- **No Idle Blocking in Multi-Repo Tasks**: When waiting for CI or user input in one repository, switch to another repository to continue work.
 - **Never Force Without Lease**: Always use `--force-with-lease` when updating rebased remote branches.
 - **Strict Scope Preservation**: If a dependency update requires substantial application logic rewrites beyond minor API signature adjustments, pause and consult the user or hand off to [`refactor`](../refactor/SKILL.md).
 - **No Leftover Worktrees**: Always remove worktrees upon completion or cancellation to avoid disk clutter.

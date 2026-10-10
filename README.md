@@ -30,7 +30,7 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 | [`review-discussion`](skills/review-discussion/SKILL.md) | Guides PR/MR review comments, discussions, and thread resolutions. | Conventional Comments, constructive ethos, actionable replies, resolution ownership rules. |
 | [`edit-paced-execution`](skills/edit-paced-execution/SKILL.md) | Paces execution intervals between file edits with dynamic pauses. | Adaptive thresholds, non-edit tool call tracking, obstacle reporting, user check-in. |
 | [`evidentiary-inquiry`](skills/evidentiary-inquiry/SKILL.md) | Conducts evidence-backed investigations with source scoping and fact verification. | Pre-exploration source scoping, pre-report fact checks, separation of facts and inferences, deductive explanations. |
-| [`resolve-dependency-prs`](skills/resolve-dependency-prs/SKILL.md) | Triages, verifies, remediates, and merges dependency and security PRs/MRs. | Manifest-only filter, worktree isolation, rebase sync, adaptive CI detection, step-gate remediation approval. |
+| [`resolve-dependency-prs`](skills/resolve-dependency-prs/SKILL.md) | Triages, audits, verifies, remediates, and merges dependency and security PRs/MRs. | Manifest filter, cost-aware batching, security/legitimacy audit, safety halt on doubts, idle-wait multi-repo scheduling. |
 
 ## Project Structure
 
@@ -64,7 +64,7 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 │   ├── project-status/
 │   ├── refactor/
 │   ├── resolve-dependency-prs/
-│   │   └── references/          # Manifest filtering & CI detection guides
+│   │   └── references/          # Manifest filtering, security audit, CI & scheduling guides
 │   ├── review-discussion/
 │   │   └── references/          # Comment conventions & resolution rules
 │   ├── scrutinize-plan-execute/
