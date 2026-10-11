@@ -40,6 +40,12 @@ Skills in this repository must be portable across different AI agent platforms (
 When conducting investigations or gathering information using high-cost methods (e.g. APIs, remote queries, heavy execution tools):
 - **Minimize Total Cost**: Strive to minimize overall cost across execution time, local/client resource usage, and server-side resource consumption.
 - **Cache and Reference Locally**: Fetch potentially needed contents or query results up front into a local file or temporary cache via the API, and reference that local file for subsequent analysis rather than repeatedly invoking the high-cost API.
+- **Dynamic Command Caching & Idempotency Evaluation**:
+  - Before executing high-cost or external communication commands, evaluate whether the command is **idempotent and stable** (e.g. finished CI logs, fixed metadata). Do NOT cache time-varying/polling operations, transient failures awaiting retry, or state-mutating actions.
+  - **Time-To-Live (TTL)**: Default cache validity is **5 minutes** from execution, adjustable based on volatility (extended for immutable logs/releases, shortened for mutable lists).
+  - **Filename Specification**: Encode repository path, branch, sanitized command, execution timestamp, and expiration timestamp: `<escaped_repo>__<escaped_branch>__<escaped_cmd>__<executed_at>__<expires_at>.cache`.
+  - **Execution Protocol**: Before running a cacheable command, check for existing non-expired cache entries. If valid, reuse cached output directly (`grep ... cache_file`, `jq ... cache_file`, or pipe where appropriate); if absent or expired, execute the command, refresh the cache, and delete expired entries.
+  - **Lifecycle Cleanup**: Delete associated cache files when branches or worktrees are deleted, or when remote conditions change. Refer to [command-cache-protocol.md](skills/explore-plan-execute/references/command-cache-protocol.md) for detailed workflows.
 
 ### 6. Offline & Self-Contained References (No Autonomous External Access)
 Skills and agent operations in this repository are strictly self-contained and offline-capable:

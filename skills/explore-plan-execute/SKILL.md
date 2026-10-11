@@ -44,7 +44,7 @@ Before writing any code or making any changes, explore the relevant context.
   current state.
 - Check for existing patterns, naming conventions, and abstractions to follow.
 - Identify potential side-effects or impacted areas.
-- **Minimize investigation cost**: When using high-cost exploration methods (e.g. APIs, remote queries, heavy tool executions), minimize total cost across latency, local compute, and server-side resource consumption. Fetch potentially needed content into a local file or temporary cache up front and query the local file for subsequent exploration instead of making repetitive API calls.
+- **Minimize investigation cost**: When using high-cost exploration methods (e.g. APIs, remote queries, heavy tool executions), minimize total cost across latency, local compute, and server-side resource consumption. Fetch potentially needed content into a local file or temporary cache up front and query the local file for subsequent exploration instead of making repetitive API calls. Before executing cacheable commands, evaluate idempotency and follow the caching and TTL protocol in [references/command-cache-protocol.md](references/command-cache-protocol.md).
 - **Evidence-backed inquiry**: If exploration requires diagnosing ambiguous bugs, investigating root causes, or establishing verifiable evidence before planning, adopt the source scoping and fact verification guidelines from [`evidentiary-inquiry`](../evidentiary-inquiry/SKILL.md).
 
 Do **not** modify any files during this step.
@@ -238,4 +238,6 @@ Verify: All success criteria are satisfied. No regressions introduced.
   `assignee`.
 - **Cost-aware exploration.** When using APIs or expensive operations to
   gather context, fetch data once into a local file or cache and reference it
-  locally to minimize latency, local resources, and server-side consumption.
+  locally to minimize latency, local resources, and server-side consumption. Follow
+  [references/command-cache-protocol.md](references/command-cache-protocol.md) for idempotency,
+  TTL, naming, and lifecycle rules.
