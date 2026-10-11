@@ -108,6 +108,7 @@ flowchart TD
     RDP -.->|planning & approval gate| EPE
     RDP -.->|remediation gate pattern| SG
     RDP -.->|complex fix hand-off| RF
+    RDP -.->|thorough mode audit| CR
     CR -.->|comment guidelines| RD
     CR -.->|suggests doc improvements| DR
 

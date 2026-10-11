@@ -11,7 +11,16 @@ description: >-
 
 Triage open dependency update and security patch PRs/MRs, audit their legitimacy and security safety, verify them in isolated worktrees, ensure they are up to date with the default branch, validate through CI, remediate failures under user approval, manage multi-repository pipelines without idle waiting, and safely merge.
 
-This workflow coordinates [`explore-plan-execute`](../explore-plan-execute/SKILL.md) to explore candidates and establish an agreed execution plan before modifying any branches, [`git-worktree`](../git-worktree/SKILL.md) for branch isolation, and [`step-gate`](../step-gate/SKILL.md) for remediation approval gates without duplicating procedures.
+This workflow coordinates [`explore-plan-execute`](../explore-plan-execute/SKILL.md) to explore candidates and establish an agreed execution plan before modifying any branches, [`git-worktree`](../git-worktree/SKILL.md) for branch isolation, and [`step-gate`](../step-gate/SKILL.md) for remediation approval gates without duplicating procedures. In `thorough` mode, it also consults review criteria from [`code-review`](../code-review/SKILL.md) for deep micro/macro audits.
+
+---
+
+## Execution Modes
+
+This skill supports two execution modes:
+
+- **`standard` (Default)**: Standard automated triage, manifest-level security check, rebase, local test/lint, CI verification, and safe merge.
+- **`thorough`**: In-depth micro-level code reviews per candidate (via [`code-review`](../code-review/SKILL.md)), holistic macro reviews of the entire candidate set (detecting transitive conflicts, bundling co-upgrades, optimizing execution order, recommending holds/deprecations), and exhaustive multi-faceted local and environmental verification prior to merge.
 
 ---
 
@@ -22,6 +31,7 @@ This workflow coordinates [`explore-plan-execute`](../explore-plan-execute/SKILL
   - GitHub: `gh` CLI (or `github` MCP server) as described in [`multi-repo-change/references/platform-tools.md`](../multi-repo-change/references/platform-tools.md).
   - GitLab: `glab` CLI (or `gitlab` MCP server) as described in [`multi-repo-change/references/platform-tools.md`](../multi-repo-change/references/platform-tools.md).
 - Follow cost-aware principles (`AGENTS.md` Rule 5): batch API queries, cache candidate state locally, avoid excessive CI polling, and rely strictly on local references and PR descriptions.
+- **Determine Execution Mode**: Check if the user specified `standard` or `thorough`. If unspecified, default to `standard` (or present `thorough` as an option in Step 2).
 - **Explore & Plan First**: Do not jump directly into creating worktrees or checking out branches upon invocation. Adhere to [`explore-plan-execute`](../explore-plan-execute/SKILL.md) by exploring open PRs, auditing requirements, and presenting a concrete triage and resolution plan for user approval before modifying any local branches.
 
 ---
@@ -74,17 +84,28 @@ Verify: The candidate PRs are filtered, audited for security/legitimacy, and cla
 Following [`explore-plan-execute`](../explore-plan-execute/SKILL.md), synthesize the exploration and audit findings into a structured execution plan before checking out branches or altering the repository:
 
 1. **Construct the Resolution Plan**:
+   - **Declare Execution Mode**: State whether running in `standard` or `thorough` mode.
    - **Triage Summary**: Total open PRs, eligible candidates, excluded PRs (with reasons), and any safety halts.
    - **Candidate Breakdown**: For each candidate PR:
      - PR number and package name
      - SemVer delta (patch / minor / major) and type (routine bump vs. security advisory)
      - Estimated risk and required work (e.g., clean merge expected vs. breaking changes / local test run needed)
-   - **Execution Order**: Planned sequence of processing (e.g. security fixes first, patch updates next, minor/major updates last).
+   - **Thorough Mode In-Depth Audit (if mode is `thorough`)**:
+     - Follow [references/thorough-audit-and-verification.md](references/thorough-audit-and-verification.md).
+     - **Micro Code-Review**: Deep review per candidate using [`code-review`](../code-review/SKILL.md) standards (changelogs, breaking changes, deprecations, supply chain security).
+     - **Macro Holistic Review**: Review the collective set of candidate PRs:
+       - Detect peer dependency conflicts or transitive duplication across candidates.
+       - Identify co-upgrade bundling opportunities (e.g. bundling related ecosystem libraries into a single branch/PR).
+       - Optimize execution ordering based on dependency topology.
+       - Identify updates recommended for holding or rejection (e.g. unstable upstream, massive breaking refactors).
+   - **Execution Order**: Planned sequence of processing (e.g. security fixes first, patch updates next, minor/major updates last; or topologically ordered).
    - **Execution Strategy**: Whether processing sequentially or concurrently across repositories using [references/multi-repo-scheduling.md](references/multi-repo-scheduling.md).
 
 2. **Present Plan to the User**:
    ```markdown
    ### Dependency PR Resolution Plan
+
+   **Mode**: standard / thorough
 
    #### Candidate Overview
    | PR # | Package | Version Bump | Type | Risk / Expected Action |
@@ -92,6 +113,10 @@ Following [`explore-plan-execute`](../explore-plan-execute/SKILL.md), synthesize
    | #12 | `foo` | `1.0.1` -> `1.0.2` | Patch (Security) | Low; rebase, run tests, merge |
    | #15 | `bar` | `2.1.0` -> `2.2.0` | Minor | Low; rebase, verify CI |
    | #18 | `baz` | `3.0.0` -> `4.0.0` | Major | High; check breaking changes, run local build |
+
+   #### Holistic Audit & Optimization (Thorough Mode Only)
+   - Co-upgrade Bundling: Recommend bundling PR #15 and PR #16 together.
+   - Hold Recommendations: Hold PR #18 due to breaking API shifts; recommend separate refactor branch.
 
    #### Excluded / Halted PRs
    - PR #10: Excluded (modifies non-manifest files `src/index.ts`)
@@ -155,6 +180,12 @@ Verify: The branch contains the latest default branch commits and is pushed clea
 
 ### 5.1 Local-First Verification
 Follow [references/ci-detection.md](references/ci-detection.md) to detect and execute project test/lint commands locally inside the worktree if runtime dependencies are available. Running local checks first prevents triggering unnecessary remote CI pipelines on obvious syntax or lockfile errors.
+
+In **`thorough` mode**, local tests passing is considered a baseline requirement. Execute exhaustive multi-faceted checks per [references/thorough-audit-and-verification.md](references/thorough-audit-and-verification.md):
+- **Type Checking / Static Analysis**: e.g., `npx tsc --noEmit`, `go vet ./...`, `cargo check`, `mypy .`
+- **Security & Dependency Audit Scans**: e.g., `npm audit`, `cargo audit`, `govulncheck ./...`, `pip-audit`
+- **Lockfile & Tree Integrity**: e.g., `npm ls`, `pnpm doctor`, `go mod verify`
+- **Clean Build Verification**: Purge build caches and verify a complete scratch build (`npm run build`, `cargo build --release`, `go build ./...`)
 
 ### 5.2 Remote CI Verification & Idle Wait Handling
 1. Check remote CI status via single-shot queries (never use streaming or loop-polling commands like `--watch`):
@@ -240,5 +271,7 @@ Verify: The PR/MR is merged (or queued for auto-merge), and the temporary worktr
 - **Safety First on Doubts**: If there is any suspicion regarding package identity, registry URLs, unexpected dependencies, or security advisories, halt and request user confirmation immediately.
 - **No Idle Blocking in Multi-Repo Tasks**: When waiting for CI or user input in one repository, switch to another repository to continue work.
 - **Never Force Without Lease**: Always use `--force-with-lease` when updating rebased remote branches.
+- **Declare Execution Mode Upfront**: Explicitly identify whether running in `standard` or `thorough` mode during plan presentation.
+- **Thorough Mode Holistic Scrutiny**: In `thorough` mode, treat single-PR merges as part of the broader dependency graph: inspect changelogs, audit breaking changes, detect cross-PR peer conflicts, consider bundling co-upgrades, and mandate comprehensive local verification (type checks, audits, clean builds) beyond basic CI.
 - **Strict Scope Preservation**: If a dependency update requires substantial application logic rewrites beyond minor API signature adjustments, pause and consult the user or hand off to [`refactor`](../refactor/SKILL.md).
 - **No Leftover Worktrees**: Always remove worktrees upon completion or cancellation to avoid disk clutter.
