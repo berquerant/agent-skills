@@ -133,10 +133,11 @@ Evaluate whether the task risks long investigation delays, troubleshooting loops
 
 **Propose [`edit-paced-execution`](../edit-paced-execution/SKILL.md) when:**
 - The task requires non-trivial trial-and-error, unfamiliar library exploration, or multi-step debugging before reaching file edits.
+- The task involves executing long-running, heavy, or external commands requiring periodic liveness checks.
 - The user expressed concern about long autonomous pauses or requested regular progress checkpoints.
 
-If applicable, include the proposed pacing thresholds (e.g. 3 minutes or 20 non-edit tool calls) in the plan presented to the user:
-> **Pacing guard**: Recommend [`edit-paced-execution`](../edit-paced-execution/SKILL.md) (threshold: <X minutes / Y non-edit calls>) to halt and check in if progress stalls between file edits.
+If applicable, include the proposed pacing thresholds and command execution mode (`standard`: 3m, `heavy`: 5m, `critical`: 1m, `unmonitored`: 60m) in the plan presented to the user:
+> **Pacing guard**: Recommend [`edit-paced-execution`](../edit-paced-execution/SKILL.md) (threshold: <X minutes / Y non-edit calls>, command mode: `standard` / `heavy` / `critical` / `unmonitored` [check interval: Zm]) to monitor liveness and halt if progress stalls.
 
 Verify: Each step is actionable. Each success criterion is testable.
 Execution mode and any recommended pacing guard are explicitly stated in the plan (or delegated to `scrutinize-plan-execute`).

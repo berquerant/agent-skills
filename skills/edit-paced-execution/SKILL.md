@@ -18,20 +18,26 @@ For reporting templates and threshold heuristics, refer to [references/pace-moni
 
 ## Step 1: Assess Work Complexity and Propose Thresholds
 
-Before beginning task execution, analyze the task requirements and propose pacing thresholds to the user.
+Before beginning task execution, analyze the task requirements and propose pacing thresholds and execution modes to the user.
 
-1. **Establish Baseline Thresholds**:
+1. **Establish Baseline Edit-Pacing Thresholds**:
    - Default: **3 minutes** or **20 non-edit tool calls** (commands, searches, reads, test runs without modifying project files).
-2. **Context-Aware Adjustment**:
-   - Tailor the threshold based on the work scope (see [references/pace-monitoring-guide.md](references/pace-monitoring-guide.md)):
+2. **Determine Task & Command Execution Mode**:
+   - When executing commands or background tasks, determine their execution mode based on duration, retryability, and external volatility:
+     - **`standard`**: Routine tasks; easy & fast to retry (e.g. unit tests, linters). Default check interval: **3 minutes**.
+     - **`heavy`**: Long-running tasks, but cleanly retryable without special conditions (e.g. integration tests, release builds). Default check interval: **5 minutes**.
+     - **`critical`**: Sensitive tasks affected by uncontrollable conditions (network, API limits) or hard to retry (e.g. deployments, remote API batches, migrations). Default check interval: **1 minute**.
+     - **`unmonitored`**: Tasks known in advance to take very long where frequent checks are disruptive (e.g. model training, giant clones). Check interval: **60 minutes or none**.
+3. **Context-Aware Adjustment**:
+   - Tailor thresholds based on work scope (see [references/pace-monitoring-guide.md](references/pace-monitoring-guide.md)):
      - Small/localized edits: 1–2 minutes or 5–10 non-edit tool calls.
      - Standard tasks: 3 minutes or 20 non-edit tool calls.
      - Broad cross-cutting exploration: 4–5 minutes or 25–30 non-edit tool calls.
-3. **Present Proposal**:
-   - Explicitly communicate the proposed limits and rationale before executing actions:
-     > *"For this task, I propose an edit-pacing threshold of X minutes or Y non-edit tool calls between file modifications. If I encounter unexpected delays or exceed this limit, I will pause and report for guidance."*
+4. **Present Proposal**:
+   - Explicitly communicate proposed pacing limits, command execution mode, and rationale before executing actions:
+     > *"For this task, I propose an edit-pacing threshold of X minutes or Y non-edit tool calls. Long-running commands will run in `mode` (check interval: Z minutes). If I encounter unexpected delays, stalls, or exceed limits, I will pause and report for guidance."*
 
-Verify: Pacing thresholds are proposed with clear rationale and acknowledged or adjusted by the user.
+Verify: Pacing thresholds and command execution modes are proposed with clear rationale and acknowledged or adjusted by the user.
 
 ---
 
@@ -47,8 +53,11 @@ Execute the planned task while continuously tracking pace against the agreed thr
 3. **Pace Monitoring**:
    - Maintain awareness of continuous non-edit operations.
    - If an exploratory command or troubleshooting sequence is anticipated to take significant time, evaluate whether an early checkpoint is warranted before running it.
+4. **Command Liveness Tracking**:
+   - For long-running or background commands, check execution progress at the mode's interval (`standard`: 3m, `heavy`: 5m, `critical`: 1m, `unmonitored`: 60m).
+   - Evaluate liveness signals (CPU/memory consumption, file/artifact changes, and log activity).
 
-Verify: Tool execution count and time elapsed since the last file modification are tracked accurately.
+Verify: Tool execution count, time elapsed since the last file modification, and command execution liveness are tracked accurately.
 
 ---
 
@@ -59,17 +68,16 @@ Pause immediately and report to the user if ANY of the following occur before th
 - Elapsed wall-clock time reaches the agreed time threshold.
 - Accumulated non-edit tool calls reach the agreed limit.
 - Investigation stalls in cyclic failure loops (e.g. repeated test failures or dead-end search queries).
+- A monitored command or task appears stalled (0% CPU, no log activity, or frozen artifacts across check intervals).
 - A blocking ambiguity or architectural decision point emerges.
 
 ### Checkpoint Report Procedure:
 1. Stop all further background or exploratory commands.
-2. Structure the report using the template from [references/pace-monitoring-guide.md](references/pace-monitoring-guide.md):
-   - **Current Status**: Actions taken, files examined, findings discovered.
-   - **Reason for Delay**: Specific obstacle, ambiguity, or why the file edit has not yet occurred.
-   - **Options**: 2–3 actionable choices for how to proceed (including recommended path).
-   - **Question**: Direct request for user guidance.
+2. Structure the report using the templates from [references/pace-monitoring-guide.md](references/pace-monitoring-guide.md):
+   - For edit pacing delays, use the **Paced Execution Checkpoint** template (Current Status, Reason for Delay, Options, Question).
+   - For stalled or frozen commands, use the **Command Execution Stall Report** template (Observed Liveness Signals, Diagnostic Assessment, Action Options: Abort vs. Keep Waiting, User Judgment).
 
-Verify: Execution is halted, findings and blocker reasons are clearly articulated, and user judgment is requested without taking further autonomous actions.
+Verify: Execution is halted, findings/signals and blocker reasons are clearly articulated, and user judgment (e.g. abort vs. continue waiting) is requested without taking further autonomous actions.
 
 ---
 
@@ -96,4 +104,5 @@ Verify: The agent acts strictly on the approved option, tracking counters are re
 - **Propose, don't mandate.** Always suggest thresholds adapted to the task at hand rather than rigidly applying static numbers without justification.
 - **Respect file edits as genuine milestones.** Intermediate reading and logging are not completions; progress is marked by concrete, verifiable changes.
 - **Transparent blockers.** When halting, clearly state what was tried and why it failed or slowed down—never hide investigation friction.
+- **Liveness over blind waiting.** Do not wait indefinitely for background commands without checking progress. Observe resource consumption, logs, and artifacts at the mode's interval; report stalled commands proactively and seek user judgment on aborting vs. waiting.
 - **Sequential hand-off.** When large plan restructuring is required upon halting, recommend planning skills (`step-gate` or `explore-plan-execute`) for user approval.
