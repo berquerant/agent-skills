@@ -127,6 +127,16 @@ State the decision in the plan:
 If using `step-gate`, note that Step 5 will follow the step-gate protocol
 (per-step verification + user approval before continuing).
 
+### Propose `checkpoint-log` for Milestone Tracking
+
+Evaluate whether the task benefits from persistent, file-based milestone records.
+
+**Propose [`checkpoint-log`](../checkpoint-log/SKILL.md) when:**
+- The task spans multiple steps, complex debugging, or high-context refactoring where tracking progress and rationale in a local file helps both user visibility and agent context recovery.
+- The user expressed interest in having a persistent local record of execution steps and decisions.
+
+If proposed, ask the user if they wish to record progress via `checkpoint-log` and request their preferred log file path (never assume a default path).
+
 ### Propose `edit-paced-execution` for Extended Tasks
 
 Evaluate whether the task risks long investigation delays, troubleshooting loops, or silent stalls between file modifications.
@@ -140,7 +150,8 @@ If applicable, include the proposed pacing thresholds and command execution mode
 > **Pacing guard**: Recommend [`edit-paced-execution`](../edit-paced-execution/SKILL.md) (threshold: <X minutes / Y non-edit calls>, command mode: `standard` / `heavy` / `critical` / `unmonitored` [check interval: Zm]) to monitor liveness and halt if progress stalls.
 
 Verify: Each step is actionable. Each success criterion is testable.
-Execution mode and any recommended pacing guard are explicitly stated in the plan (or delegated to `scrutinize-plan-execute`).
+Execution mode, any milestone logging proposal, and any recommended pacing guard are explicitly stated in the plan (or delegated to `scrutinize-plan-execute`).
+
 
 ---
 
@@ -188,8 +199,10 @@ Execute the plan step by step with internal verification loops:
 - Run the relevant verification after each meaningful step (tests, linters,
   type-checkers, dry-runs, etc.).
 - Confirm the success criterion for that step is met before continuing.
+- If [`checkpoint-log`](../checkpoint-log/SKILL.md) is enabled, append a checkpoint entry recording actions, verification outcomes, decisions, and next steps to the user-confirmed log file.
 - If a step fails, diagnose the issue and propose a fix — do **not** silently
   skip or work around it.
+
 
 ### Worktree Setup Before Modification
 

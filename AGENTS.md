@@ -69,6 +69,7 @@ flowchart TD
         EPE[explore-plan-execute]
         SPE[scrutinize-plan-execute]
         SG[step-gate]
+        CPL["checkpoint-log<br/>(Milestone log & recovery)"]
         EPE_PACE["edit-paced-execution<br/>(Pacing interval & checkpoint)"]
         GW[git-worktree]
         MRC[multi-repo-change]
@@ -96,8 +97,12 @@ flowchart TD
     EPE -.->|delegates complex risk| SPE
     EPE -.->|proposes pacing guard| EPE_PACE
     SPE -.->|proposes pacing guard| EPE_PACE
+    EPE -.->|proposes milestone logging| CPL
+    SPE -.->|proposes milestone logging| CPL
+    SG -.->|records step milestones| CPL
     EPE -.->|structured evidence inquiry| EI
     SPE -.->|structured evidence inquiry| EI
+
     GW -.->|worktree isolation| EPE
     GW -.->|worktree isolation| SPE
     GW -.->|worktree isolation| MRC

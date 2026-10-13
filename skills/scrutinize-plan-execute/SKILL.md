@@ -139,8 +139,12 @@ Assess if unexpected investigation delays or trial-and-error loops risk stalling
 If appropriate, recommend [`edit-paced-execution`](../edit-paced-execution/SKILL.md) alongside the plan:
 > **Pacing guard**: Recommend [`edit-paced-execution`](../edit-paced-execution/SKILL.md) (threshold: <X minutes / Y non-edit calls>) to halt and consult if file edits are delayed.
 
-### 4. Explicit Execution Permission
+### 4. Milestone Checkpoint Logging (`checkpoint-log`)
+If the task spans complex multi-phase execution or the user wants persistent step-by-step records, propose [`checkpoint-log`](../checkpoint-log/SKILL.md). Always ask the user for their desired log file path (never assume a default path).
+
+### 5. Explicit Execution Permission
 Confirm the user gives explicit approval to proceed with execution.
+
 
 Ask the user:
 > "Are you ready to proceed with executing this plan in <standard/step-gate> mode?"
@@ -168,8 +172,10 @@ Follow the [`step-gate`](../step-gate/SKILL.md) skill protocol:
 Execute the plan step by step with internal verification checks:
 1. Follow the sequenced steps agreed upon in Step 4.
 2. Apply verification checks after each step to ensure expected behavior.
-3. If an unforeseen error or roadblock arises, stop execution, diagnose the
+3. If [`checkpoint-log`](../checkpoint-log/SKILL.md) is enabled, append a checkpoint entry to the user-confirmed log file after each step.
+4. If an unforeseen error or roadblock arises, stop execution, diagnose the
    cause, and consult the user rather than making unilateral assumptions.
+
 
 Verify: All steps of the plan are executed and each step's verification check
 passes under the selected execution mode.

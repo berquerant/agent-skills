@@ -62,8 +62,11 @@ Present the plan in this format:
 ...
 ```
 
+If persistent milestone tracking is desired, propose using [`checkpoint-log`](../checkpoint-log/SKILL.md) to log each step's progress and decisions to a user-confirmed file path.
+
 Verify: Every step has all three elements defined and each completion criterion
 is measurable.
+
 
 ---
 
@@ -94,8 +97,10 @@ For each step in the approved plan, repeat this loop:
    - What was done
    - What the verification showed
    - Whether the completion criterion was met
+   - If [`checkpoint-log`](../checkpoint-log/SKILL.md) is enabled, append the completed step entry to the user-confirmed log file.
 5. **Ask for approval** to continue:
    > "Step N complete. Shall I proceed to Step N+1: `<title>`?"
+
 
 Wait for explicit approval before moving on.
 

@@ -13,8 +13,10 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 | Skill | Description | Key Features |
 |---|---|---|
 | [`explore-plan-execute`](skills/explore-plan-execute/SKILL.md) | Enforces structured workflows on non-trivial tasks. | Read before writing, user approval gate, verification loops. |
+| [`checkpoint-log`](skills/checkpoint-log/SKILL.md) | Records progressive milestone logs and rationale to a user-confirmed local file. | No default paths, append-only step entries, context recovery, decision tracking. |
 | [`code-review`](skills/code-review/SKILL.md) | Inspects code and documentation quality, security, and public release safety. | Default branch diff check, public exposure hazard alerts, severity categorization, read-only audit. |
 | [`refactor`](skills/refactor/SKILL.md) | Safely transforms code and docs without changing behavior. | Baseline tests, pragmatic DRY, code-review integration, mandatory lint/test passing, doc synchronization. |
+
 | [`doc-refactor`](skills/doc-refactor/SKILL.md) | Refines documentation and code comments with zero code mutation. | Information preservation, clarity & logical depth, zero code diff verification, Why-first explanations. |
 | [`diff-continue`](skills/diff-continue/SKILL.md) | Continues work-in-progress git diffs across other files. | Pattern extraction, style preservation, scope detection. |
 | [`git-worktree`](skills/git-worktree/SKILL.md) | Manages git worktrees for parallel branch work. | WORKTREE_ROOT organization, subagent parallelism, cleanup on request. |
@@ -43,8 +45,11 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 ├── skills/
 │   ├── change-message/
 │   │   └── references/          # Commit message & PR/MR description guides
+│   ├── checkpoint-log/
+│   │   └── references/          # Milestone log format & checkpoint templates
 │   ├── code-review/
 │   │   └── references/          # Security checklists & OWASP secure coding guide
+
 │   ├── diff-continue/
 │   ├── doc-refactor/
 │   │   └── references/          # Information inventory & zero-code-diff guide
