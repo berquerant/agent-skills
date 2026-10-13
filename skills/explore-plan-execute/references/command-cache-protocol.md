@@ -2,6 +2,9 @@
 
 Operational protocol for caching high-cost or external communication commands to minimize latency, API limits, and resource consumption across repetitive agent executions.
 
+> [!NOTE] Caching Mechanism Priority
+> If a dedicated caching or memoization skill, tool, or MCP server is available in the current environment, prioritize using it for caching command and tool/MCP execution results. Use this file-based protocol as the standard fallback when no dedicated caching skill, tool, or MCP server is present.
+
 ---
 
 ## 1. Idempotence & Cacheability Evaluation

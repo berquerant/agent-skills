@@ -47,7 +47,7 @@ Execute the investigation focusing on the agreed sources, and verify all facts b
 1. **Targeted Exploration**:
    - Probe the prioritized sources first.
    - Record exact tool commands, file paths, line ranges, and raw tool outputs.
-   - For high-cost or external commands (e.g. CI logs, platform APIs), evaluate idempotency and follow the caching and TTL protocol in [`command-cache-protocol.md`](../explore-plan-execute/references/command-cache-protocol.md) to preserve evidence locally while minimizing repetitive queries.
+   - For high-cost or external commands (e.g. CI logs, platform APIs), evaluate idempotency and prioritize using a dedicated caching or memoization skill, tool, or MCP server if available; otherwise, follow the caching and TTL protocol in [`command-cache-protocol.md`](../explore-plan-execute/references/command-cache-protocol.md) to preserve evidence locally while minimizing repetitive queries.
    - If investigation threatens to become prolonged or stalls, respect interval pacing or consult pacing guidelines.
 2. **Pre-Report Fact-Checking (Self-Verification)**:
    - Before presenting any fact to the user, verify its truth and reproducibility:
