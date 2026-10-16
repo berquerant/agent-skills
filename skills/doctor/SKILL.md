@@ -1,14 +1,7 @@
 ---
 name: doctor
 description: >-
-  Use this skill when the user wants a one-shot checkup of a project (or of its recent
-  changes) that covers missing documentation and weak comments, hard-to-maintain code,
-  latent bugs, and security risks together. Lets the user pick the target (whole project
-  or recent changes) and the depth (quick or thorough), diagnoses with evidence, and
-  produces a prioritized improvement plan that hands off to refactor, doc-refactor,
-  step-gate, or explore-plan-execute after approval. Prefer project-audit for repository
-  hygiene and release readiness, and code-review for reviewing specific files or a
-  given diff.
+  Use this skill to diagnose a project or recent changes across documentation, maintainability, latent bugs, and security risks. Supports project/recent targets and quick/thorough depths, produces an evidence-backed improvement plan, and hands off to mutation skills after approval.
 ---
 
 # Doctor
