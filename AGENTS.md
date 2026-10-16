@@ -33,7 +33,6 @@ Skills in this repository must be portable across different AI agent platforms (
 
 ### 4. File Modification & Git Protocol
 - When adding or editing skills, write changes directly to `skills/<name>/`.
-- `.agents/skills` is a symlink to `skills/` enabling project-local agent discovery. Do not replace it with a regular directory.
 - Verify that markdown files are cleanly formatted and links use relative paths where appropriate.
 
 ### 5. Cost-Aware Investigation & Resource Efficiency

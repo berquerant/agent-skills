@@ -6,7 +6,7 @@ A curated collection of agent skills designed for AI coding assistants (such as 
 
 This repository provides reusable skills that enforce best practices, structured workflows, safe refactoring, thorough code reviews, and project scaffolding.
 
-All skills are maintained under `skills/` and symlinked via `.agents/skills` for seamless workspace discovery.
+All skills are maintained under `skills/`.
 
 ## Included Skills
 
@@ -16,7 +16,6 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 | [`checkpoint-log`](skills/checkpoint-log/SKILL.md) | Records progressive milestone logs and rationale to a user-confirmed local file. | No default paths, append-only step entries, context recovery, decision tracking. |
 | [`code-review`](skills/code-review/SKILL.md) | Inspects code and documentation quality, security, and public release safety. | Default branch diff check, public exposure hazard alerts, severity categorization, read-only audit. |
 | [`refactor`](skills/refactor/SKILL.md) | Safely transforms code and docs without changing behavior. | Baseline tests, pragmatic DRY, code-review integration, mandatory lint/test passing, doc synchronization. |
-
 | [`doc-refactor`](skills/doc-refactor/SKILL.md) | Refines documentation and code comments with zero code mutation. | Information preservation, clarity & logical depth, zero code diff verification, Why-first explanations. |
 | [`diff-continue`](skills/diff-continue/SKILL.md) | Continues work-in-progress git diffs across other files. | Pattern extraction, style preservation, scope detection. |
 | [`git-worktree`](skills/git-worktree/SKILL.md) | Manages git worktrees for parallel branch work. | WORKTREE_ROOT organization, subagent parallelism, cleanup on request. |
@@ -39,10 +38,13 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 
 ```text
 .
-├── .agents/
-│   └── skills -> ../skills/     # Symlink for agent auto-discovery
+├── .github/
+│   ├── dependabot.yml           # Dependabot configuration
+│   └── workflows/
+│       └── lint.yml             # CI lint workflow
 ├── bin/
-│   └── install.sh               # Symlinks skills to a target directory
+│   ├── install.sh               # Symlinks skills to a target directory
+│   └── lint.sh                  # Shellcheck and shfmt runner
 ├── skills/
 │   ├── change-message/
 │   │   └── references/          # Commit message & PR/MR description guides
@@ -50,7 +52,6 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 │   │   └── references/          # Milestone log format & checkpoint templates
 │   ├── code-review/
 │   │   └── references/          # Security checklists & OWASP secure coding guide
-
 │   ├── diff-continue/
 │   ├── doc-refactor/
 │   │   └── references/          # Information inventory & zero-code-diff guide
@@ -61,9 +62,11 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 │   ├── evidentiary-inquiry/
 │   │   └── references/          # Source scoping templates & verification checklist
 │   ├── explore-plan-execute/
+│   │   └── references/          # Command cache protocol guide
 │   ├── git-worktree/
 │   │   └── references/          # Git worktree workflow references
 │   ├── mcp-creator/
+│   │   ├── examples/            # Example server implementations
 │   │   └── references/          # Detailed MCP protocol specs
 │   ├── multi-repo-change/
 │   │   └── references/          # Approval gates, platform tools, safeguards
@@ -80,9 +83,11 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 │   ├── skill-creator/
 │   │   └── references/          # Detailed Agent Skill specs
 │   ├── skill-review/
-│   │   └── references/          # Review checklist, automated checks, report templates
+│   │   ├── references/          # Review checklist, automated checks, report templates
+│   │   └── scripts/             # Automated validation scripts
 │   └── step-gate/
 ├── AGENTS.md                    # Operational guidelines & context for AI agents
+├── .gitignore
 ├── .mise.toml                   # Tool configuration and mise tasks
 └── README.md
 ```
@@ -105,15 +110,19 @@ TARGET_DIR=/path/to/skills mise run install
 ```
 
 The installer displays all planned actions and asks for confirmation (`[Y/n]`) before creating symlinks.
+Note that `ln -sfn` is used:
+- Existing symlinks with the same name in `TARGET_DIR` are overwritten without extra prompts.
+- If an actual directory with the same name exists in `TARGET_DIR`, the symlink is created inside that directory.
 
 ### Project-local usage
-Clone or submodule this repository into your workspace, and ensure `.agents/skills` points to `skills/`:
+To enable project-local skill auto-discovery in AI agent environments expecting skills under `.agents/skills`, create a symlink:
 
 ```bash
-ln -s skills .agents/skills
+mkdir -p .agents
+ln -s ../skills .agents/skills
 ```
 
-AI agents that scan `.agents/skills` will automatically discover and activate these skills when triggered.
+AI agents scanning `.agents/skills` will then discover and activate these skills automatically.
 
 ## Development
 
