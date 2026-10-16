@@ -19,6 +19,8 @@ async def my_tool(x: int, y: int) -> int:
 @mcp.resource("data://{key}")
 async def get_data(key: str) -> str:
     """Return stored content by key."""
+    if key not in data_store:
+        raise ValueError(f"Key not found: {key}")
     return data_store[key]
 
 
