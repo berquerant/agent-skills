@@ -22,6 +22,7 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 | [`git-worktree`](skills/git-worktree/SKILL.md) | Manages git worktrees for parallel branch work. | WORKTREE_ROOT organization, subagent parallelism, cleanup on request. |
 | [`project-status`](skills/project-status/SKILL.md) | Audits the current state of a project. | Git state inspection, file change analysis, test/lint result reporting, pass/fail judgments. |
 | [`project-audit`](skills/project-audit/SKILL.md) | Comprehensive health check, security, public release readiness, and maintainability audit. | Read-only whole-project diagnostics, exposure risk ratings, dynamic commit window, maintainability metrics, hand-off to refactor/step-gate. |
+| [`doctor`](skills/doctor/SKILL.md) | One-shot project checkup across docs/comments, maintainability, latent bugs, and security, ending in a prioritized improvement plan. | Mode selection (project/recent × quick/thorough), evidence-backed findings, reuses code-review/project-audit/evidentiary-inquiry criteria, approval gate, hand-off to refactor/doc-refactor/step-gate. |
 | [`skill-creator`](skills/skill-creator/SKILL.md) | Scaffolds and writes new agent skills. | Frontmatter quality checklist, progressive disclosure, standard directory templates. |
 | [`skill-review`](skills/skill-review/SKILL.md) | Reviews agent skills against the Agent Skills Specification and repository conventions. | Read-only, automated shell checks, six-dimension verdict rules, batch cross-skill summary, hand-off to step-gate/refactor. |
 | [`mcp-creator`](skills/mcp-creator/SKILL.md) | Scaffolds and implements Model Context Protocol (MCP) servers. | Python/TS templates, tool/resource/prompt support, host setup guides. |
@@ -53,6 +54,8 @@ All skills are maintained under `skills/` and symlinked via `.agents/skills` for
 │   ├── diff-continue/
 │   ├── doc-refactor/
 │   │   └── references/          # Information inventory & zero-code-diff guide
+│   ├── doctor/
+│   │   └── references/          # Mode axes, diagnostic axes routing & report template
 │   ├── edit-paced-execution/
 │   │   └── references/          # Pacing thresholds & checkpoint report guide
 │   ├── evidentiary-inquiry/

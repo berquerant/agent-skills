@@ -83,6 +83,7 @@ flowchart TD
         CR["code-review<br/>(Meso diff/PR review & security audit)"]
         RD["review-discussion<br/>(PR/MR comments & thread resolution)"]
         EI["evidentiary-inquiry<br/>(Source scoping, fact verification, logical deductions)"]
+        DOC["doctor<br/>(Mode-selectable checkup: docs, maintainability, bugs, security; diagnoses and plans)"]
     end
 
     subgraph Remediation ["Remediation & Action"]
@@ -128,6 +129,14 @@ flowchart TD
     PA -->|suggests phased fixes| SG
     PA -.->|post-remediation verification| PS
 
+    DOC -->|suggests structural remediation| RF
+    DOC -->|suggests doc remediation| DR
+    DOC -->|suggests phased fixes| SG
+    DOC -.->|applies review & security criteria| CR
+    DOC -.->|applies maintainability metrics| PA
+    DOC -.->|fact verification| EI
+    DOC -->|suggests bug & security fix planning| EPE
+
     CR -.->|shares security checklist| PA
     RF -.->|consults review criteria| CR
 
@@ -141,7 +150,7 @@ flowchart TD
 ```
 
 ### Interoperability Principles
-- **Read-Only vs. Mutation Separation**: Audit and investigation skills (`project-audit`, `project-status`, `code-review`, `skill-review`, `evidentiary-inquiry`) are strictly read-only and never mutate files. When changes are required, they suggest mutation skills (`refactor`, `doc-refactor`, `step-gate`, `diff-continue`).
+- **Read-Only vs. Mutation Separation**: Audit and investigation skills (`project-audit`, `project-status`, `code-review`, `skill-review`, `evidentiary-inquiry`, `doctor`) are strictly read-only and never mutate files. When changes are required, they suggest mutation skills (`refactor`, `doc-refactor`, `step-gate`, `diff-continue`).
 - **Sequential Hand-off (User-in-the-Loop)**: Rather than calling other skills directly in a deep nested chain, skills present findings and recommend the next skill for the user to approve.
 - **Reference Sharing over Duplication**: When audit standards overlap (such as security and public release checklists), skills share references (e.g. `../code-review/references/security-checklist.md`) via relative links instead of duplicating checklist content.
 - **Gate Ownership**: When a skill's guidance or artifact is used inside another workflow, the calling workflow owns the approval gates; avoid introducing duplicate or redundant approval checkpoints.
