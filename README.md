@@ -33,6 +33,7 @@ All skills are maintained under `skills/`.
 | [`edit-paced-execution`](skills/edit-paced-execution/SKILL.md) | Paces execution intervals between file edits with dynamic pauses. | Adaptive thresholds, non-edit tool call tracking, obstacle reporting, user check-in. |
 | [`evidentiary-inquiry`](skills/evidentiary-inquiry/SKILL.md) | Conducts evidence-backed investigations with source scoping and fact verification. | Pre-exploration source scoping, pre-report fact checks, separation of facts and inferences, deductive explanations. |
 | [`resolve-dependency-prs`](skills/resolve-dependency-prs/SKILL.md) | Triages, audits, verifies, remediates, and merges dependency and security PRs/MRs. | Manifest filter, cost-aware batching, security/legitimacy audit, safety halt on doubts, idle-wait multi-repo scheduling. |
+| [`resolve-recent-dependency-prs`](skills/resolve-recent-dependency-prs/SKILL.md) | Coordinates discovery, mode selection, and resolution of dependency/security PRs/MRs across repositories. | Explicit/recent repository discovery, pre-flight duration confirmation, batch and interactive triage modes with defer/skip, sequential hand-off, non-blocking CI switching. |
 
 ## Project Structure
 
@@ -76,6 +77,7 @@ All skills are maintained under `skills/`.
 │   ├── refactor/
 │   ├── resolve-dependency-prs/
 │   │   └── references/          # Manifest filtering, security audit, CI & scheduling guides
+│   ├── resolve-recent-dependency-prs/
 │   ├── review-discussion/
 │   │   └── references/          # Comment conventions & resolution rules
 │   ├── scrutinize-plan-execute/

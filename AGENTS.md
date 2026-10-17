@@ -90,6 +90,7 @@ flowchart TD
         DR["doc-refactor<br/>(Doc & comment refinement, zero code change)"]
         DC[diff-continue]
         RDP["resolve-dependency-prs<br/>(Triage, test & merge deps/security PRs)"]
+        RRDP["resolve-recent-dependency-prs<br/>(Multi-repo discovery & PR triage coordination)"]
     end
 
     %% Workflows & Hand-offs
@@ -110,6 +111,7 @@ flowchart TD
     GW -.->|worktree isolation| RDP
     EPE -.->|message guidelines| CM
     MRC -.->|message guidelines| CM
+    RRDP -->|sequential hand-off| RDP
     RDP -.->|message guidelines| CM
     RDP -.->|planning & approval gate| EPE
     RDP -.->|remediation gate pattern| SG
