@@ -70,13 +70,13 @@ awk '
 echo "--- Check E: Relative & Absolute Links ---"
 find "$SKILL_DIR" -name '*.md' | while read -r f; do
   d=$(dirname "$f")
-  awk '/^[[:space:]]*```/ { code = !code; next } !code' "$f" |
+  awk '/^[[:space:]]*```/ { code = !code; next } !code { gsub(/`[^`]*`/, ""); print }' "$f" |
     grep -o '](\([^)]*\))' | sed 's/^](//; s/)$//; s/#.*//; s/[[:space:]].*//' |
     grep -Ev '^(https?:|mailto:|$)' | while read -r p; do
     [ -e "$d/$p" ] || echo "BROKEN link: $f -> $p"
   done
 done
-grep -rnE '\]\((/|file://)|/Users/|/home/[a-z]|[A-Z]:[/\\]' "$SKILL_DIR" || true
+find "$SKILL_DIR" -name '*.md' ! -name 'automated-checks.md' -exec grep -HnE '\]\((/|file://)|/Users/|/home/[a-z]|[A-Z]:[/\\]' {} + || true
 
 # Check F: Script Permissions
 echo "--- Check F: Script Permissions ---"

@@ -44,6 +44,7 @@ All skills are maintained under `skills/`.
 │   └── workflows/
 │       └── lint.yml             # CI lint workflow
 ├── bin/
+│   ├── check-skills.sh          # Automated quality and consistency checker across skills
 │   ├── install.sh               # Symlinks skills to a target directory
 │   └── lint.sh                  # Shellcheck and shfmt runner
 ├── skills/
@@ -115,9 +116,12 @@ TARGET_DIR=/path/to/skills mise run install
 
 # Alternatively, invoke the script directly
 ./bin/install.sh /path/to/skills
+
+# Skip confirmation prompt for unattended installation
+./bin/install.sh -y /path/to/skills
 ```
 
-The installer displays all planned actions and asks for confirmation (`[Y/n]`) before creating symlinks.
+The installer displays all planned actions and asks for confirmation (`[Y/n]`) before creating symlinks (or skips the prompt when `-y` / `--yes` is specified).
 Note that `ln -sfn` is used:
 - Existing symlinks with the same name in `TARGET_DIR` are overwritten without extra prompts.
 - If an actual directory with the same name exists in `TARGET_DIR`, the symlink is created inside that directory.
@@ -142,6 +146,12 @@ mise install
 
 # Run linter checks (shellcheck & shfmt)
 mise run lint
+
+# Run automated skill review checks across all skills
+mise run check-skills
+
+# Run all checks (lint + check-skills)
+mise run check
 
 # Format shell scripts
 mise run fmt

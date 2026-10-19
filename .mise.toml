@@ -14,6 +14,10 @@ run = "./bin/lint.sh check"
 description = "Format shell scripts with shfmt"
 run = "./bin/lint.sh fmt"
 
+[tasks.check-skills]
+description = "Run automated quality checks across all skills"
+run = "./bin/check-skills.sh"
+
 [tasks.check]
 description = "Run all checks"
-depends = ["lint"]
+depends = ["lint", "check-skills"]

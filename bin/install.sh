@@ -19,6 +19,7 @@ Arguments:
                        If unspecified, prompts interactively.
 
 Options:
+  -y, --yes            Assume yes to confirmation prompt and run non-interactively.
   -h, --help           Show this help message and exit.
 EOF
 }
@@ -35,7 +36,10 @@ run_cmd() {
 confirm_proceed() {
   printf "Proceed with creating links? [Y/n]: " >&2
   local answer
-  read -r answer
+  if ! read -r answer; then
+    log "Aborted (EOF received)."
+    exit 1
+  fi
   case "$answer" in
     [yY][eE][sS] | [yY] | "")
       return 0
@@ -53,19 +57,24 @@ apply_plans() {
   shift 2
   local skills=("$@")
 
-  run_cmd "$dryrun" mkdir -p "$target"
+  run_cmd "$dryrun" mkdir -p -- "$target"
   for skill_path in "${skills[@]}"; do
     local skill_name
     skill_name="$(basename "${skill_path}")"
-    run_cmd "$dryrun" ln -sfn "${skill_path}" "${target}/${skill_name}"
+    run_cmd "$dryrun" ln -sfn -- "${skill_path}" "${target}/${skill_name}"
   done
 }
 
 main() {
   local target=""
+  local assume_yes=0
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
+      -y | --yes)
+        assume_yes=1
+        shift
+        ;;
       -h | --help)
         usage
         exit 0
@@ -130,7 +139,11 @@ main() {
   apply_plans 1 "$target" "${skills[@]}"
 
   # 2. User confirmation
-  confirm_proceed
+  if [ "$assume_yes" -eq 1 ]; then
+    log "Proceeding without confirmation (--yes specified)."
+  else
+    confirm_proceed
+  fi
 
   # 3. Apply actions
   log "Executing:"
