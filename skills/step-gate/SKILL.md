@@ -87,18 +87,21 @@ Verify: The user has explicitly approved the plan (or requested revisions).
 
 For each step in the approved plan, repeat this loop:
 
-1. **Execute** the step as defined in the plan.
-2. **Verify** using the defined verification method.
-3. **Evaluate** against the completion criterion:
-   - ✅ **Pass**: report success to the user.
+1. **Align & Pre-Check (Pre-Execution Alignment)**:
+   - Extract and display the relevant portion of the approved plan/procedure (the `Execute`, `Verify`, and `Done when` criteria for this step) before taking action.
+   - Check whether the current workspace or environment state aligns with the assumptions in the procedure.
+   - If discrepancies or drift (Plan Drift) are detected, stop and adjust the plan or procedure to match reality, confirming revisions with the user before proceeding.
+2. **Execute** the step as defined in the plan.
+3. **Verify** using the defined verification method.
+4. **Evaluate** against the completion criterion:
+   - ✅ **Pass**: proceed to logging and reporting.
    - ❌ **Fail**: stop, diagnose the issue, propose a fix, and ask the user how
      to proceed. Do **not** continue to the next step.
-4. **Report** to the user:
-   - What was done
-   - What the verification showed
-   - Whether the completion criterion was met
+5. **Log & Report**:
+   - Maintain execution history by recording what was done, what verification showed, whether completion criteria were met, and key decisions.
    - If [`checkpoint-log`](../checkpoint-log/SKILL.md) is enabled, append the completed step entry to the user-confirmed log file.
-5. **Ask for approval** to continue:
+   - Present the concise report to the user.
+6. **Ask for approval** to continue:
    > "Step N complete. Shall I proceed to Step N+1: `<title>`?"
 
 
@@ -123,6 +126,8 @@ Verify: All completion criteria from the plan are satisfied.
 ## Guidelines
 
 - **One step at a time.** Never execute the next step without explicit user approval.
+- **Pre-execution alignment.** Always display the relevant plan excerpt and verify alignment against the workspace state before executing each step.
+- **Maintain execution history.** Record step-by-step progress, verification evidence, and rationale throughout execution.
 - **Stop on failure.** Do not silently skip or work around a failed step.
 - **Measurable criteria only.** Completion criteria must be observable, not vague ("looks good").
 - **Prefer reversible actions.** When multiple approaches exist, prefer the one easiest to undo.

@@ -37,7 +37,8 @@ Before including any fact in an investigation report, confirm each item on this 
 
 - [ ] **Exact Output Check**: Did you directly observe the claim in raw tool output or file contents during this session, rather than recalling from general knowledge or assumption?
 - [ ] **Exit Code & Error Silence**: Did the tool command exit successfully (`0`) without hidden errors or truncated outputs?
-- [ ] **Citation Precision**: Is the file path, function/symbol name, and line number cited exact and currently up-to-date in the workspace?
+- [ ] **Citation Precision**: Is the file path (relative to workspace), function/symbol name, line number/range, and commit hash cited exact and currently up-to-date in the workspace?
+- [ ] **Remote URL Verification**: If pointing to a git remote repository, is the permalink URL accurately formed? If operating locally or unpushed, is the local relative path clearly stated?
 - [ ] **Non-Contradiction**: Are there conflicting outputs or opposing data points in other parts of the codebase? If yes, is the discrepancy noted?
 - [ ] **Reproducibility**: If relying on a command output, can the same output be consistently obtained under the same parameters?
 
@@ -59,7 +60,8 @@ Format the final report in Step 4 to ensure clear separation between observation
 > *Note: All items below are verified directly against workspace files and tool outputs.*
 
 1. **<Fact Summary 1>**
-   - **Source / Command**: `git log -n 1` or `path/to/file.ext#L20-L35`
+   - **Source / Commit**: `<commit-hash>` (URL: `<remote-permalink-or-local-relative-path>`)
+   - **Location**: `path/to/file.ext#L20-L35`
    - **Observed Evidence**: `<Snippet or precise output summary showing the fact>`
 2. **<Fact Summary 2>**
    - **Source / Command**: `path/to/config.json#L12`

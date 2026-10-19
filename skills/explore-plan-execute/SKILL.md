@@ -84,6 +84,16 @@ If the task involves modifying files in a git repository:
 - Plan to start work in an isolated worktree created from the latest default branch.
 - Include steps to fetch the latest remote changes (`git fetch origin`), create a new branch from the latest remote default branch (e.g. `origin/main`), and set up the worktree (following [`git-worktree`](../git-worktree/SKILL.md)).
 
+### File Archiving for Long Reports or Reusable Procedures
+
+Evaluate whether the generated report, plan, or procedure is extensive or intended for repeated reference:
+- **Archiving Threshold**:
+  - Investigation reports, technical findings, or architecture analyses exceeding 300 lines.
+  - Detailed procedure manuals, runbooks, or multi-step execution plans intended to be consulted multiple times in subsequent work.
+- **Protocol**:
+  - Do not dump extensive documents directly into the chat buffer to avoid token bloat and context loss. Save them to a local file.
+  - **Confirm file path with user**: Propose a recommended path (e.g., `docs/...` or `<task-dir>/...`) and confirm it explicitly with the user before writing. Never write to arbitrary unconfirmed paths.
+
 ### Decide Whether to Use `scrutinize-plan-execute`
 
 Analyze whether the task requires deep upfront scrutiny, risk evaluation, or interactive refinement before execution.
@@ -96,7 +106,7 @@ Analyze whether the task requires deep upfront scrutiny, risk evaluation, or int
 | Unclear or subjective success criteria | "Improve performance", ambiguous verification logic |
 | High-impact execution obstacles | Potential breaking changes, complex multi-component interactions |
 | Need for deep user consultation | Multiple competing solutions with trade-offs requiring user dialogue |
-| Need for plan or report archiving | Long architecture plans or extensive reports requiring user-approved file archiving |
+| Need for complex plan or report archiving | Long architecture plans requiring interactive trade-off scrutiny alongside file archiving |
 
 If delegating to `scrutinize-plan-execute`, hand off the workflow to [`scrutinize-plan-execute`](../scrutinize-plan-execute/SKILL.md) to complete obstacle scrutiny, user consultation, archiving checks, and execution.
 
@@ -161,6 +171,8 @@ Share the plan with the user before taking any action.
 
 Format the plan clearly (use numbered lists, code spans, or a markdown table as
 appropriate). Highlight the success criteria explicitly.
+
+If the plan, report, or procedure exceeds 300 lines or is intended for repeated reference in subsequent tasks, propose saving it to a local file and confirm the target path with the user before proceeding.
 
 When git commits, remotes, or PRs/MRs are involved, explicitly present the following for confirmation:
 - Commit author `name` and `email` to be used for the commits (if unspecified, ask: "May I reference your global `$HOME/.gitconfig`?")
@@ -250,6 +262,7 @@ Verify: All success criteria are satisfied. No regressions introduced.
   pre-confirm the commit author `name` and `email` (asking if referencing
   `$HOME/.gitconfig` is allowed if unspecified), git `sshCommand`, and MR/PR
   `assignee`.
+- **Archive extensive documents.** Save reports ≥ 300 lines or reusable procedure manuals to a user-confirmed file path instead of dumping them directly into the chat.
 - **Cost-aware exploration.** When using APIs or expensive operations to
   gather context, fetch data once into a local file or cache and reference it
   locally to minimize latency, local resources, and server-side consumption. Prioritize

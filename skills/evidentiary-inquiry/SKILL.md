@@ -53,6 +53,7 @@ Execute the investigation focusing on the agreed sources, and verify all facts b
    - Before presenting any fact to the user, verify its truth and reproducibility:
      - Did the command exit with status 0, or did it fail silently?
      - Does the cited file and line range actually contain the stated code or configuration?
+     - Are commit hashes, workspace-relative paths, and exact line numbers rigorously identified for versioned changes and code locations?
      - Is the observed phenomenon consistently reproducible or a transient side effect?
      - Cross-check against alternative evidence if the finding seems counterintuitive.
    - Discard unverified claims or clearly label them as unconfirmed anomalies.
@@ -85,7 +86,11 @@ Present the structured investigation report to the user with full traceability.
 1. **Structure the Evidentiary Report**:
    - Format the findings using the template from [references/source-scoping-and-verification.md](references/source-scoping-and-verification.md):
      - **Agreed Sources & Scope**: Sources consulted and any sources excluded.
-     - **Verified Facts**: Concrete findings with exact citations (file paths, line numbers, tool commands, output snippets).
+     - **Verified Facts**: Concrete findings with exact citations:
+       - **Commit Hash**: Explicit commit hash (abbreviated or full) for versioned changes.
+       - **Path & Line Numbers**: Workspace-relative file paths with precise line numbers or ranges (e.g. `src/lib.rs:45-52`).
+       - **Target URL**: Corresponding remote repository permalink URL if a remote (e.g. GitHub/GitLab) is configured; state local relative path if unpushed or operating in a local-only environment.
+       - **Outputs**: Exact tool commands and raw output snippets.
      - **Interpretation & Reasoning**: Step-by-step logic bridging facts to conclusions.
      - **Conclusions / Judgments**: Explicit verdict, root cause, or architectural decision.
 2. **Recommend Sequential Handoff**:
@@ -101,6 +106,7 @@ Verify: The report provides complete evidentiary traceability for every finding 
 ## Guidelines
 
 - **Pre-report verification is mandatory.** Never communicate an unconfirmed fact to the user as truth; always verify against tool outputs or file contents first.
+- **Rigorously specify evidence targets.** Always cite exact commit hashes, workspace-relative paths, line numbers, and corresponding remote URLs (where applicable) when referencing code, diffs, or commits.
 - **Strictly honor source exclusions.** While exploration may expand to unpredicted sources if necessary, never consult sources that the user flagged as excessive or off-limits.
 - **Unambiguous demarcation.** Keep "what was observed" (facts) clearly distinct from "what it means" (interpretations and hypotheses) in both internal reasoning and user-facing reports.
 - **Transparent rationale before and after decisions.** Always explain the logical chain of thought leading to a judgment, both when proposing it and after executing it.
