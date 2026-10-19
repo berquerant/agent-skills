@@ -7,6 +7,8 @@ Operational guidelines and conventions for AI agents operating within this repos
 This repository hosts agent skills following the [Agent Skills Specification](skills/skill-creator/references/agent-skills-spec.md).
 Each skill defines clear triggers, procedures, step-by-step verification methods, and guidelines.
 
+Additionally, [`global/AGENTS.md`](global/AGENTS.md) provides portable, general-purpose operational guidelines intended for use in external repositories and global agent environments, distinct from this repository's own development guidelines.
+
 ## Development & Maintenance Rules
 
 ### 1. Skill Directory Conventions

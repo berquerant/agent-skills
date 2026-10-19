@@ -88,11 +88,17 @@ All skills are maintained under `skills/`.
 │   │   ├── references/          # Review checklist, automated checks, report templates
 │   │   └── scripts/             # Automated validation scripts
 │   └── step-gate/
+├── global/
+│   └── AGENTS.md            # Portable/global agent guidelines for external projects
 ├── AGENTS.md                    # Operational guidelines & context for AI agents
 ├── .gitignore
 ├── .mise.toml                   # Tool configuration and mise tasks
 └── README.md
 ```
+
+## Global Agent Guidelines
+
+In addition to modular skills, this repository provides portable, project-agnostic operational guidelines in [`global/AGENTS.md`](global/AGENTS.md). These guidelines define cross-cutting principles (such as unadorned raw string outputs for paths and URLs to ensure seamless copy-pasting) that can be applied to global agent configurations or imported into other repositories.
 
 ## Setup & Usage
 
