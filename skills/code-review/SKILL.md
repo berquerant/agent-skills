@@ -84,7 +84,11 @@ Verify: All findings are categorized by severity levels (Critical, Warnings, Sug
 Present the structured report to the user.
 - If any public exposure or security risk is detected, highlight a clear warning upfront before other findings.
 - When posting feedback as inline review comments or notes on a PR/MR, format and discuss them following [`review-discussion`](../review-discussion/SKILL.md).
-- Provide an executive summary and ask if the user wants to proceed with fixing any of the items (e.g., switching to the [`refactor`](../refactor/SKILL.md) skill, or [`doc-refactor`](../doc-refactor/SKILL.md) for documentation and comment clarifications).
+- Provide an executive summary and recommend sequential hand-off options based on findings:
+  - **For behavior-preserving cleanup & refactoring**: Recommend [`refactor`](../refactor/SKILL.md).
+  - **For pure documentation & comment clarifications**: Recommend [`doc-refactor`](../doc-refactor/SKILL.md).
+  - **For functional fixes, behavioral changes, or feature work**: Recommend [`explore-plan-execute`](../explore-plan-execute/SKILL.md).
+  - **For conducting interactive PR discussions & resolving threads**: Recommend [`review-discussion`](../review-discussion/SKILL.md).
 
 Verify: The report is clear, actionable, alerts on any public release risk, and is non-blocking.
 

@@ -258,6 +258,9 @@ Once remote and local CI checks succeed:
    git worktree remove <worktree-path>
    git branch -D <head-branch>
    ```
+3. Propose follow-up skills (Sequential Hand-off):
+   - **For post-merge working tree verification**: Recommend [`project-status`](../project-status/SKILL.md).
+   - **For generating release notes or summary messages**: Recommend [`change-message`](../change-message/SKILL.md).
 
 Verify: The PR/MR is merged (or queued for auto-merge), and the temporary worktree is completely removed.
 

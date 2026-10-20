@@ -34,6 +34,35 @@ All skills are maintained under `skills/`.
 | [`evidentiary-inquiry`](skills/evidentiary-inquiry/SKILL.md) | Conducts evidence-backed investigations with source scoping and fact verification. | Pre-exploration source scoping, pre-report fact checks, separation of facts and inferences, deductive explanations. |
 | [`resolve-dependency-prs`](skills/resolve-dependency-prs/SKILL.md) | Triages, audits, verifies, remediates, and merges dependency and security PRs/MRs. | Manifest filter, cost-aware batching, security/legitimacy audit, safety halt on doubts, idle-wait multi-repo scheduling. |
 | [`resolve-recent-dependency-prs`](skills/resolve-recent-dependency-prs/SKILL.md) | Coordinates discovery, mode selection, and resolution of dependency/security PRs/MRs across repositories. | Explicit/recent repository discovery, pre-flight duration confirmation, batch and interactive triage modes with defer/skip, sequential hand-off, non-blocking CI switching. |
+| [`skill-router`](skills/skill-router/SKILL.md) | Triages requests, matches intent, and formulates sequential skill execution pipelines. | Read-only analysis, intent matrix mapping, multi-skill pipeline formulation, user approval gate. |
+
+## Skill Selection Matrix
+
+When deciding which skill to activate, consult this goal-oriented matrix:
+
+| Task Goal / User Intent | Recommended Entry Skill | Typical Sequential Pipeline |
+|---|---|---|
+| Ambiguous intent or multi-skill coordination | [`skill-router`](skills/skill-router/SKILL.md) | Triage → Entry skill → Approval |
+| Complex feature, bug fix, or design change | [`explore-plan-execute`](skills/explore-plan-execute/SKILL.md) | `step-gate` (if complex) → `change-message` |
+| High-risk, ambiguous, or irreversible changes | [`scrutinize-plan-execute`](skills/scrutinize-plan-execute/SKILL.md) | `step-gate` → `change-message` |
+| Stepwise incremental execution with gates | [`step-gate`](skills/step-gate/SKILL.md) | `checkpoint-log` → `change-message` |
+| One-shot whole-project health check & plan | [`doctor`](skills/doctor/SKILL.md) | `refactor` / `doc-refactor` / `step-gate` |
+| PR / commit code & security review | [`code-review`](skills/code-review/SKILL.md) | `review-discussion` / `refactor` / `doc-refactor` / `explore-plan-execute` |
+| Macro repository health & maintainability audit | [`project-audit`](skills/project-audit/SKILL.md) | `refactor` / `step-gate` |
+| Working-tree status & diff drift check | [`project-status`](skills/project-status/SKILL.md) | `refactor` / `change-message` |
+| Behavior-preserving code cleanup / DRY | [`refactor`](skills/refactor/SKILL.md) | `project-status` → `change-message` |
+| Pure documentation & comment refinement | [`doc-refactor`](skills/doc-refactor/SKILL.md) | `project-status` → `change-message` |
+| Apply in-progress diff pattern to other files | [`diff-continue`](skills/diff-continue/SKILL.md) | `refactor` → `change-message` |
+| Parallel branch work in isolated worktree | [`git-worktree`](skills/git-worktree/SKILL.md) | `explore-plan-execute` / `multi-repo-change` |
+| Multi-repository synchronized changes | [`multi-repo-change`](skills/multi-repo-change/SKILL.md) | `git-worktree` → `change-message` |
+| Dependency / security PR triage & merge | [`resolve-dependency-prs`](skills/resolve-dependency-prs/SKILL.md) | `project-status` → `change-message` |
+| Cross-repo dependency PR discovery | [`resolve-recent-dependency-prs`](skills/resolve-recent-dependency-prs/SKILL.md) | `resolve-dependency-prs` |
+| Commit message or PR description drafting | [`change-message`](skills/change-message/SKILL.md) | — |
+| Interactive PR review comment resolution | [`review-discussion`](skills/review-discussion/SKILL.md) | `refactor` / `change-message` |
+| Fact-checking & source scoping investigation | [`evidentiary-inquiry`](skills/evidentiary-inquiry/SKILL.md) | `explore-plan-execute` / `refactor` |
+| Scaffold new agent skill | [`skill-creator`](skills/skill-creator/SKILL.md) | `skill-review` |
+| Audit existing agent skills against spec | [`skill-review`](skills/skill-review/SKILL.md) | `step-gate` / `refactor` |
+| Scaffold new Model Context Protocol server | [`mcp-creator`](skills/mcp-creator/SKILL.md) | `explore-plan-execute` |
 
 ## Project Structure
 
@@ -88,6 +117,8 @@ All skills are maintained under `skills/`.
 │   ├── skill-review/
 │   │   ├── references/          # Review checklist, automated checks, report templates
 │   │   └── scripts/             # Automated validation scripts
+│   ├── skill-router/
+│   │   └── references/          # Intent matrix & dispatch routing guides
 │   └── step-gate/
 ├── global/
 │   └── AGENTS.md            # Portable/global agent guidelines for external projects

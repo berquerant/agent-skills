@@ -83,6 +83,18 @@ Verify: All configured lint and test tasks pass completely. Documentation (READM
 
 ---
 
+## Step 6: Hand Off for Verification & Commit
+
+Do not modify files in this step. Recommend follow-up skills to complete the workflow:
+
+- **For post-refactoring status & diff inspection**: Recommend [`project-status`](../project-status/SKILL.md).
+- **For drafting commit messages and PR/MR descriptions**: Recommend [`change-message`](../change-message/SKILL.md).
+- **For thorough code review against security and design standards**: Recommend [`code-review`](../code-review/SKILL.md).
+
+Verify: Clear next steps and recommended follow-up skills are presented to the user without unprompted changes.
+
+---
+
 ## Guidelines
 
 - **Behavior preservation first.** Never change external behavior, contracts, or public APIs during a refactoring task.

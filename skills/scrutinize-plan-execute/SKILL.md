@@ -201,6 +201,12 @@ Evaluate whether the post-execution report is extensive:
     directly to specify their desired file path if they want it saved.
   - If the user provides a path, write the report to that exact file.
 
+### Sequential Hand-off
+Propose appropriate follow-up skills based on the outcome:
+- **For commit messages and PR/MR descriptions**: Recommend [`change-message`](../change-message/SKILL.md).
+- **For post-execution state and diff verification**: Recommend [`project-status`](../project-status/SKILL.md).
+- **For full quality and security audit of changes**: Recommend [`code-review`](../code-review/SKILL.md).
+
 Verify: The user receives the full completion report, and if requested, the
 report is saved to the user-specified file path.
 

@@ -61,6 +61,10 @@ Skills in this repository follow a **loosely coupled, sequential hand-off archit
 
 ```mermaid
 flowchart TD
+    subgraph Routing ["Routing & Dispatch"]
+        SRTR["skill-router<br/>(Intent triage & pipeline routing)"]
+    end
+
     subgraph Meta ["Meta & Skill Creation"]
         SC[skill-creator]
         SR["skill-review<br/>(Read-only skill audit)"]
@@ -96,6 +100,14 @@ flowchart TD
     end
 
     %% Workflows & Hand-offs
+    SRTR -.->|routes ambiguous/complex intent| EPE
+    SRTR -.->|routes high-risk intent| SPE
+    SRTR -.->|routes health check| DOC
+    SRTR -.->|routes code review| CR
+    SRTR -.->|routes multi-repo dep triage| RRDP
+    SRTR -.->|routes single-repo dep triage| RDP
+    SRTR -.->|routes multi-repo coordination| MRC
+
     EPE -->|sequential hand-off| SG
     SPE -->|sequential hand-off| SG
     EPE -.->|delegates complex risk| SPE
@@ -153,7 +165,8 @@ flowchart TD
 ```
 
 ### Interoperability Principles
-- **Read-Only vs. Mutation Separation**: Audit and investigation skills (`project-audit`, `project-status`, `code-review`, `skill-review`, `evidentiary-inquiry`, `doctor`) are strictly read-only and never mutate files. When changes are required, they suggest mutation skills (`refactor`, `doc-refactor`, `step-gate`, `diff-continue`).
+- **Intent-Driven Dispatch & Pipeline Routing**: For ambiguous, broad, or multi-skill goals, `skill-router` acts as a read-only entrypoint dispatcher to analyze context, map user intent, and present an explicit sequential pipeline for user sign-off before executing any skill.
+- **Read-Only vs. Mutation Separation**: Audit and investigation skills (`project-audit`, `project-status`, `code-review`, `skill-review`, `evidentiary-inquiry`, `doctor`, `skill-router`) are strictly read-only and never mutate files. When changes are required, they suggest mutation skills (`refactor`, `doc-refactor`, `step-gate`, `diff-continue`).
 - **Sequential Hand-off (User-in-the-Loop)**: Rather than calling other skills directly in a deep nested chain, skills present findings and recommend the next skill for the user to approve.
 - **Reference Sharing over Duplication**: When audit standards overlap (such as security and public release checklists), skills share references (e.g. `../code-review/references/security-checklist.md`) via relative links instead of duplicating checklist content.
 - **Gate Ownership**: When a skill's guidance or artifact is used inside another workflow, the calling workflow owns the approval gates; avoid introducing duplicate or redundant approval checkpoints.

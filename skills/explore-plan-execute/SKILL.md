@@ -236,6 +236,10 @@ At the end:
 - Verify **all** success criteria from the plan.
 - Report the outcome to the user, including any deviations from the original
   plan and why they were made.
+- Propose appropriate follow-up skills (Sequential Hand-off):
+  - **For drafting commit messages and PR/MR descriptions**: Recommend [`change-message`](../change-message/SKILL.md).
+  - **For inspecting post-execution working tree and git drift**: Recommend [`project-status`](../project-status/SKILL.md).
+  - **For conducting a comprehensive diff review**: Recommend [`code-review`](../code-review/SKILL.md).
 
 Verify: All success criteria are satisfied. No regressions introduced.
 

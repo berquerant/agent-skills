@@ -118,6 +118,10 @@ After all steps are complete, report:
 - A summary of all steps completed.
 - Any deviations from the original plan and the reasons.
 - The overall outcome.
+- Propose appropriate follow-up skills (Sequential Hand-off):
+  - **For crafting commit messages and PR/MR descriptions**: Recommend [`change-message`](../change-message/SKILL.md).
+  - **For inspecting post-execution working tree state and diff drift**: Recommend [`project-status`](../project-status/SKILL.md).
+  - **For comprehensive quality and security audit of the final diff**: Recommend [`code-review`](../code-review/SKILL.md).
 
 Verify: All completion criteria from the plan are satisfied.
 

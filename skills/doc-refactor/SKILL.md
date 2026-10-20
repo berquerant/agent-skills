@@ -97,6 +97,10 @@ Perform a final audit against the information conservation checklist before conc
      - Files updated.
      - Key structural improvements made.
      - Confirmation of zero code mutation and complete information preservation.
+3. **Sequential Hand-off**:
+   - Recommend follow-up skills to finalize the task:
+     - **For post-edit working tree inspection**: Recommend [`project-status`](../project-status/SKILL.md).
+     - **For commit message and PR description preparation**: Recommend [`change-message`](../change-message/SKILL.md).
 
 Verify: All items in the information conservation checklist pass, and the report is presented to the user.
 
