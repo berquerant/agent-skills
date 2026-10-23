@@ -91,7 +91,7 @@ For each step in the approved plan, repeat this loop:
    - Extract and display the relevant portion of the approved plan/procedure (the `Execute`, `Verify`, and `Done when` criteria for this step) before taking action.
    - Check whether the current workspace or environment state aligns with the assumptions in the procedure.
    - If discrepancies or drift (Plan Drift) are detected, stop and adjust the plan or procedure to match reality, confirming revisions with the user before proceeding.
-2. **Execute** the step as defined in the plan.
+2. **Execute** the step as defined in the plan. When running complex, chained, or long commands (≥4 operators, ≥120 characters, or ≥3 lines), adhere to [`command-snippet`](../command-snippet/SKILL.md) by saving and running from a documented snippet file with explicit CLI arguments.
 3. **Verify** using the defined verification method.
 4. **Evaluate** against the completion criterion:
    - ✅ **Pass**: proceed to logging and reporting.
@@ -135,4 +135,5 @@ Verify: All completion criteria from the plan are satisfied.
 - **Stop on failure.** Do not silently skip or work around a failed step.
 - **Measurable criteria only.** Completion criteria must be observable, not vague ("looks good").
 - **Prefer reversible actions.** When multiple approaches exist, prefer the one easiest to undo.
+- **Avoid long inline commands.** Follow [`command-snippet`](../command-snippet/SKILL.md) to convert long (≥120 chars), chained (≥4 operators), or multi-line (≥3 lines) commands into documented snippet files with explicit CLI arguments.
 - **No implicit continuation.** Even if the user seems in a hurry, always ask before proceeding.

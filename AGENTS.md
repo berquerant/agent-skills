@@ -80,6 +80,8 @@ flowchart TD
         GW[git-worktree]
         MRC[multi-repo-change]
         CM["change-message<br/>(Commit & PR/MR messages)"]
+        CS["command-snippet<br/>(Command script & parameterization)"]
+        OP["output-presentation<br/>(Unadorned copy-paste formatting)"]
     end
 
     subgraph Audit ["Audit & Verification - Read-Only"]
@@ -125,6 +127,8 @@ flowchart TD
     GW -.->|worktree isolation| RDP
     EPE -.->|message guidelines| CM
     MRC -.->|message guidelines| CM
+    EPE -.->|complex command scripts| CS
+    SG -.->|complex command scripts| CS
     RRDP -->|sequential hand-off| RDP
     RDP -.->|message guidelines| CM
     RDP -.->|planning & approval gate| EPE

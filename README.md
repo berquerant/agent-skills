@@ -35,6 +35,8 @@ All skills are maintained under `skills/`.
 | [`resolve-dependency-prs`](skills/resolve-dependency-prs/SKILL.md) | Triages, audits, verifies, remediates, and merges dependency and security PRs/MRs. | Manifest filter, cost-aware batching, security/legitimacy audit, safety halt on doubts, idle-wait multi-repo scheduling. |
 | [`resolve-recent-dependency-prs`](skills/resolve-recent-dependency-prs/SKILL.md) | Coordinates discovery, mode selection, and resolution of dependency/security PRs/MRs across repositories. | Explicit/recent repository discovery, pre-flight duration confirmation, batch and interactive triage modes with defer/skip, sequential hand-off, non-blocking CI switching. |
 | [`skill-router`](skills/skill-router/SKILL.md) | Triages requests, matches intent, and formulates sequential skill execution pipelines. | Read-only analysis, intent matrix mapping, multi-skill pipeline formulation, user approval gate. |
+| [`command-snippet`](skills/command-snippet/SKILL.md) | Converts complex, chained, or long commands into documented snippet files before execution. | Avoidance thresholds, reusability evaluation, CLI argument parameterization over env vars, header documentation. |
+| [`output-presentation`](skills/output-presentation/SKILL.md) | Formats file paths, workspace targets, and URLs as plain raw strings without Markdown decorations. | Raw strings for seamless copy-pasting, no Markdown links or enclosing backticks, pre-flight verification. |
 
 ## Skill Selection Matrix
 
@@ -63,6 +65,8 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 | Scaffold new agent skill | [`skill-creator`](skills/skill-creator/SKILL.md) | `skill-review` |
 | Audit existing agent skills against spec | [`skill-review`](skills/skill-review/SKILL.md) | `step-gate` / `refactor` |
 | Scaffold new Model Context Protocol server | [`mcp-creator`](skills/mcp-creator/SKILL.md) | `explore-plan-execute` |
+| Convert long or complex command to snippet | [`command-snippet`](skills/command-snippet/SKILL.md) | `step-gate` / `explore-plan-execute` |
+| Format output paths & URLs for clean copy-paste | [`output-presentation`](skills/output-presentation/SKILL.md) | — |
 
 ## Project Structure
 
@@ -83,6 +87,7 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │   │   └── references/          # Milestone log format & checkpoint templates
 │   ├── code-review/
 │   │   └── references/          # Security checklists & OWASP secure coding guide
+│   ├── command-snippet/
 │   ├── diff-continue/
 │   ├── doc-refactor/
 │   │   └── references/          # Information inventory & zero-code-diff guide
@@ -101,6 +106,7 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │   │   └── references/          # Detailed MCP protocol specs
 │   ├── multi-repo-change/
 │   │   └── references/          # Approval gates, platform tools, safeguards
+│   ├── output-presentation/
 │   ├── project-audit/
 │   │   └── references/          # Maintainability & debt metrics
 │   ├── project-status/

@@ -223,6 +223,12 @@ When modifying files in a git repository:
 - Create a new branch from the latest remote default branch and set up an isolated worktree (following [`git-worktree`](../git-worktree/SKILL.md)).
 - Switch to the newly created worktree directory and begin all file modifications there to keep the primary working tree clean.
 
+### Command Execution & Snippet Protocol
+
+When executing shell commands during exploration or execution:
+- Avoid executing long, chained, or complex inline commands that are difficult for users to inspect (≥4 chained operators, ≥120 characters, or ≥3 lines).
+- Follow [`command-snippet`](../command-snippet/SKILL.md) to save the command logic into a dedicated snippet file with explicit CLI arguments (avoiding environment variables) and a header documentation comment.
+
 ### Safeguards for Git Commits, Remotes, and PRs/MRs
 
 When execution involves modifying git history or remote hosting:
@@ -267,6 +273,7 @@ Verify: All success criteria are satisfied. No regressions introduced.
   `$HOME/.gitconfig` is allowed if unspecified), git `sshCommand`, and MR/PR
   `assignee`.
 - **Archive extensive documents.** Save reports ≥ 300 lines or reusable procedure manuals to a user-confirmed file path instead of dumping them directly into the chat.
+- **Avoid long inline commands.** Follow [`command-snippet`](../command-snippet/SKILL.md) to convert long (≥120 chars), chained (≥4 operators), or multi-line (≥3 lines) commands into documented snippet files with explicit CLI arguments instead of environment variables.
 - **Cost-aware exploration.** When using APIs or expensive operations to
   gather context, fetch data once into a local file or cache and reference it
   locally to minimize latency, local resources, and server-side consumption. Prioritize
