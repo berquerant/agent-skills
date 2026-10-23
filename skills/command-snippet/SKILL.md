@@ -2,8 +2,9 @@
 name: command-snippet
 description: >-
   Use this skill when executing complex, chained, or multi-line shell commands
-  to convert them into structured, documented, and parameterized snippet files
-  instead of executing long inline commands.
+  to convert them into structured, documented, and parameterized snippet files,
+  review them for intelligibility via snippet-review, and explain their intent to
+  the user before execution instead of executing long inline commands.
 ---
 
 # Command Snippet
@@ -12,6 +13,10 @@ Use this skill to convert long, chained, or complex shell commands into
 dedicated, documented, and parameterized snippet files before execution.
 Directly running long inline commands reduces readability and makes inspecting,
 debugging, and verifying execution difficult for users.
+
+This workflow coordinates [`snippet-review`](../snippet-review/SKILL.md) to audit
+the cognitive intelligibility of every generated snippet and mandate explaining its
+intent and side-effects to the user before execution.
 
 ---
 
@@ -101,7 +106,29 @@ purpose, arguments, usage, and prerequisites.
 
 ---
 
-## Step 5: Save, Execute, and Verify
+## Step 5: Audit Intelligibility & Explain Intent to User
+
+Before executing any snippet, evaluate its cognitive intelligibility and ensure the user understands its operation:
+
+1. **Intelligibility Audit**:
+   - Audit the snippet using [`snippet-review`](../snippet-review/SKILL.md) against its four-tier rubric (Transparent, Moderate, Complex, Opaque).
+   - If the snippet is rated **Level 3 (Complex)** or **Level 4 (Opaque)**:
+     - Attempt to simplify the logic (inline single-use functions, remove dense regex, linearize control flow, add Why comments).
+     - If simplification is not feasible, open the **User Consultation Gate** per [`snippet-review`](../snippet-review/SKILL.md) and present the three options:
+       1. Split into smaller, sequential steps
+       2. Proceed as-is under explicit user acknowledgment
+       3. Abandon the snippet and switch to an alternative method
+2. **Pre-Execution Explanation**:
+   - Once the snippet is verified as intelligible (Level 1/2 or user-approved Level 3/4), explain its execution parameters clearly to the user in the conversation before running:
+     - **Purpose**: What the script does and why it was created.
+     - **Arguments**: Positional or flag arguments being passed and their meanings.
+     - **Side-Effects**: What files, directories, processes, or remote resources are affected.
+
+Verify: The snippet's intelligibility is audited, any high complexity is simplified or consulted on, and its purpose and side-effects are communicated to the user.
+
+---
+
+## Step 6: Save, Execute, and Verify
 
 1. **Save Snippet File**:
    - Write the script to the determined path. Ensure file permissions allow
@@ -116,7 +143,7 @@ Verify: The snippet executed cleanly and satisfied the intended operation.
 
 ---
 
-## Step 6: Post-Execution Lifecycle Management
+## Step 7: Post-Execution Lifecycle Management
 
 Based on the reusability decision from Step 2:
 
@@ -138,5 +165,9 @@ in their designated locations.
   variables to pass input to snippets; use explicit CLI arguments instead.
 - **Document upfront.** Every snippet must include a clear documentation header
   explaining purpose, arguments, and usage.
+- **Audit intelligibility before execution.** Every snippet must undergo review
+  via [`snippet-review`](../snippet-review/SKILL.md) regardless of line count.
+- **Explain intent before running.** Always present the purpose, arguments, and
+  side-effects to the user before executing the snippet.
 - **Keep snippets focused.** A snippet should accomplish a coherent task, making
   it easy for users to read and understand.

@@ -28,7 +28,8 @@ This reference provides the intent classification criteria, recommended entry sk
 | **Creating New Skills** | "Create a new agent skill", "Add a skill for XYZ" | `skill-creator` | `skill-review` |
 | **Auditing Skills** | "Review this skill against specs", "Check skills consistency" | `skill-review` | `step-gate` / `refactor` |
 | **Creating MCP Servers** | "Build an MCP server", "Scaffold MCP tools" | `mcp-creator` | `explore-plan-execute` |
-| **Command Scripting & Snippet Parameterization** | "Save command as script", "Format complex command into snippet", "Parameterize command" | `command-snippet` | `step-gate` / `explore-plan-execute` |
+| **Command Scripting & Snippet Parameterization** | "Save command as script", "Format complex command into snippet", "Parameterize command" | `command-snippet` | `snippet-review` → `step-gate` / `explore-plan-execute` |
+| **Snippet Intelligibility & Complexity Review** | "Audit this snippet", "Is this script too complex?", "Check snippet readability" | `snippet-review` | `command-snippet` |
 | **Output String & Copy-Paste Presentation** | "Format output as raw string", "Make paths/URLs copy-pasteable without markdown" | `output-presentation` | — |
 
 ---

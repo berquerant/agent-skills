@@ -91,6 +91,7 @@ flowchart TD
         RD["review-discussion<br/>(PR/MR comments & thread resolution)"]
         EI["evidentiary-inquiry<br/>(Source scoping, fact verification, logical deductions)"]
         DOC["doctor<br/>(Mode-selectable checkup: docs, maintainability, bugs, security; diagnoses and plans)"]
+        SNR["snippet-review<br/>(Ad-hoc snippet intelligibility & complexity audit)"]
     end
 
     subgraph Remediation ["Remediation & Action"]
@@ -109,6 +110,7 @@ flowchart TD
     SRTR -.->|routes multi-repo dep triage| RRDP
     SRTR -.->|routes single-repo dep triage| RDP
     SRTR -.->|routes multi-repo coordination| MRC
+    SRTR -.->|routes snippet review| SNR
 
     EPE -->|sequential hand-off| SG
     SPE -->|sequential hand-off| SG
@@ -129,6 +131,9 @@ flowchart TD
     MRC -.->|message guidelines| CM
     EPE -.->|complex command scripts| CS
     SG -.->|complex command scripts| CS
+    CS -.->|audits snippet intelligibility| SNR
+    SNR -.->|suggests simplification| CS
+    CR -.->|shares review criteria| SNR
     RRDP -->|sequential hand-off| RDP
     RDP -.->|message guidelines| CM
     RDP -.->|planning & approval gate| EPE
@@ -171,7 +176,7 @@ flowchart TD
 
 ### Interoperability Principles
 - **Intent-Driven Dispatch & Pipeline Routing**: For ambiguous, broad, or multi-skill goals, `skill-router` acts as a read-only entrypoint dispatcher to analyze context, map user intent, and present an explicit sequential pipeline for user sign-off before executing any skill.
-- **Read-Only vs. Mutation Separation**: Audit and investigation skills (`project-audit`, `project-status`, `code-review`, `skill-review`, `evidentiary-inquiry`, `doctor`, `skill-router`) are strictly read-only and never mutate files. When changes are required, they suggest mutation skills (`refactor`, `doc-refactor`, `step-gate`, `diff-continue`).
+- **Read-Only vs. Mutation Separation**: Audit and investigation skills (`project-audit`, `project-status`, `code-review`, `skill-review`, `evidentiary-inquiry`, `doctor`, `snippet-review`, `skill-router`) are strictly read-only and never mutate files. When changes are required, they suggest mutation skills (`refactor`, `doc-refactor`, `step-gate`, `diff-continue`).
 - **Sequential Hand-off (User-in-the-Loop)**: Rather than calling other skills directly in a deep nested chain, skills present findings and recommend the next skill for the user to approve.
 - **Reference Sharing over Duplication**: When audit standards overlap (such as security and public release checklists), skills share references (e.g. `../code-review/references/security-checklist.md`) via relative links instead of duplicating checklist content.
 - **Gate Ownership**: When a skill's guidance or artifact is used inside another workflow, the calling workflow owns the approval gates; avoid introducing duplicate or redundant approval checkpoints.
