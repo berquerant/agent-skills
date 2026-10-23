@@ -53,6 +53,8 @@ Evaluate candidate snippets across five primary dimensions:
 - *Impact*: Any asynchronous or parallel execution inherently obscures execution order and error propagation, elevating complexity.
 
 ### Metric 5: Language-Specific & Shell Idiosyncrasies
+- **Inline Interpreter Scripts (`-c`, `-e`, inline code strings)**:
+  Executing interpreter code inline (e.g., `python -c "..."`, `node -e "..."`, `bash -c "..."`, `ruby -e "..."`) when the code payload is ≥ 50 characters, contains module imports, multiple statements, or loops/conditionals. These obscure code logic inside string quotes and must be extracted into a dedicated script file.
 - **Obscure Parameter Expansion**: e.g., `${var//pat/repl}`, `${var#*:}`, `${!ref*}` without explanation.
 - **Deep Pipelines**: Chaining 3 or more pipes (`cmd1 | cmd2 | cmd3 | cmd4`).
 - **Dynamic Evaluation**: `eval`, `source` / `.`, dynamically generated code execution.

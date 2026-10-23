@@ -40,7 +40,7 @@ Inspect the snippet against the five evaluation dimensions in [references/intell
 4. **Asynchrony & Concurrency**:
    - Detect background processes (`&`), subshell parallelism, async constructs, or custom signal traps.
 5. **Language & Shell Idiosyncrasies**:
-   - Check for deep pipelines (≥3 pipes), `eval`, process substitution (`<()`), or dense, uncommented regex patterns (`sed`, `awk`, `perl`).
+   - Check for deep pipelines (≥3 pipes), `eval`, process substitution (`<()`), dense/uncommented regex patterns (`sed`, `awk`, `perl`), or inline interpreter scripts (`python -c`, `node -e`, `bash -c`, etc. with ≥50 chars, imports, or multi-statement payloads) that should be saved as dedicated files.
 
 Verify: All five structural metrics are measured and recorded for the candidate snippet.
 
@@ -52,7 +52,7 @@ Score the snippet using the Four-Tier Rubric in [references/intelligibility-rubr
 
 - **Level 1 (Transparent)**: Simple, linear command flow (≤ 10 SLOC, no custom functions, ≤ 1 pipe, trivial branching).
 - **Level 2 (Moderate)**: Clear logic with minor branching or a simple loop (11–20 SLOC, explicit comments, cleanly documented inputs).
-- **Level 3 (Complex)**: Multiple functions, nested branches, dense regex, subshells, or ≥ 21 SLOC. Hard to verify at a glance.
+- **Level 3 (Complex)**: Multiple functions, nested branches, dense regex, subshells, unextracted inline interpreter scripts, or ≥ 21 SLOC. Hard to verify at a glance.
 - **Level 4 (Opaque / Critical)**: Deep pipelines, `eval`, concurrency/async background tasks, nesting depth ≥ 3, or high-risk destructive commands.
 
 Verify: The snippet is assigned an explicit rating (Level 1, Level 2, Level 3, or Level 4) with documented evidence.
@@ -66,11 +66,8 @@ Determine the workflow path based on the tier assigned in Step 2:
 ### Path A: Low Complexity (Level 1 or Level 2)
 The snippet is sufficiently intelligible for execution.
 1. Ensure all non-obvious blocks contain concise "Why" comments.
-2. Formulate a **Pre-Execution Explanation** containing:
-   - **Purpose**: What the script accomplishes.
-   - **Arguments**: What values are passed and their roles.
-   - **Side-Effects**: What files, directories, or processes are affected.
-3. Proceed directly to presenting the explanation to the user before running.
+2. Formulate the mandatory **Pre-Execution Notice** block (`### 📋 Snippet Pre-Execution Notice`) detailing Script Path, Invocation, Purpose, Parameters & Arguments, and Expected Side-Effects & Safety per [`command-snippet`](../command-snippet/SKILL.md).
+3. Proceed directly to presenting the notice block to the user before running.
 
 ### Path B: High Complexity (Level 3 or Level 4)
 The snippet requires intervention to prevent black-box execution:
@@ -113,5 +110,5 @@ Verify: The intelligibility evaluation report is communicated clearly to the use
 - **Zero Black-Box Execution**: Never execute ad-hoc snippets without auditing how understandable they are to human reviewers.
 - **Universal Application**: Apply this review to all generated execution snippets, regardless of line count.
 - **Prioritize Simplification over Consultation**: Always attempt to refactor and simplify complex snippets first before escalating to the user consultation gate.
-- **Explain Intent Before Execution**: Every snippet execution must be preceded by a clear summary of purpose, inputs, and side-effects.
+- **Mandatory Pre-Execution Notice Block**: Every snippet execution must be preceded by the explicit, structured Pre-Execution Notice block (`### 📋 Snippet Pre-Execution Notice`) detailing purpose, parameters, and side-effects.
 - **Three-Choice Consultation**: When high complexity is unavoidable, always offer the user the choice to split, proceed as-is, or adopt an alternative approach.

@@ -20,17 +20,28 @@ intent and side-effects to the user before execution.
 
 ---
 
-## Step 1: Detect Long or Complex Commands
+## Step 1: Detect Long, Complex, or Inline Interpreter Commands
 
 Inspect the intended command against the avoidance thresholds:
 
 - **Chained commands**: 4 or more commands chained with operators such as `;`,
   `&&`, `||`, or `|`.
-- **Character length**: 120 characters or longer.
+- **Character length**: 120 characters or longer. This count evaluates the entire
+  command line, including all flags, options, and quoted payload strings.
 - **Line count**: 3 or more lines (multi-line commands).
+- **Inline interpreter scripts (`-c`, `-e`, inline code payloads)**:
+  Any command invoking a language interpreter or shell (`python`, `python3`,
+  `node`, `ruby`, `perl`, `bash -c`, `sh -c`, `awk`, `sed`, etc.) that embeds an
+  inline script string matching ANY of the following conditions:
+  - **Payload length**: The inline script string itself is **50 characters or longer**.
+  - **Multiple statements**: Contains multiple statements (separated by `;` or newlines).
+  - **Module imports**: Contains `import ...`, `from ... import`, or `require(...)`.
+  - **Control flow**: Uses loops (`for`, `while`), comprehensions, or conditionals (`if`, `elif`, `else`).
+  - **Escaped quotes / string nesting**: Requires escaped quotes (`\"`, `\'`) or complex string nesting.
 
 If the command meets any of these criteria, **do not execute it inline**. Halt
-inline execution and proceed to create a snippet file.
+inline execution and proceed to create a snippet file with the appropriate extension
+(e.g., `.sh`, `.py`, `.js`).
 
 Verify: You have checked the command against all avoidance thresholds and confirmed
 that it requires snippet creation.
@@ -118,13 +129,26 @@ Before executing any snippet, evaluate its cognitive intelligibility and ensure 
        1. Split into smaller, sequential steps
        2. Proceed as-is under explicit user acknowledgment
        3. Abandon the snippet and switch to an alternative method
-2. **Pre-Execution Explanation**:
-   - Once the snippet is verified as intelligible (Level 1/2 or user-approved Level 3/4), explain its execution parameters clearly to the user in the conversation before running:
-     - **Purpose**: What the script does and why it was created.
-     - **Arguments**: Positional or flag arguments being passed and their meanings.
-     - **Side-Effects**: What files, directories, processes, or remote resources are affected.
+2. **Mandatory Pre-Execution Notice**:
+   - Once the snippet is verified as intelligible (Level 1/2 or user-approved Level 3/4), do NOT casually run the command. Output an explicit, prominent notice block in the conversation immediately before invoking the execution tool:
 
-Verify: The snippet's intelligibility is audited, any high complexity is simplified or consulted on, and its purpose and side-effects are communicated to the user.
+   ```markdown
+   ### 📋 Snippet Pre-Execution Notice
+
+   - **Script Path**: <raw unadorned snippet path>
+   - **Invocation**: `<interpreter> <script-path> [arguments...]`
+   - **Purpose**: <Clear, concrete explanation of what the script does and why a snippet was necessary>
+   - **Parameters & Arguments**:
+     - `$1` (or `<flag>`): `<value>` — <what this parameter represents>
+   - **Expected Side-Effects & Safety**:
+     - **Filesystem**: <files created, edited, deleted, or "Read-only (no filesystem changes)">
+     - **Environment / Network**: <network calls, environment changes, or "None">
+     - **Reversibility**: <Reversible / Non-destructive / Irreversible>
+   ```
+
+   - Informal, single-sentence mentions (e.g., "Running script now to check files.") are strictly prohibited. The structured notice must be presented clearly.
+
+Verify: The snippet's intelligibility is audited, any high complexity is simplified or consulted on, and the mandatory Pre-Execution Notice is output before execution.
 
 ---
 
@@ -159,15 +183,17 @@ in their designated locations.
 
 ## Guidelines
 
-- **Never run complex one-liners.** Always adhere to the avoidance thresholds (≥4
-  operators, ≥120 characters, ≥3 lines).
+- **Never run complex one-liners or inline scripts.** Adhere strictly to the
+  avoidance thresholds (≥4 operators, ≥120 characters, ≥3 lines, or inline
+  interpreter scripts `-c`/`-e` with ≥50 chars, imports, multiple statements, or control flow).
 - **Explicit arguments over environment variables.** Never use environment
   variables to pass input to snippets; use explicit CLI arguments instead.
 - **Document upfront.** Every snippet must include a clear documentation header
   explaining purpose, arguments, and usage.
 - **Audit intelligibility before execution.** Every snippet must undergo review
   via [`snippet-review`](../snippet-review/SKILL.md) regardless of line count.
-- **Explain intent before running.** Always present the purpose, arguments, and
-  side-effects to the user before executing the snippet.
+- **Always output the Pre-Execution Notice.** Never execute snippets silently or
+  with casual one-line chat messages. Always output the structured Pre-Execution
+  Notice block before invoking the execution tool.
 - **Keep snippets focused.** A snippet should accomplish a coherent task, making
   it easy for users to read and understand.
