@@ -48,4 +48,35 @@ Before running detected verification commands locally:
    ```
 2. **Decision Matrix**:
    - **Tool Available & Fast**: Execute locally in the worktree. Fast-fails save round-trip time and CI quota.
-   - **Tool Missing / Heavy Containerized Pipeline**: Do **NOT** attempt to install dependencies or force local emulation. Push the branch and delegate verification directly to the remote CI pipeline (`gh pr checks --watch` or `glab mr view`).
+   - **Tool Missing / Heavy Containerized Pipeline**: Do **NOT** attempt to install dependencies or force local emulation. Push the branch and delegate verification directly to the remote CI pipeline via single-shot queries (`gh pr checks <id>` or `glab mr view <id>`).
+
+---
+
+## 4. Post-Merge Default Branch CI Inspection
+
+After merging a candidate PR into the default branch, the default branch CI must be identified and verified before proceeding to the next candidate PR or concluding:
+
+### GitHub Actions
+1. Confirm the PR has finalized merging (especially if `--auto` was queued), then retrieve the merge commit SHA:
+   ```bash
+   # Ensure PR is merged, then retrieve the merge commit SHA
+   MERGE_SHA=$(gh pr view <number> --json state,mergeCommit --jq 'select(.state=="MERGED") | .mergeCommit.oid' 2>/dev/null || git rev-parse origin/<default-branch>)
+   ```
+2. Query the workflow run triggered on the default branch for that merge commit:
+   ```bash
+   gh run list --branch <default-branch> --commit "$MERGE_SHA" --limit 1 --json databaseId,status,conclusion,name
+   ```
+3. For single-shot status checks:
+   ```bash
+   gh run view <run-id>
+   ```
+
+### GitLab CI
+1. Retrieve the latest pipeline on the default branch following the merge commit:
+   ```bash
+   glab ci status --branch <default-branch>
+   ```
+2. Check pipeline details via single-shot view:
+   ```bash
+   glab ci view --branch <default-branch>
+   ```

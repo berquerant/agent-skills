@@ -30,7 +30,9 @@ This skill supports two execution modes:
 - A supported platform tool is authenticated:
   - GitHub: `gh` CLI (or `github` MCP server) as described in [`multi-repo-change/references/platform-tools.md`](../multi-repo-change/references/platform-tools.md).
   - GitLab: `glab` CLI (or `gitlab` MCP server) as described in [`multi-repo-change/references/platform-tools.md`](../multi-repo-change/references/platform-tools.md).
-- Follow cost-aware principles (`AGENTS.md` Rule 5): batch API queries, cache candidate state locally, avoid excessive CI polling, and rely strictly on local references and PR descriptions.
+- Follow cost-aware principles (`AGENTS.md` Rule 5 and [`command-cache-protocol.md`](../explore-plan-execute/references/command-cache-protocol.md)): batch API queries, cache candidate state locally (leveraging `cache-memoizer` if available), avoid excessive CI polling, and rely strictly on local references and PR descriptions.
+- **Confirm API Rate Limit & Cost Tracking**:
+  External API interactions (`gh`, `glab`, REST APIs) must respect a rate-limit interval to prevent hitting secondary rate limits or 429 errors. The recommended default is **10 seconds per call**. Because this 10-second interval is an example default, explicitly confirm with the user during Step 2 planning what rate limit interval is appropriate for their environment, and treat external API calls as a tracked cost metric.
 - **Determine Execution Mode**: Check if the user specified `standard` or `thorough`. If unspecified, default to `standard` (or present `thorough` as an option in Step 2).
 - **Explore & Plan First**: Do not jump directly into creating worktrees or checking out branches upon invocation. Adhere to [`explore-plan-execute`](../explore-plan-execute/SKILL.md) by exploring open PRs, auditing requirements, and presenting a concrete triage and resolution plan for user approval before modifying any local branches.
 
@@ -99,13 +101,18 @@ Following [`explore-plan-execute`](../explore-plan-execute/SKILL.md), synthesize
        - Optimize execution ordering based on dependency topology.
        - Identify updates recommended for holding or rejection (e.g. unstable upstream, massive breaking refactors).
    - **Execution Order**: Planned sequence of processing (e.g. security fixes first, patch updates next, minor/major updates last; or topologically ordered).
-   - **Execution Strategy**: Whether processing sequentially or concurrently across repositories using [references/multi-repo-scheduling.md](references/multi-repo-scheduling.md).
+   - **Execution Strategy & API Cost Budget**:
+     - State whether processing sequentially or concurrently across repositories using [references/multi-repo-scheduling.md](references/multi-repo-scheduling.md).
+     - **External API Rate Limit & Cost**: Propose the external API rate-limit interval (recommended default: 10 seconds per call) and estimate total remote API calls (batch collection, CI checks, merges, default branch CI checks). Ask the user to confirm or adjust the rate limit.
+     - **Default Branch CI Stability Gate**: Confirm that for single repositories with multiple PRs, each PR merge will be held until the default branch CI passes before rebasing and proceeding to the next candidate PR.
 
 2. **Present Plan to the User**:
    ```markdown
    ### Dependency PR Resolution Plan
 
    **Mode**: standard / thorough
+   **API Rate Limit**: 10 seconds / call (default; please adjust if needed)
+   **Estimated API Calls**: ~<X> calls (~<X*10>s API time)
 
    #### Candidate Overview
    | PR # | Package | Version Bump | Type | Risk / Expected Action |
@@ -122,12 +129,12 @@ Following [`explore-plan-execute`](../explore-plan-execute/SKILL.md), synthesize
    - PR #10: Excluded (modifies non-manifest files `src/index.ts`)
    - PR #14: Halted (typosquatting concern or unverified registry URL)
 
-   #### Proposed Execution Order
-   1. PR #12 (`foo`): Security patch
-   2. PR #15 (`bar`): Minor bump
-   3. PR #18 (`baz`): Major bump
+   #### Proposed Execution Order & Gating
+   1. PR #12 (`foo`): Security patch -> Merge -> **Wait Default Branch CI Pass**
+   2. PR #15 (`bar`): Minor bump (rebase onto updated default branch) -> Merge -> **Wait Default Branch CI Pass**
+   3. PR #18 (`baz`): Major bump (rebase onto updated default branch) -> Merge -> **Wait Default Branch CI Pass**
 
-   May I proceed with this resolution plan?
+   May I proceed with this resolution plan and the proposed 10-second API rate limit?
    ```
 
 3. **Await Explicit User Confirmation**:
@@ -202,11 +209,11 @@ In **`thorough` mode**, local tests passing is considered a baseline requirement
      glab mr view <id>
      ```
 2. **Idle Wait Switching across Repositories**:
-   - If processing across multiple repositories (or multiple PRs) and a repository enters an idle wait state (waiting for remote CI checks, build completion, or approval):
+   - If processing across multiple repositories (or multiple PRs) and a repository enters an idle wait state (waiting for remote PR CI checks, build completion, or approval):
      - Follow [references/multi-repo-scheduling.md](references/multi-repo-scheduling.md).
-     - Save the repository's state as `WAITING_CI`.
+     - Save the repository's state as `WAITING_PR_CI`.
      - **Immediately switch focus to the next queued or pending repository** to begin or resume its triage, checkout, or local verification.
-     - Avoid blocking loops (e.g. `while true; do ...; sleep 10; done`); re-check pending CI status only upon transitioning between repository tasks or after an appropriate interval.
+     - Avoid blocking loops (e.g. `while true; do ...; sleep 10; done`); re-check pending CI status only upon transitioning between repository tasks or after the agreed rate-limit cooldown has elapsed.
 
 Verify: Verification results from both local execution and remote CI are evaluated without idle blocking.
 
@@ -240,39 +247,70 @@ Verify: The user has approved the remediation plan before any file modifications
 
 ---
 
-## Step 7: Merge and Clean Up
+## Step 7: Merge, Verify Default Branch CI, and Clean Up
 
 Once remote and local CI checks succeed:
 
-1. Merge the PR/MR:
+### 7.1 Merge the PR/MR
+Merge the PR/MR adhering to the agreed API rate limit (cooldown check):
+- **GitHub**:
+  ```bash
+  gh pr merge <number> --auto --squash # or --merge / --rebase per repository rule
+  ```
+- **GitLab**:
+  ```bash
+  glab mr merge <id> --auto-merge
+  ```
+
+### 7.2 Post-Merge Default Branch CI Verification Gate
+Before proceeding to the next candidate PR in the same repository or concluding the workflow, verify that the default branch CI triggered by the merge commit passes:
+
+1. Identify the default branch CI run triggered by the merge commit per [references/ci-detection.md](references/ci-detection.md):
    - **GitHub**:
      ```bash
-     gh pr merge <number> --auto --squash # or --merge / --rebase per repository rule
+     # Retrieve merge commit SHA and inspect the triggered workflow run
+     MERGE_SHA=$(gh pr view <number> --json mergeCommit --jq .mergeCommit.oid 2>/dev/null || git rev-parse origin/<default-branch>)
+     gh run list --branch <default-branch> --commit "$MERGE_SHA" --limit 1
      ```
    - **GitLab**:
      ```bash
-     glab mr merge <id> --auto-merge
+     glab ci status --branch <default-branch>
      ```
-2. Clean up the worktree following [`git-worktree`](../git-worktree/SKILL.md):
-   ```bash
-   git worktree remove <worktree-path>
-   git branch -D <head-branch>
-   ```
-3. Propose follow-up skills (Sequential Hand-off):
-   - **For post-merge working tree verification**: Recommend [`project-status`](../project-status/SKILL.md).
-   - **For generating release notes or summary messages**: Recommend [`change-message`](../change-message/SKILL.md).
+2. **Idle Wait Handling**:
+   - While the default branch CI is running (`WAITING_DEFAULT_CI`), do NOT block in a loop.
+   - If processing across multiple repositories, immediately switch focus to another repository per [references/multi-repo-scheduling.md](references/multi-repo-scheduling.md).
+3. **Verify Pass**:
+   - Check the run status using single-shot commands after an appropriate interval.
+   - Once the default branch CI succeeds:
+     - If more candidate PRs remain in this repository: rebase the next candidate PR onto this new default branch commit and proceed to Step 4.
+     - If all approved candidate PRs in this repository are resolved: proceed to cleanup.
+4. **Safety Halt on Default Branch Failure**:
+   - If default branch CI fails, freeze all further PR merges immediately.
+   - Present a Safety Halt Incident Report to the user with failure logs, and offer remediation options (e.g., revert the merge commit via `git revert <merge-sha>`, or create an immediate patch).
 
-Verify: The PR/MR is merged (or queued for auto-merge), and the temporary worktree is completely removed.
+### 7.3 Clean Up Worktree
+Clean up the worktree following [`git-worktree`](../git-worktree/SKILL.md):
+```bash
+git worktree remove <worktree-path>
+git branch -D <head-branch>
+```
+
+### 7.4 Follow-Up Skills (Sequential Hand-off)
+- **For post-merge working tree verification**: Recommend [`project-status`](../project-status/SKILL.md).
+- **For generating release notes or summary messages**: Recommend [`change-message`](../change-message/SKILL.md).
+
+Verify: The PR/MR is merged, default branch CI is verified green, and the temporary worktree is completely removed.
 
 ---
 
 ## Guidelines
 
 - **Explore & Plan First**: Never jump directly into branch checkouts or modifications. Always triage open PRs, formulate an explicit resolution plan with candidate breakdown and execution order, and obtain user confirmation first.
-
+- **External API Rate Limit & Cost Tracking**: Always confirm the API rate limit with the user during planning (default recommended: 10s per call). Treat API requests as billable costs, track total calls, and use cooldowns to execute zero-API local operations.
+- **Post-Merge Default Branch CI Stability**: In any single repository, multiple PRs must be processed strictly sequentially. Never advance to the next candidate PR until the default branch CI triggered by the prior merge commit passes. Halt immediately if default branch CI breaks.
 - **Minimize Total Cost**: Batch API requests upfront (`gh pr list --json ... > prs.json`), cache candidate metadata locally, inspect details locally rather than querying remote APIs per PR, prioritize fast local checks over remote CI runs, and strictly avoid tight polling loops (`--watch` or sleep loops).
 - **Safety First on Doubts**: If there is any suspicion regarding package identity, registry URLs, unexpected dependencies, or security advisories, halt and request user confirmation immediately.
-- **No Idle Blocking in Multi-Repo Tasks**: When waiting for CI or user input in one repository, switch to another repository to continue work.
+- **No Idle Blocking in Multi-Repo Tasks**: When waiting for CI (either PR CI or post-merge default branch CI) or user input in one repository, switch to another repository immediately to continue work.
 - **Never Force Without Lease**: Always use `--force-with-lease` when updating rebased remote branches.
 - **Declare Execution Mode Upfront**: Explicitly identify whether running in `standard` or `thorough` mode during plan presentation.
 - **Thorough Mode Holistic Scrutiny**: In `thorough` mode, treat single-PR merges as part of the broader dependency graph: inspect changelogs, audit breaking changes, detect cross-PR peer conflicts, consider bundling co-upgrades, and mandate comprehensive local verification (type checks, audits, clean builds) beyond basic CI.

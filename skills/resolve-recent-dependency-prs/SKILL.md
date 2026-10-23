@@ -128,16 +128,18 @@ For each repository to be processed:
    Following the Sequential Hand-off principle, present the repository's triage plan and request explicit user confirmation before initiating file modifications or branch checkouts.
 2. **Execute via `resolve-dependency-prs`**:
    Upon user approval, switch working directory to the repository and carry out the [`resolve-dependency-prs`](../resolve-dependency-prs/SKILL.md) workflow:
+   - Respect the user-confirmed API rate limit (recommended default: 10s per call) and account for API call costs.
    - Filter changes to package manifests and lockfiles.
    - Run context, legitimacy, and security audits.
    - Create isolated worktrees via `git-worktree`.
    - Rebase onto default branch and run local tests/linters.
    - Validate remote CI checks and merge safely.
+   - Ensure the default branch CI triggered by the merge passes before advancing to subsequent candidate PRs in the same repository.
 3. **Idle-Wait Switching (Non-Blocking Progress)**:
-   - If remote CI pipelines are running, do NOT block in active sleep or polling loops.
-   - Record the current repository's status as `WAITING_CI`.
+   - When remote CI pipelines are running (either PR branch CI `WAITING_PR_CI` or post-merge default branch CI `WAITING_DEFAULT_CI`), do NOT block in active sleep or polling loops.
+   - Follow [`multi-repo-scheduling.md`](../resolve-dependency-prs/references/multi-repo-scheduling.md) to manage repository state transitions and context switching.
    - **Immediately switch focus** to the next pending repository (or a previously held repository) to perform discovery, local audit, or testing.
-   - Re-check pending CI status only when transitioning between repository checkpoints.
+   - Re-check pending CI status only when transitioning between repository checkpoints and after the agreed rate limit cooldown has elapsed.
 
 Verify: Each repository is processed through [`resolve-dependency-prs`](../resolve-dependency-prs/SKILL.md) under user approval, and idle CI waits are interleaved productively.
 
@@ -157,9 +159,10 @@ Verify: Each repository is processed through [`resolve-dependency-prs`](../resol
    If approved, process them following **Step 4**.
 2. **Consolidated Summary Report**:
    Present an end-to-end outcome report covering all target repositories:
-   - **Merged PRs/MRs**: Repository, PR/MR number, package name, version delta.
+   - **Merged PRs/MRs**: Repository, PR/MR number, package name, version delta, and confirmation of default branch CI pass.
    - **Skipped / Halted PRs/MRs**: Any PRs excluded due to non-manifest changes, breaking changes, or user request.
    - **Pending Status**: Any items still awaiting external reviews or lengthy CI pipelines.
+   - **API Cost Summary**: Total remote API calls executed, effective rate-limit cooldown, and estimated API time.
    - **Cleanup**: Confirm all temporary worktrees were cleanly removed.
 
 Verify: All held repositories have been addressed or explicitly acknowledged, and a comprehensive summary report is delivered.
@@ -170,7 +173,8 @@ Verify: All held repositories have been addressed or explicitly acknowledged, an
 
 - **Sequential Hand-Off over Hard Coupling**: Do not invoke sibling skills as non-interactive automated subroutines. Always present findings, formulate a concrete plan, and obtain explicit user approval before delegating execution to [`resolve-dependency-prs`](../resolve-dependency-prs/SKILL.md).
 - **Respect User-Specified Scope**: When explicit repository paths or URLs are provided, strictly honor the input and bypass time-window restrictions. Audit all open PRs/MRs for those repositories.
-- **Pre-Flight Duration Confirmation**: When discovering repositories automatically via platform activity, always confirm or adjust the scan window with the user before querying.
+- **Pre-Flight Duration & Rate Limit Confirmation**: When discovering repositories automatically via platform activity, always confirm the scan window with the user. Always confirm the API rate limit interval (default: 10s/call) and track API costs.
 - **Platform-Agnostic Workflows**: Keep core instructions portable across platforms (GitHub, GitLab) and avoid tying workflows to proprietary tools. Provide platform commands (`gh`, `glab`) as non-exclusive examples.
-- **Never Idle-Wait on Remote CI**: When a repository is waiting for remote CI completion or approvals, switch to another candidate repository immediately to ensure continuous forward progress.
+- **Never Idle-Wait on Remote CI**: When a repository is waiting for remote CI completion (PR CI or default branch CI), switch to another candidate repository immediately to ensure continuous forward progress.
+- **Enforce Default Branch Stability**: Ensure default branch CI is green after each merge before allowing subsequent PRs in the same repository to proceed.
 - **Clear Decision Semantics in Interactive Mode**: Adhere strictly to the three triage states (`start` executes and advances; `defer` postpones and reminds at the end; `skip` drops the repository completely).
