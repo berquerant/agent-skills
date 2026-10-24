@@ -14,8 +14,8 @@ Unless project-specific instructions dictate otherwise, agents must adhere to th
 
 ## 2. Command Execution & Scripting
 
-- **Avoid Long Inline Commands & Audit Snippets**:
-  AI agents must not execute long, overly complex, or multi-line commands directly inline in the shell. When commands reach avoidance thresholds (chained operators, high character count, or multiple lines), follow the **`command-snippet`** skill to save, parameterize (via explicit CLI arguments instead of environment variables), and document them in snippet files before execution. Every generated snippet must be audited for intelligibility via **`snippet-review`**, and its purpose, arguments, and side-effects must be explained to the user before running.
+- **Read Snippet Skills Before Command Execution**:
+  Before running non-trivial shell commands, AI agents must read and follow the **`command-snippet`** and **`snippet-review`** skills to save, parameterize, audit, and explain immutable snippet files instead of executing inline scripts.
 
 ---
 
