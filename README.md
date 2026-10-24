@@ -82,7 +82,7 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │       └── lint.yml             # CI lint workflow
 ├── bin/
 │   ├── check-skills.sh          # Automated quality and consistency checker across skills
-│   ├── install.sh               # Symlinks skills to a target directory
+│   ├── install.sh               # Copies skills to a target directory
 │   └── lint.sh                  # Shellcheck and shfmt runner
 ├── skills/
 │   ├── change-message/
@@ -150,7 +150,7 @@ In addition to modular skills, this repository provides portable, project-agnost
 
 ### Installing Skills into a Target Directory
 
-Use `mise run install` or `bin/install.sh` to create symbolic links pointing to each skill in your target directory:
+Use `mise run install` or `bin/install.sh` to copy each skill directory into your target directory:
 
 ```bash
 # Interactive prompt if target directory is not specified
@@ -166,10 +166,8 @@ TARGET_DIR=/path/to/skills mise run install
 ./bin/install.sh -y /path/to/skills
 ```
 
-The installer displays all planned actions and asks for confirmation (`[Y/n]`) before creating symlinks (or skips the prompt when `-y` / `--yes` is specified).
-Note that `ln -sfn` is used:
-- Existing symlinks with the same name in `TARGET_DIR` are overwritten without extra prompts.
-- If an actual directory with the same name exists in `TARGET_DIR`, the symlink is created inside that directory.
+The installer displays all planned actions and asks for confirmation (`[Y/n]`) before copying skills (or skips the prompt when `-y` / `--yes` is specified).
+Existing skills or symlinks with the same name in `TARGET_DIR` are cleanly removed and replaced.
 
 ### Project-local usage
 To enable project-local skill auto-discovery in AI agent environments expecting skills under `.agents/skills`, create a symlink:

@@ -9,12 +9,12 @@ usage() {
   cat <<'EOF' >&2
 Usage: bin/install.sh [OPTIONS] [TARGET_DIR]
 
-Installs agent skills from this repository by creating symbolic links
-in TARGET_DIR pointing to each skill directory.
+Installs agent skills from this repository by copying each skill directory
+into TARGET_DIR.
 Displays the planned actions and requests confirmation before applying.
 
 Arguments:
-  TARGET_DIR           Target directory to install skill symlinks.
+  TARGET_DIR           Target directory to install skills.
                        Can also be specified via TARGET_DIR environment variable.
                        If unspecified, prompts interactively.
 
@@ -34,7 +34,7 @@ run_cmd() {
 }
 
 confirm_proceed() {
-  printf "Proceed with creating links? [Y/n]: " >&2
+  printf "Proceed with copying skills? [Y/n]: " >&2
   local answer
   if ! read -r answer; then
     log "Aborted (EOF received)."
@@ -59,9 +59,13 @@ apply_plans() {
 
   run_cmd "$dryrun" mkdir -p -- "$target"
   for skill_path in "${skills[@]}"; do
-    local skill_name
+    local skill_name dest
     skill_name="$(basename "${skill_path}")"
-    run_cmd "$dryrun" ln -sfn -- "${skill_path}" "${target}/${skill_name}"
+    dest="${target}/${skill_name}"
+    if [ -e "${dest}" ] || [ -L "${dest}" ]; then
+      run_cmd "$dryrun" rm -rf -- "${dest}"
+    fi
+    run_cmd "$dryrun" cp -R -- "${skill_path}" "${dest}"
   done
 }
 
