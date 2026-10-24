@@ -82,6 +82,7 @@ flowchart TD
         CM["change-message<br/>(Commit & PR/MR messages)"]
         CS["command-snippet<br/>(Command script & parameterization)"]
         OP["output-presentation<br/>(Unadorned copy-paste formatting)"]
+        TDP["task-dependency-pipeline<br/>(DAG modeling & cooperative idle-wait scheduler)"]
     end
 
     subgraph Audit ["Audit & Verification - Read-Only"]
@@ -111,9 +112,12 @@ flowchart TD
     SRTR -.->|routes single-repo dep triage| RDP
     SRTR -.->|routes multi-repo coordination| MRC
     SRTR -.->|routes snippet review| SNR
+    SRTR -.->|routes task dependency & wait interleaving| TDP
 
     EPE -->|sequential hand-off| SG
     SPE -->|sequential hand-off| SG
+    EPE -.->|proposes DAG scheduling| TDP
+    TDP -->|sequential hand-off| SG
     EPE -.->|delegates complex risk| SPE
     EPE -.->|proposes pacing guard| EPE_PACE
     SPE -.->|proposes pacing guard| EPE_PACE
@@ -138,6 +142,7 @@ flowchart TD
     RDP -.->|message guidelines| CM
     RDP -.->|planning & approval gate| EPE
     RDP -.->|remediation gate pattern| SG
+    RDP -.->|cooperative scheduling model| TDP
     RDP -.->|complex fix hand-off| RF
     RDP -.->|thorough mode audit| CR
     RDP -.->|post-merge verification| PS

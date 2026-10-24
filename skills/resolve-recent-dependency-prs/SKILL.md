@@ -137,7 +137,7 @@ For each repository to be processed:
    - Ensure the default branch CI triggered by the merge passes before advancing to subsequent candidate PRs in the same repository.
 3. **Idle-Wait Switching (Non-Blocking Progress)**:
    - When remote CI pipelines are running (either PR branch CI `WAITING_PR_CI` or post-merge default branch CI `WAITING_DEFAULT_CI`), do NOT block in active sleep or polling loops.
-   - Follow [`multi-repo-scheduling.md`](../resolve-dependency-prs/references/multi-repo-scheduling.md) to manage repository state transitions and context switching.
+   - Follow [`multi-repo-scheduling.md`](../resolve-dependency-prs/references/multi-repo-scheduling.md) and [`task-dependency-pipeline`](../task-dependency-pipeline/SKILL.md) to manage repository state transitions and cooperative context switching.
    - **Immediately switch focus** to the next pending repository (or a previously held repository) to perform discovery, local audit, or testing.
    - Re-check pending CI status only when transitioning between repository checkpoints and after the agreed rate limit cooldown has elapsed.
 

@@ -110,6 +110,21 @@ Analyze whether the task requires deep upfront scrutiny, risk evaluation, or int
 
 If delegating to `scrutinize-plan-execute`, hand off the workflow to [`scrutinize-plan-execute`](../scrutinize-plan-execute/SKILL.md) to complete obstacle scrutiny, user consultation, archiving checks, and execution.
 
+### Decide Whether to Use `task-dependency-pipeline`
+
+Analyze whether the task involves a Directed Acyclic Graph (DAG) with independent branches or tasks with asynchronous wait periods.
+
+**Use [`task-dependency-pipeline`](../task-dependency-pipeline/SKILL.md) when any of the following apply:**
+
+| Signal | Example |
+|---|---|
+| Multiple independent branches | Work across independent modules, repositories, or worktrees |
+| Asynchronous idle wait states | Tasks triggering remote CI runs, long builds, or cooldown intervals |
+| Opportunity for cooperative interleaving | Switching to execute a ready task while another task is waiting |
+
+State the decision in the plan if applicable:
+> **Scheduling mode**: `task-dependency-pipeline` (cooperative idle-wait DAG execution)
+
 ### Decide Whether to Use `step-gate`
 
 Analyze the task's nature and determine whether to apply the

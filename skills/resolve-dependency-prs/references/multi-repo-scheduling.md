@@ -2,6 +2,9 @@
 
 Guidelines for managing dependency PR resolution across single or multiple repositories without idle blocking, ensuring default branch stability, and tracking external API rate limits and costs.
 
+> [!NOTE]
+> This scheduling model is a domain-specific specialization of the general Directed Acyclic Graph (DAG) and cooperative idle-wait scheduler defined in [`task-dependency-pipeline`](../../task-dependency-pipeline/SKILL.md) and [`dag-scheduling-guide.md`](../../task-dependency-pipeline/references/dag-scheduling-guide.md).
+
 ---
 
 ## 1. Principles of Cost-Aware Scheduling

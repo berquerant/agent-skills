@@ -27,6 +27,7 @@ This reference provides the intent classification criteria, recommended entry sk
 | **Evidence-Backed Investigation** | "Investigate root cause with evidence", "Verify facts" | `evidentiary-inquiry` | `explore-plan-execute` / `refactor` |
 | **Creating New Skills** | "Create a new agent skill", "Add a skill for XYZ" | `skill-creator` | `skill-review` |
 | **Auditing Skills** | "Review this skill against specs", "Check skills consistency" | `skill-review` | `step-gate` / `refactor` |
+| **Task Dependency & Idle Wait Scheduling** | "Schedule dependent tasks as DAG", "Parallel tasks with CI wait", "Interleave tasks when waiting" | `task-dependency-pipeline` | `step-gate` → `change-message` |
 | **Creating MCP Servers** | "Build an MCP server", "Scaffold MCP tools" | `mcp-creator` | `explore-plan-execute` |
 | **Command Scripting & Snippet Parameterization** | "Save command as script", "Format complex command into snippet", "Parameterize command" | `command-snippet` | `snippet-review` → `step-gate` / `explore-plan-execute` |
 | **Snippet Intelligibility & Complexity Review** | "Audit this snippet", "Is this script too complex?", "Check snippet readability" | `snippet-review` | `command-snippet` |

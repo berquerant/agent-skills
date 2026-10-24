@@ -26,7 +26,7 @@ Read the task carefully and decompose it into subtasks.
   confirmed without completing later steps.
 - Each subtask should be **easy to roll back** if it fails.
 - Prefer smaller steps over larger ones when in doubt.
-- Order steps by dependency (prerequisite steps come first).
+- Order steps by dependency (prerequisite steps come first). If the task structure contains multiple independent branches or asynchronous idle wait states (e.g. CI or remote builds) that can be interleaved, consider structuring the execution via [`task-dependency-pipeline`](../task-dependency-pipeline/SKILL.md).
 
 **Avoid these pitfalls:**
 

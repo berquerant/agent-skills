@@ -37,6 +37,7 @@ All skills are maintained under `skills/`.
 | [`skill-router`](skills/skill-router/SKILL.md) | Triages requests, matches intent, and formulates sequential skill execution pipelines. | Read-only analysis, intent matrix mapping, multi-skill pipeline formulation, user approval gate. |
 | [`command-snippet`](skills/command-snippet/SKILL.md) | Converts complex, chained, or long commands into documented snippet files before execution. | Avoidance thresholds, reusability evaluation, CLI argument parameterization over env vars, header documentation. |
 | [`snippet-review`](skills/snippet-review/SKILL.md) | Audits ad-hoc execution snippets for cognitive intelligibility, complexity, and safety. | Four-tier complexity scale, 5 evaluation dimensions, automated simplification, 3-choice user consultation gate. |
+| [`task-dependency-pipeline`](skills/task-dependency-pipeline/SKILL.md) | Models task dependencies as a DAG and executes via a cooperative idle-wait scheduler. | DAG decomposition, cooperative context switching, idle-wait interleaving, anti-polling rules. |
 | [`output-presentation`](skills/output-presentation/SKILL.md) | Formats file paths, workspace targets, and URLs as plain raw strings without Markdown decorations. | Raw strings for seamless copy-pasting, no Markdown links or enclosing backticks, pre-flight verification. |
 
 ## Skill Selection Matrix
@@ -49,6 +50,7 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 | Complex feature, bug fix, or design change | [`explore-plan-execute`](skills/explore-plan-execute/SKILL.md) | `step-gate` (if complex) → `change-message` |
 | High-risk, ambiguous, or irreversible changes | [`scrutinize-plan-execute`](skills/scrutinize-plan-execute/SKILL.md) | `step-gate` → `change-message` |
 | Stepwise incremental execution with gates | [`step-gate`](skills/step-gate/SKILL.md) | `checkpoint-log` → `change-message` |
+| Task DAG execution with idle wait interleaving | [`task-dependency-pipeline`](skills/task-dependency-pipeline/SKILL.md) | `step-gate` → `change-message` |
 | One-shot whole-project health check & plan | [`doctor`](skills/doctor/SKILL.md) | `refactor` / `doc-refactor` / `step-gate` |
 | PR / commit code & security review | [`code-review`](skills/code-review/SKILL.md) | `review-discussion` / `refactor` / `doc-refactor` / `explore-plan-execute` |
 | Macro repository health & maintainability audit | [`project-audit`](skills/project-audit/SKILL.md) | `refactor` / `step-gate` |
@@ -129,7 +131,9 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │   │   └── references/          # Intent matrix & dispatch routing guides
 │   ├── snippet-review/
 │   │   └── references/          # Intelligibility rubric & complexity metrics
-│   └── step-gate/
+│   ├── step-gate/
+│   └── task-dependency-pipeline/
+│       └── references/          # DAG modeling & cooperative scheduling guide
 ├── global/
 │   └── AGENTS.md            # Portable/global agent guidelines for external projects
 ├── AGENTS.md                    # Operational guidelines & context for AI agents

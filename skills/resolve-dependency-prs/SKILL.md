@@ -11,7 +11,7 @@ description: >-
 
 Triage open dependency update and security patch PRs/MRs, audit their legitimacy and security safety, verify them in isolated worktrees, ensure they are up to date with the default branch, validate through CI, remediate failures under user approval, manage multi-repository pipelines without idle waiting, and safely merge.
 
-This workflow coordinates [`explore-plan-execute`](../explore-plan-execute/SKILL.md) to explore candidates and establish an agreed execution plan before modifying any branches, [`git-worktree`](../git-worktree/SKILL.md) for branch isolation, and [`step-gate`](../step-gate/SKILL.md) for remediation approval gates without duplicating procedures. In `thorough` mode, it also consults review criteria from [`code-review`](../code-review/SKILL.md) for deep micro/macro audits.
+This workflow coordinates [`explore-plan-execute`](../explore-plan-execute/SKILL.md) to explore candidates and establish an agreed execution plan before modifying any branches, [`git-worktree`](../git-worktree/SKILL.md) for branch isolation, and [`step-gate`](../step-gate/SKILL.md) for remediation approval gates without duplicating procedures. For multi-repository coordination and idle-wait switching, it applies the cooperative scheduling principles defined in [`task-dependency-pipeline`](../task-dependency-pipeline/SKILL.md). In `thorough` mode, it also consults review criteria from [`code-review`](../code-review/SKILL.md) for deep micro/macro audits.
 
 ---
 
@@ -210,7 +210,7 @@ In **`thorough` mode**, local tests passing is considered a baseline requirement
      ```
 2. **Idle Wait Switching across Repositories**:
    - If processing across multiple repositories (or multiple PRs) and a repository enters an idle wait state (waiting for remote PR CI checks, build completion, or approval):
-     - Follow [references/multi-repo-scheduling.md](references/multi-repo-scheduling.md).
+     - Follow [references/multi-repo-scheduling.md](references/multi-repo-scheduling.md) and [`task-dependency-pipeline`](../task-dependency-pipeline/SKILL.md).
      - Save the repository's state as `WAITING_PR_CI`.
      - **Immediately switch focus to the next queued or pending repository** to begin or resume its triage, checkout, or local verification.
      - Avoid blocking loops (e.g. `while true; do ...; sleep 10; done`); re-check pending CI status only upon transitioning between repository tasks or after the agreed rate-limit cooldown has elapsed.
