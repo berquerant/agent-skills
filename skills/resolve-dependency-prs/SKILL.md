@@ -27,12 +27,9 @@ This skill supports two execution modes:
 ## Prerequisites
 
 - `git` is installed and the current directory is inside a git repository (or target repositories are available locally).
-- A supported platform tool is authenticated:
-  - GitHub: `gh` CLI (or `github` MCP server) as described in [`multi-repo-change/references/platform-tools.md`](../multi-repo-change/references/platform-tools.md).
-  - GitLab: `glab` CLI (or `gitlab` MCP server) as described in [`multi-repo-change/references/platform-tools.md`](../multi-repo-change/references/platform-tools.md).
+- A supported platform tool is authenticated (`gh` CLI for GitHub or `glab` CLI for GitLab; refer to [`multi-repo-change/references/platform-tools.md`](../multi-repo-change/references/platform-tools.md)).
 - Follow cost-aware principles (`AGENTS.md` Rule 5 and [`command-cache-protocol.md`](../explore-plan-execute/references/command-cache-protocol.md)): batch API queries, cache candidate state locally (leveraging `cache-memoizer` if available), avoid excessive CI polling, and rely strictly on local references and PR descriptions.
-- **Confirm API Rate Limit & Cost Tracking**:
-  External API interactions (`gh`, `glab`, REST APIs) must respect a rate-limit interval to prevent hitting secondary rate limits or 429 errors. The recommended default is **10 seconds per call**. Because this 10-second interval is an example default, explicitly confirm with the user during Step 2 planning what rate limit interval is appropriate for their environment, and treat external API calls as a tracked cost metric.
+- **Confirm API Rate Limit & Cost Tracking**: External API queries must respect a rate-limit interval (recommended default: **10 seconds per call**; explicitly confirm with the user during Step 2 planning, and track total API calls as a cost metric).
 - **Determine Execution Mode**: Check if the user specified `standard` or `thorough`. If unspecified, default to `standard` (or present `thorough` as an option in Step 2).
 - **Explore & Plan First**: Do not jump directly into creating worktrees or checking out branches upon invocation. Adhere to [`explore-plan-execute`](../explore-plan-execute/SKILL.md) by exploring open PRs, auditing requirements, and presenting a concrete triage and resolution plan for user approval before modifying any local branches.
 
@@ -41,21 +38,9 @@ This skill supports two execution modes:
 ## Step 1: Collect, Filter, and Audit Candidate PRs/MRs
 
 ### 1.1 Cost-Aware Batch Collection
-Retrieve open PRs/MRs along with files and body in a single query to avoid repetitive platform API calls. Save candidate metadata into a local JSON file or cache first, and inspect candidate details from that local file rather than calling remote APIs per candidate:
-- **GitHub**:
-  ```bash
-  # Query all candidate PRs in a single API call and save locally
-  gh pr list --state open --json number,title,headRefName,author,labels,files,body > candidate_prs.json
-  ```
-- **GitLab**:
-  ```bash
-  # Query candidate MRs via glab and save locally (glab api / glab mr list)
-  glab mr list --state opened > candidate_mrs.txt
-  # Or fetch JSON payload via glab api
-  glab api "projects/:id/merge_requests?state=opened" > candidate_mrs.json
-  ```
-
-Inspect, filter, and audit candidates against the saved file (`candidate_prs.json` / `candidate_mrs.json`) locally. Avoid issuing separate API queries for each candidate PR.
+Retrieve open PRs/MRs along with files and body in a single query to avoid repetitive platform API calls. Save candidate metadata into a local file (`candidate_prs.json` / `candidate_mrs.json`) first, and inspect candidates locally per [references/filter-criteria.md](references/filter-criteria.md):
+- **GitHub**: `gh pr list --state open --json number,title,headRefName,author,labels,files,body > candidate_prs.json`
+- **GitLab**: `glab mr list --state opened > candidate_mrs.txt` or `glab api "projects/:id/merge_requests?state=opened" > candidate_mrs.json`
 
 ### 1.2 File-Level Exclusivity Check
 Filter PRs according to [references/filter-criteria.md](references/filter-criteria.md):
@@ -118,21 +103,15 @@ Following [`explore-plan-execute`](../explore-plan-execute/SKILL.md), synthesize
    | PR # | Package | Version Bump | Type | Risk / Expected Action |
    |---|---|---|---|---|
    | #12 | `foo` | `1.0.1` -> `1.0.2` | Patch (Security) | Low; rebase, run tests, merge |
-   | #15 | `bar` | `2.1.0` -> `2.2.0` | Minor | Low; rebase, verify CI |
-   | #18 | `baz` | `3.0.0` -> `4.0.0` | Major | High; check breaking changes, run local build |
+   | #15 | `bar` | `2.1.0` -> `3.0.0` | Major | High; check breaking changes, run local build |
 
    #### Holistic Audit & Optimization (Thorough Mode Only)
-   - Co-upgrade Bundling: Recommend bundling PR #15 and PR #16 together.
-   - Hold Recommendations: Hold PR #18 due to breaking API shifts; recommend separate refactor branch.
-
-   #### Excluded / Halted PRs
-   - PR #10: Excluded (modifies non-manifest files `src/index.ts`)
-   - PR #14: Halted (typosquatting concern or unverified registry URL)
+   - Co-upgrade Bundling: Recommend bundling related packages #15 and #16.
+   - Excluded / Halted: PR #10 (non-manifest files), PR #14 (safety halt).
 
    #### Proposed Execution Order & Gating
    1. PR #12 (`foo`): Security patch -> Merge -> **Wait Default Branch CI Pass**
-   2. PR #15 (`bar`): Minor bump (rebase onto updated default branch) -> Merge -> **Wait Default Branch CI Pass**
-   3. PR #18 (`baz`): Major bump (rebase onto updated default branch) -> Merge -> **Wait Default Branch CI Pass**
+   2. PR #15 (`bar`): Major bump (rebase on updated default branch) -> Merge -> **Wait Default Branch CI Pass**
 
    May I proceed with this resolution plan and the proposed 10-second API rate limit?
    ```
@@ -188,26 +167,12 @@ Verify: The branch contains the latest default branch commits and is pushed clea
 ### 5.1 Local-First Verification
 Follow [references/ci-detection.md](references/ci-detection.md) to detect and execute project test/lint commands locally inside the worktree if runtime dependencies are available. Running local checks first prevents triggering unnecessary remote CI pipelines on obvious syntax or lockfile errors.
 
-In **`thorough` mode**, local tests passing is considered a baseline requirement. Execute exhaustive multi-faceted checks per [references/thorough-audit-and-verification.md](references/thorough-audit-and-verification.md):
-- **Type Checking / Static Analysis**: e.g., `npx tsc --noEmit`, `go vet ./...`, `cargo check`, `mypy .`
-- **Security & Dependency Audit Scans**: e.g., `npm audit`, `cargo audit`, `govulncheck ./...`, `pip-audit`
-- **Lockfile & Tree Integrity**: e.g., `npm ls`, `pnpm doctor`, `go mod verify`
-- **Clean Build Verification**: Purge build caches and verify a complete scratch build (`npm run build`, `cargo build --release`, `go build ./...`)
+In **`thorough` mode**, execute exhaustive multi-faceted checks (static analysis, dependency audits, tree integrity, clean builds) per [references/thorough-audit-and-verification.md](references/thorough-audit-and-verification.md).
 
 ### 5.2 Remote CI Verification & Idle Wait Handling
 1. Check remote CI status via single-shot queries (never use streaming or loop-polling commands like `--watch`):
-   - **GitHub**:
-     ```bash
-     # Single-shot check; do NOT use `gh pr checks <number> --watch`
-     gh pr checks <number>
-     ```
-   - **GitLab**:
-     ```bash
-     # Single-shot check; query pipeline status once
-     glab ci status
-     # Or view MR pipeline details once
-     glab mr view <id>
-     ```
+   - **GitHub**: `gh pr checks <number>`
+   - **GitLab**: `glab ci status` or `glab mr view <id>`
 2. **Idle Wait Switching across Repositories**:
    - If processing across multiple repositories (or multiple PRs) and a repository enters an idle wait state (waiting for remote PR CI checks, build completion, or approval):
      - Follow [references/multi-repo-scheduling.md](references/multi-repo-scheduling.md) and [`task-dependency-pipeline`](../task-dependency-pipeline/SKILL.md).
@@ -252,30 +217,14 @@ Verify: The user has approved the remediation plan before any file modifications
 Once remote and local CI checks succeed:
 
 ### 7.1 Merge the PR/MR
-Merge the PR/MR adhering to the agreed API rate limit (cooldown check):
-- **GitHub**:
-  ```bash
-  gh pr merge <number> --auto --squash # or --merge / --rebase per repository rule
-  ```
-- **GitLab**:
-  ```bash
-  glab mr merge <id> --auto-merge
-  ```
+Merge adhering to the agreed API rate limit:
+- **GitHub**: `gh pr merge <number> --auto --squash` (or `--merge` / `--rebase` per repository rule)
+- **GitLab**: `glab mr merge <id> --auto-merge`
 
 ### 7.2 Post-Merge Default Branch CI Verification Gate
 Before proceeding to the next candidate PR in the same repository or concluding the workflow, verify that the default branch CI triggered by the merge commit passes:
 
-1. Identify the default branch CI run triggered by the merge commit per [references/ci-detection.md](references/ci-detection.md):
-   - **GitHub**:
-     ```bash
-     # Retrieve merge commit SHA and inspect the triggered workflow run
-     MERGE_SHA=$(gh pr view <number> --json mergeCommit --jq .mergeCommit.oid 2>/dev/null || git rev-parse origin/<default-branch>)
-     gh run list --branch <default-branch> --commit "$MERGE_SHA" --limit 1
-     ```
-   - **GitLab**:
-     ```bash
-     glab ci status --branch <default-branch>
-     ```
+1. Identify and inspect the default branch CI run triggered by the merge commit per [references/ci-detection.md](references/ci-detection.md) (e.g., `gh run list --branch <default-branch> --commit "$MERGE_SHA" --limit 1` or `glab ci status --branch <default-branch>`).
 2. **Idle Wait Handling**:
    - While the default branch CI is running (`WAITING_DEFAULT_CI`), do NOT block in a loop.
    - If processing across multiple repositories, immediately switch focus to another repository per [references/multi-repo-scheduling.md](references/multi-repo-scheduling.md).

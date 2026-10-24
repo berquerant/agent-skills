@@ -102,7 +102,7 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │   ├── evidentiary-inquiry/
 │   │   └── references/          # Source scoping templates & verification checklist
 │   ├── explore-plan-execute/
-│   │   └── references/          # Command cache protocol guide
+│   │   └── references/          # Command cache protocol & workflow coordination guides
 │   ├── git-worktree/
 │   │   └── references/          # Git worktree workflow references
 │   ├── mcp-creator/

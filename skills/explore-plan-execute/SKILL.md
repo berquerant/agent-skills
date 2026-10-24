@@ -94,85 +94,19 @@ Evaluate whether the generated report, plan, or procedure is extensive or intend
   - Do not dump extensive documents directly into the chat buffer to avoid token bloat and context loss. Save them to a local file.
   - **Confirm file path with user**: Propose a recommended path (e.g., `docs/...` or `<task-dir>/...`) and confirm it explicitly with the user before writing. Never write to arbitrary unconfirmed paths.
 
-### Decide Whether to Use `scrutinize-plan-execute`
+### Workflow Coordination and Secondary Skills
 
-Analyze whether the task requires deep upfront scrutiny, risk evaluation, or interactive refinement before execution.
+Evaluate whether the task requires specialized workflow, scheduling, gating, or logging skills during execution. Refer to [references/workflow-coordination-matrix.md](references/workflow-coordination-matrix.md) for full decision signals, prerequisites, and plan declaration templates.
 
-**Delegate to [`scrutinize-plan-execute`](../scrutinize-plan-execute/SKILL.md) when any of the following apply:**
+| Need / Signal | Candidate Skill | Action in Plan |
+|---|---|---|
+| Ambiguous premises, high risk, multi-approach trade-offs | [`scrutinize-plan-execute`](../scrutinize-plan-execute/SKILL.md) | Hand off planning, scrutiny, and execution |
+| Independent task branches, asynchronous idle waits (CI/builds) | [`task-dependency-pipeline`](../task-dependency-pipeline/SKILL.md) | Declare `task-dependency-pipeline` scheduling mode |
+| Low reversibility, ≥5 steps, user asked for step-by-step caution | [`step-gate`](../step-gate/SKILL.md) | Declare `step-gate` execution mode |
+| Extended multi-turn work, complex refactors needing audit trail | [`checkpoint-log`](../checkpoint-log/SKILL.md) | Propose milestone log and confirm path with user |
+| High uncertainty, slow commands, risk of silent stalls | [`edit-paced-execution`](../edit-paced-execution/SKILL.md) | Propose pacing guard thresholds and command mode |
 
-| Signal | Example |
-|---|---|
-| Ambiguous premises or conditions | Unverified environment behavior, incomplete requirements |
-| Unclear or subjective success criteria | "Improve performance", ambiguous verification logic |
-| High-impact execution obstacles | Potential breaking changes, complex multi-component interactions |
-| Need for deep user consultation | Multiple competing solutions with trade-offs requiring user dialogue |
-| Need for complex plan or report archiving | Long architecture plans requiring interactive trade-off scrutiny alongside file archiving |
-
-If delegating to `scrutinize-plan-execute`, hand off the workflow to [`scrutinize-plan-execute`](../scrutinize-plan-execute/SKILL.md) to complete obstacle scrutiny, user consultation, archiving checks, and execution.
-
-### Decide Whether to Use `task-dependency-pipeline`
-
-Analyze whether the task involves a Directed Acyclic Graph (DAG) with independent branches or tasks with asynchronous wait periods.
-
-**Use [`task-dependency-pipeline`](../task-dependency-pipeline/SKILL.md) when any of the following apply:**
-
-| Signal | Example |
-|---|---|
-| Multiple independent branches | Work across independent modules, repositories, or worktrees |
-| Asynchronous idle wait states | Tasks triggering remote CI runs, long builds, or cooldown intervals |
-| Opportunity for cooperative interleaving | Switching to execute a ready task while another task is waiting |
-
-State the decision in the plan if applicable:
-> **Scheduling mode**: `task-dependency-pipeline` (cooperative idle-wait DAG execution)
-
-### Decide Whether to Use `step-gate`
-
-Analyze the task's nature and determine whether to apply the
-[`step-gate`](../step-gate/SKILL.md) skill during execution.
-
-**Use `step-gate` when any of the following apply:**
-
-| Signal | Example |
-|--------|---------|
-| Low reversibility | Data deletion, DB migration, production deployment |
-| High cost of mid-task failure | Long multi-phase refactor, infrastructure change |
-| Many steps (≥ 5) with strong dependencies | Sequential setup with each step gating the next |
-| User explicitly asked for caution | "Be careful", "confirm with me", "step by step" |
-
-**Skip `step-gate` when:**
-
-- The task is read-only or exploratory (no file edits or state changes).
-- The task completes in 1–2 steps with negligible risk.
-- All actions are trivially reversible (e.g. editing a draft file).
-
-State the decision in the plan:
-
-> **Execution mode**: `step-gate` / standard
-
-If using `step-gate`, note that Step 5 will follow the step-gate protocol
-(per-step verification + user approval before continuing).
-
-### Propose `checkpoint-log` for Milestone Tracking
-
-Evaluate whether the task benefits from persistent, file-based milestone records.
-
-**Propose [`checkpoint-log`](../checkpoint-log/SKILL.md) when:**
-- The task spans multiple steps, complex debugging, or high-context refactoring where tracking progress and rationale in a local file helps both user visibility and agent context recovery.
-- The user expressed interest in having a persistent local record of execution steps and decisions.
-
-If proposed, ask the user if they wish to record progress via `checkpoint-log` and request their preferred log file path (never assume a default path).
-
-### Propose `edit-paced-execution` for Extended Tasks
-
-Evaluate whether the task risks long investigation delays, troubleshooting loops, or silent stalls between file modifications.
-
-**Propose [`edit-paced-execution`](../edit-paced-execution/SKILL.md) when:**
-- The task requires non-trivial trial-and-error, unfamiliar library exploration, or multi-step debugging before reaching file edits.
-- The task involves executing long-running, heavy, or external commands requiring periodic liveness checks.
-- The user expressed concern about long autonomous pauses or requested regular progress checkpoints.
-
-If applicable, include the proposed pacing thresholds and command execution mode (`standard`: 3m, `heavy`: 5m, `critical`: 1m, `unmonitored`: 60m) in the plan presented to the user:
-> **Pacing guard**: Recommend [`edit-paced-execution`](../edit-paced-execution/SKILL.md) (threshold: <X minutes / Y non-edit calls>, command mode: `standard` / `heavy` / `critical` / `unmonitored` [check interval: Zm]) to monitor liveness and halt if progress stalls.
+Declare the selected execution mode, scheduling mode, milestone log proposal, and pacing guard in the plan presented to the user.
 
 Verify: Each step is actionable. Each success criterion is testable.
 Execution mode, any milestone logging proposal, and any recommended pacing guard are explicitly stated in the plan (or delegated to `scrutinize-plan-execute`).
