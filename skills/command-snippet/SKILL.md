@@ -77,9 +77,14 @@ Design the snippet's interface:
    - Do **not** use environment variables to pass arguments or configuration to
      the snippet. Environment variables are implicit and difficult for users to
      track in terminal history. Always prefer explicit CLI arguments.
+3. **Safe Command Execution over `eval`**:
+   - Do **not** use `eval` or raw string concatenation to assemble and execute dynamic commands inside snippets.
+   - Use safe parameterization patterns:
+     - Array parameterization: `cmd=("$@")` or `opts=("-v" "--filter" "$1"); "${cmd[@]}" "${opts[@]}"`
+     - Clean subshell invocation: `bash -c '...' _ "$@"`
 
 Verify: All variable inputs are mapped to explicit positional arguments or
-command-line flags, and no inputs rely on ambient environment variables.
+command-line flags, no inputs rely on ambient environment variables, and dynamic command invocations avoid `eval`.
 
 ---
 
@@ -191,6 +196,7 @@ Verify: Unneeded temporary files and superseded snippet versions are disposed of
   interpreter scripts `-c`/`-e` with ≥50 chars, imports, multiple statements, or control flow).
 - **Explicit arguments over environment variables.** Never use environment
   variables to pass input to snippets; use explicit CLI arguments instead.
+- **Avoid eval and dynamic string evaluation.** Use positional arrays (`"${cmd[@]}"`) or explicit parameter lists instead of `eval` to prevent quoting bugs, injection hazards, and excessive cognitive complexity.
 - **Document upfront.** Every snippet must include a clear documentation header
   explaining purpose, arguments, and usage.
 - **Snippets are immutable (Write-Once).** Never modify an existing snippet file

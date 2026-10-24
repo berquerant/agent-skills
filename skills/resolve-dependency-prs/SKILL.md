@@ -134,12 +134,16 @@ For each approved candidate PR/MR, isolate the worktree following [`git-worktree
 2. Create an isolated worktree under `WORKTREE_ROOT`:
    - Follow Step 1 and Step 2 of [`git-worktree`](../git-worktree/SKILL.md).
    - Checkout the PR's head branch inside the new worktree.
+3. **Inspect Repository Context**:
+   - Immediately check the repository's `README.md` and `AGENTS.md` (or contributing guidelines) inside the worktree to identify project-specific verification commands, derived secondary artifacts, or snapshot update targets.
 
 Verify: The worktree is successfully created, clean, and checked out to the target PR branch.
 
 ---
 
 ## Step 4: Rebase onto Default Branch and Sync
+
+Always execute rebase operations via local Git transport inside the worktree (rather than platform API update endpoints) to avoid API token scope limitations on workflow files:
 
 1. Inside the worktree, check whether the branch is behind the default branch:
    ```bash
@@ -153,7 +157,7 @@ Verify: The worktree is successfully created, clean, and checked out to the targ
    - If rebase encounters merge conflicts:
      - Formulate a conflict resolution proposal.
      - Seek user confirmation before forcing resolution.
-   - Push the rebased branch:
+   - Push the rebased branch via authenticated Git transport:
      ```bash
      git push --force-with-lease origin <head-branch>
      ```
@@ -192,6 +196,7 @@ If any local or remote CI checks fail (e.g., breaking API changes, deprecations,
 
 1. **Analyze Failure**:
    - Inspect build / test failure logs.
+   - Cross-reference failure symptoms against [references/failure-archetypes.md](references/failure-archetypes.md) (outdated base branch, unsynced derived artifacts, snapshot drift) to apply standard playbooks before conjecturing code rewrites.
    - Determine the minimal adaptation needed to accommodate the upgraded dependency.
 2. **Present Remediation Plan (Human-in-the-Loop)**:
    - Follow the gate structure modeled after [`step-gate`](../step-gate/SKILL.md):
@@ -217,9 +222,10 @@ Verify: The user has approved the remediation plan before any file modifications
 Once remote and local CI checks succeed:
 
 ### 7.1 Merge the PR/MR
-Merge adhering to the agreed API rate limit:
-- **GitHub**: `gh pr merge <number> --auto --squash` (or `--merge` / `--rebase` per repository rule)
-- **GitLab**: `glab mr merge <id> --auto-merge`
+1. **Pre-Merge Base Drift Check**: Verify the branch tip is a fast-forward descendant of latest default branch. If behind, rebase in worktree per Step 4 to satisfy fast-forward branch protection rules without resorting to `--admin`.
+2. **Merge PR/MR**: Merge adhering to the agreed API rate limit:
+   - **GitHub**: `gh pr merge <number> --auto --squash` (or `--merge` / `--rebase` per repository rule)
+   - **GitLab**: `glab mr merge <id> --auto-merge`
 
 ### 7.2 Post-Merge Default Branch CI Verification Gate
 Before proceeding to the next candidate PR in the same repository or concluding the workflow, verify that the default branch CI triggered by the merge commit passes:

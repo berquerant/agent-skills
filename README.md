@@ -116,7 +116,7 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │   ├── project-status/
 │   ├── refactor/
 │   ├── resolve-dependency-prs/
-│   │   └── references/          # Manifest filtering, security audit, CI & scheduling guides
+│   │   └── references/          # Manifest filtering, security audit, CI, scheduling & failure guides
 │   ├── resolve-recent-dependency-prs/
 │   ├── review-discussion/
 │   │   └── references/          # Comment conventions & resolution rules

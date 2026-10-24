@@ -57,7 +57,7 @@ Evaluate candidate snippets across five primary dimensions:
   Executing interpreter code inline (e.g., `python -c "..."`, `node -e "..."`, `bash -c "..."`, `ruby -e "..."`) when the code payload is ≥ 50 characters, contains module imports, multiple statements, or loops/conditionals. These obscure code logic inside string quotes and must be extracted into a dedicated script file.
 - **Obscure Parameter Expansion**: e.g., `${var//pat/repl}`, `${var#*:}`, `${!ref*}` without explanation.
 - **Deep Pipelines**: Chaining 3 or more pipes (`cmd1 | cmd2 | cmd3 | cmd4`).
-- **Dynamic Evaluation**: `eval`, `source` / `.`, dynamically generated code execution.
+- **Dynamic Evaluation**: `eval`, `source` / `.`, dynamically constructed code strings (inherently elevates snippet to Level 3 / Complex due to quoting bugs and injection hazards; always replace with array parameterization `"${cmd[@]}"` or clean subshell execution).
 - **Process Substitution & Heredocs**: `<(...)`, `>(...)`, multi-line nested heredocs.
 - **Uncommented Regex / Script Engines**: Dense, unannotated `sed`, `awk`, or `perl` one-liners embedded inside shell scripts.
 
