@@ -80,6 +80,7 @@ Assign the snippet to one of four levels based on the dimensions above:
 
 When a snippet is evaluated as Level 3 (Complex) or Level 4 (Opaque), apply the following simplification patterns before asking the user:
 
+- **Rule 0: Snippet Immutability**: Never edit an existing snippet file in place. Any simplification or remediation must be written to a **new versioned file** (e.g. `script_v2.sh`) to prevent TOCTOU approval bypass. Any prior rating or user notice for the previous file is void.
 1. **Linearize & Inline**:
    - Replace single-use helper functions with sequential in-line steps.
 2. **Replace Dense One-Liners with Explicit Commands**:

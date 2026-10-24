@@ -71,9 +71,10 @@ The snippet is sufficiently intelligible for execution.
 
 ### Path B: High Complexity (Level 3 or Level 4)
 The snippet requires intervention to prevent black-box execution:
-1. **Attempt Simplification**:
+1. **Attempt Simplification under Immutability Rule**:
    - Apply simplification strategies from [references/intelligibility-rubric.md](references/intelligibility-rubric.md) (inlining single-use helpers, breaking dense pipes into temporary variables, adding explanatory comments).
-   - Re-evaluate the modified snippet. If the score drops to Level 1 or Level 2, transition to Path A.
+   - **Snippet Immutability**: NEVER edit an existing snippet file in place. Save the simplified logic to a **new versioned file** (e.g. `<name>_v2.sh`). Any prior audit rating or user notice for the previous version is void; re-evaluate the new file from Step 1.
+   - If the score drops to Level 1 or Level 2, transition to Path A.
 2. **Open User Consultation Gate (If Simplification Fails)**:
    - If the task's inherent nature prevents reducing complexity to Level 1 or 2, do NOT execute silently.
    - Present the **Snippet Intelligibility Consultation** using the template in [references/intelligibility-rubric.md](references/intelligibility-rubric.md):
@@ -109,6 +110,7 @@ Verify: The intelligibility evaluation report is communicated clearly to the use
 
 - **Zero Black-Box Execution**: Never execute ad-hoc snippets without auditing how understandable they are to human reviewers.
 - **Universal Application**: Apply this review to all generated execution snippets, regardless of line count.
+- **Snippet Immutability**: Never mutate an existing snippet file in place. Any simplification or fix must create a new versioned file and undergo a fresh review to prevent TOCTOU approval bypass.
 - **Prioritize Simplification over Consultation**: Always attempt to refactor and simplify complex snippets first before escalating to the user consultation gate.
 - **Mandatory Pre-Execution Notice Block**: Every snippet execution must be preceded by the explicit, structured Pre-Execution Notice block (`### 📋 Snippet Pre-Execution Notice`) detailing purpose, parameters, and side-effects.
 - **Three-Choice Consultation**: When high complexity is unavoidable, always offer the user the choice to split, proceed as-is, or adopt an alternative approach.

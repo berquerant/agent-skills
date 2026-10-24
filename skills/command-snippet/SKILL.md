@@ -121,10 +121,11 @@ purpose, arguments, usage, and prerequisites.
 
 Before executing any snippet, evaluate its cognitive intelligibility and ensure the user understands its operation:
 
-1. **Intelligibility Audit**:
+1. **Intelligibility Audit & Immutability**:
    - Audit the snippet using [`snippet-review`](../snippet-review/SKILL.md) against its four-tier rubric (Transparent, Moderate, Complex, Opaque).
    - If the snippet is rated **Level 3 (Complex)** or **Level 4 (Opaque)**:
      - Attempt to simplify the logic (inline single-use functions, remove dense regex, linearize control flow, add Why comments).
+     - **Snippet Immutability Rule**: When simplifying or modifying a snippet, **never edit an existing snippet file in place**. Modifying an existing snippet risks Time-of-Check to Time-of-Use (TOCTOU) discrepancies where code is executed that the user never saw or approved. Always write the simplified code to a **new versioned file** (e.g. `script_v2.sh`).
      - If simplification is not feasible, open the **User Consultation Gate** per [`snippet-review`](../snippet-review/SKILL.md) and present the three options:
        1. Split into smaller, sequential steps
        2. Proceed as-is under explicit user acknowledgment
@@ -147,23 +148,25 @@ Before executing any snippet, evaluate its cognitive intelligibility and ensure 
    ```
 
    - Informal, single-sentence mentions (e.g., "Running script now to check files.") are strictly prohibited. The structured notice must be presented clearly.
+   - **Approval Invalidation**: If any change or correction is made to the snippet after this notice is presented, the previous approval is automatically void. A new versioned file must be created and a new notice presented.
 
-Verify: The snippet's intelligibility is audited, any high complexity is simplified or consulted on, and the mandatory Pre-Execution Notice is output before execution.
+Verify: The snippet's intelligibility is audited, any high complexity is simplified into a new versioned file or consulted on, and the mandatory Pre-Execution Notice is output before execution.
 
 ---
 
 ## Step 6: Save, Execute, and Verify
 
-1. **Save Snippet File**:
+1. **Save Snippet File as Immutable**:
    - Write the script to the determined path. Ensure file permissions allow
      execution if running directly, or invoke via the interpreter (e.g., `bash path/to/script.sh`).
+   - Once saved, treat the file as **strictly immutable**. Never apply in-place edits. If a fix is needed during verification, create a new file (e.g., `_v2`).
 2. **Execute with Explicit Arguments**:
    - Run the snippet using explicit arguments in the shell invocation.
 3. **Verify Outcome**:
    - Check the command exit code and output against expectations.
-   - Stop and inspect if the script fails.
+   - Stop and inspect if the script fails. If failure remediation requires code changes, create a new versioned snippet file (`_v2`) and restart Step 5.
 
-Verify: The snippet executed cleanly and satisfied the intended operation.
+Verify: The snippet executed cleanly and satisfied the intended operation without in-place file modifications.
 
 ---
 
@@ -173,11 +176,11 @@ Based on the reusability decision from Step 2:
 
 - **One-off Snippets**: Clean up temporary files if they are no longer needed,
   or leave them in the scratch directory if the user needs them for inspection.
-- **Reusable Snippets**: Confirm that the snippet is cleanly formatted, documented,
+  When multiple versions were created (`_v1`, `_v2`), remove or deprecate superseded versions (`.deprecated`) to prevent accidental execution.
+- **Reusable Snippets**: Confirm that the final snippet version is cleanly formatted, documented,
   and ready for future invocations.
 
-Verify: Unneeded temporary files are disposed of, and reusable scripts are preserved
-in their designated locations.
+Verify: Unneeded temporary files and superseded snippet versions are disposed of, and reusable scripts are preserved in their designated locations.
 
 ---
 
@@ -190,6 +193,10 @@ in their designated locations.
   variables to pass input to snippets; use explicit CLI arguments instead.
 - **Document upfront.** Every snippet must include a clear documentation header
   explaining purpose, arguments, and usage.
+- **Snippets are immutable (Write-Once).** Never modify an existing snippet file
+  in place once created or presented to the user. Any revision, bug fix, or
+  simplification must be written to a new versioned file (e.g., `_v2`), invalidating
+  previous reviews and requiring a fresh Pre-Execution Notice.
 - **Audit intelligibility before execution.** Every snippet must undergo review
   via [`snippet-review`](../snippet-review/SKILL.md) regardless of line count.
 - **Always output the Pre-Execution Notice.** Never execute snippets silently or
