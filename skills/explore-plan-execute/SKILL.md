@@ -70,30 +70,13 @@ Construct a plan that includes:
 
 Keep the plan concise enough to present clearly in one message.
 
-### Git Commits, Remotes, and Change Requests (PR / MR)
+### Execution Safeguards & Pre-Confirmations
 
-If the plan involves creating git commits, interacting with remotes, or opening PRs/MRs, incorporate the following:
-
-- **Commit Author**: Determine the intended commit author `name` and `email` for commits created on the base/target branch. If not specified by the user, include an explicit question asking if referencing the global `$HOME/.gitconfig` (`git config --global user.name` and `user.email`) is permitted.
-- **Git `sshCommand`**: Check if remote operations (e.g. push, fetch) will use SSH. Confirm what `sshCommand` (`core.sshCommand` or `GIT_SSH_COMMAND`, specifying SSH key or parameters) should be used.
-- **PR / MR Assignee**: Determine who the `assignee` should be for any PR or MR to be created.
-- **Messages**: Draft commit messages and PR/MR titles/descriptions following [`change-message`](../change-message/SKILL.md), and include them in the plan or confirmation for user review.
-
-### Git Worktree and Branch Isolation
-
-If the task involves modifying files in a git repository:
-- Plan to start work in an isolated worktree created from the latest default branch.
-- Include steps to fetch the latest remote changes (`git fetch origin`), create a new branch from the latest remote default branch (e.g. `origin/main`), and set up the worktree (following [`git-worktree`](../git-worktree/SKILL.md)).
-
-### File Archiving for Long Reports or Reusable Procedures
-
-Evaluate whether the generated report, plan, or procedure is extensive or intended for repeated reference:
-- **Archiving Threshold**:
-  - Investigation reports, technical findings, or architecture analyses exceeding 300 lines.
-  - Detailed procedure manuals, runbooks, or multi-step execution plans intended to be consulted multiple times in subsequent work.
-- **Protocol**:
-  - Do not dump extensive documents directly into the chat buffer to avoid token bloat and context loss. Save them to a local file.
-  - **Confirm file path with user**: Propose a recommended path (e.g., `docs/...` or `<task-dir>/...`) and confirm it explicitly with the user before writing. Never write to arbitrary unconfirmed paths.
+Incorporate mandatory environment and safety protocols per [references/execution-safeguards.md](references/execution-safeguards.md):
+- **Git Commits & PRs/MRs**: Pre-confirm commit author identity, SSH configuration, assignee, and draft messages following [`change-message`](../change-message/SKILL.md).
+- **Git Worktree Isolation**: Plan work inside an isolated worktree created from the remote default branch per [`git-worktree`](../git-worktree/SKILL.md).
+- **File Archiving**: Propose and confirm file paths for extensive documents (≥300 lines) instead of outputting directly to chat.
+- **Command Snippets**: Plan complex shell commands as parameterized snippet files per [`command-snippet`](../command-snippet/SKILL.md).
 
 ### Workflow Coordination and Secondary Skills
 
@@ -166,25 +149,12 @@ Execute the plan step by step with internal verification loops:
   skip or work around it.
 
 
-### Worktree Setup Before Modification
+### Execution Safeguards Enforcement
 
-When modifying files in a git repository:
-- Fetch the latest changes from the remote repository (`git fetch origin`).
-- Create a new branch from the latest remote default branch and set up an isolated worktree (following [`git-worktree`](../git-worktree/SKILL.md)).
-- Switch to the newly created worktree directory and begin all file modifications there to keep the primary working tree clean.
-
-### Command Execution & Snippet Protocol
-
-When executing shell commands during exploration or execution:
-- Avoid executing long, chained, or complex inline commands that are difficult for users to inspect (≥4 chained operators, ≥120 characters, or ≥3 lines).
-- Follow [`command-snippet`](../command-snippet/SKILL.md) to save the command logic into a dedicated snippet file with explicit CLI arguments (avoiding environment variables) and a header documentation comment.
-
-### Safeguards for Git Commits, Remotes, and PRs/MRs
-
-When execution involves modifying git history or remote hosting:
-- **Before creating commits**: Verify that the commit author `name` and `email` have been explicitly confirmed by the user. If unconfirmed and the user approved referencing `$HOME/.gitconfig`, inspect it (`git config --global user.name` / `user.email`) before committing. Never commit under an arbitrary or unverified author.
-- **Before pushing or remote operations**: Verify that the git `sshCommand` (e.g. `core.sshCommand` or `GIT_SSH_COMMAND`) has been confirmed with the user.
-- **Before opening PRs/MRs**: Verify that the `assignee` has been explicitly confirmed with the user.
+Strictly apply the protocols detailed in [references/execution-safeguards.md](references/execution-safeguards.md) during execution:
+- **Worktree Isolation**: Begin work in the designated git worktree directory to keep the primary working tree clean per [`git-worktree`](../git-worktree/SKILL.md).
+- **Command Snippets**: Route complex shell commands through versioned snippet files following [`command-snippet`](../command-snippet/SKILL.md) and [`snippet-review`](../snippet-review/SKILL.md).
+- **Git Pre-Confirmations**: Verify that commit author identity, SSH configuration, and PR/MR assignee have been explicitly confirmed before committing, pushing, or opening PRs/MRs.
 
 ### Completion (both modes)
 

@@ -142,7 +142,13 @@ If appropriate, recommend [`edit-paced-execution`](../edit-paced-execution/SKILL
 ### 4. Milestone Checkpoint Logging (`checkpoint-log`)
 If the task spans complex multi-phase execution or the user wants persistent step-by-step records, propose [`checkpoint-log`](../checkpoint-log/SKILL.md). Always ask the user for their desired log file path (never assume a default path).
 
-### 5. Explicit Execution Permission
+### 5. Execution Safeguards Pre-Confirmation
+Incorporate mandatory environment and safety protocols per [`../explore-plan-execute/references/execution-safeguards.md`](../explore-plan-execute/references/execution-safeguards.md):
+- Pre-confirm commit author identity, SSH configuration, and PR/MR assignee.
+- Plan work inside an isolated worktree created from the remote default branch per [`git-worktree`](../git-worktree/SKILL.md).
+- Route complex shell commands through parameterized snippet files per [`command-snippet`](../command-snippet/SKILL.md).
+
+### 6. Explicit Execution Permission
 Confirm the user gives explicit approval to proceed with execution.
 
 
@@ -158,7 +164,7 @@ execute, and if requested, the plan has been saved to the user-specified file pa
 
 ## Step 6: Execute the Plan
 
-Execute the approved plan according to the mode selected in Step 5:
+Execute the approved plan according to the mode selected in Step 5, strictly enforcing the environment safeguards in [`../explore-plan-execute/references/execution-safeguards.md`](../explore-plan-execute/references/execution-safeguards.md) (worktree isolation, snippet execution, and confirmed commit identities):
 
 ### Mode: `step-gate`
 Follow the [`step-gate`](../step-gate/SKILL.md) skill protocol:
