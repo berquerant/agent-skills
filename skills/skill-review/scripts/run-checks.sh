@@ -10,13 +10,15 @@ if [ $# -lt 1 ]; then
 fi
 
 SKILL_DIR="$1"
-SKILLS_ROOT=$(dirname "$SKILL_DIR")
-NAME=$(basename "$SKILL_DIR")
 
 if [ ! -f "$SKILL_DIR/SKILL.md" ]; then
   echo "Error: $SKILL_DIR/SKILL.md does not exist." >&2
   exit 1
 fi
+
+SKILL_DIR_ABS=$(cd "$SKILL_DIR" && pwd)
+SKILLS_ROOT=$(dirname "$SKILL_DIR_ABS")
+NAME=$(basename "$SKILL_DIR_ABS")
 
 echo "=================================================="
 echo "Automated Check Report for: $NAME"
@@ -98,9 +100,13 @@ grep -rnE '\.\./[a-z0-9-]+/' "$SKILL_DIR" || true
 
 # Check H: Repository Registration
 echo "--- Check H: Repository Registration ---"
+REPO_ROOT=$(git -C "$SKILL_DIR" rev-parse --show-toplevel 2>/dev/null || (cd "$SKILLS_ROOT/.." 2>/dev/null && pwd) || pwd)
 for doc in README.md AGENTS.md; do
-  if [ -f "$doc" ]; then
-    printf '%s: %s\n' "$doc" "$(grep -cF -- "$NAME" "$doc" || true)"
+  doc_path="$REPO_ROOT/$doc"
+  if [ -f "$doc_path" ]; then
+    printf '%s: %s\n' "$doc" "$(grep -cF -- "$NAME" "$doc_path" || true)"
+  else
+    printf '%s: not found in %s\n' "$doc" "$REPO_ROOT"
   fi
 done
 

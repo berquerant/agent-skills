@@ -49,7 +49,7 @@ The script runs read-only commands and prints a report covering checks A through
 - **Criteria**: Recommended hand-off or shared references [OK]. No mandatory nested subroutines [F].
 
 ### H. Repository Registration (Dimension 5)
-- **Check**: Checks presence in `README.md` and `AGENTS.md`.
+- **Check**: Checks presence in `README.md` and `AGENTS.md` by dynamically locating repository root.
 - **Criteria**: Registered in repo listings [W].
 
 ### I. Cross-Skill Duplication Hints (Dimension 5, Batch Mode)

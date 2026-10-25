@@ -1,6 +1,7 @@
 # Skill Review Report Templates
 
 Report formats for skill review findings. Assign statuses and verdicts using the **Verdict Rules** in [skill-review-checklist.md](skill-review-checklist.md).
+Per the output-presentation convention, output all file paths, locations, and URLs as unadorned plain raw strings without inline code backticks or Markdown links.
 
 ---
 
@@ -9,7 +10,7 @@ Report formats for skill review findings. Assign statuses and verdicts using the
 ```markdown
 # Skill Review: `<skill-name>`
 
-**Target Path**: `<path-to-skill>` (git: `<clean / modified / untracked>`)
+**Target Path**: <path-to-skill> (git: <clean / modified / untracked>)
 **Review Basis**: `<checklist version or commit; any interpretations applied>`
 **Overall Verdict**: 🟢 **PASS** / 🟡 **NEEDS IMPROVEMENT** / 🔴 **FAIL**
 
@@ -47,13 +48,13 @@ Report formats for skill review findings. Assign statuses and verdicts using the
 
 ### 🔴 Critical / Blocking Issues (Fail)
 - **`<ID>. <Issue Title>`** `[F]`
-  - **Location**: `<file-path>#Lxx-Lyy`
+  - **Location**: <file-path>#Lxx-Lyy
   - **Problem**: `<Which [F] rule is violated and why it matters>`
   - **Suggested Remedy**: `<Concrete recommendation or diff>`
 
 ### 🟡 Improvements & Warnings (Needs Improvement)
 - **`<ID>. <Issue Title>`** `[W]`
-  - **Location**: `<file-path>#Lxx-Lyy`
+  - **Location**: <file-path>#Lxx-Lyy
   - **Problem**: `<Which [W] rule is violated and why it matters>`
   - **Suggested Remedy**: `<Concrete recommendation>`
 
@@ -68,6 +69,7 @@ Report formats for skill review findings. Assign statuses and verdicts using the
 - **Recommended Next Skill**:
   - Phased modifications with approval gates: `step-gate`
   - Behavior-preserving structural changes: `refactor`
+  - Documentation and comment refinements: `doc-refactor`
 ```
 
 ---
@@ -77,7 +79,7 @@ Report formats for skill review findings. Assign statuses and verdicts using the
 ```markdown
 # Skill Review Summary
 
-**Scope**: `<skills root>` (`<n>` skills)
+**Scope**: <skills root> (<n> skills)
 **Review Basis**: `<checklist version or commit; interpretations applied>`
 
 ## Verdict Matrix
@@ -98,5 +100,5 @@ Report formats for skill review findings. Assign statuses and verdicts using the
 
 | Priority | Item | Skills | Suggested Skill |
 |---|---|---|---|
-| High | `<item>` | `<skills>` | `step-gate` / `refactor` |
+| High | `<item>` | `<skills>` | `step-gate` / `refactor` / `doc-refactor` |
 ```

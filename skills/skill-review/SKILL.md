@@ -62,7 +62,7 @@ Verify: Every automated check has a recorded result. False positives, such as li
 
 Using the automated results as evidence, evaluate the target against dimensions **1. Scope & Granularity**, **2. Modularity & File Split**, and **3. Maintainability & Conventions** in [references/skill-review-checklist.md](references/skill-review-checklist.md).
 
-Record each finding with a severity (Fail / Warn) and a `file#Lxx-Lyy` location.
+Record each finding with a severity (Fail / Warn) and a plain raw string location (path/to/file#Lxx-Lyy) without Markdown links or backticks, following `output-presentation`.
 
 Verify: Each item in dimensions 1–3 has a finding or an explicit pass, and every finding has a location.
 
@@ -82,10 +82,10 @@ Verify: Each item in dimensions 4–6 has a finding or an explicit pass, and cro
 ## Step 5: Generate & Present the Review Report
 
 1. Rate each dimension, then determine the overall verdict using the **Verdict Rules** in [references/skill-review-checklist.md](references/skill-review-checklist.md).
-2. Fill in the per-skill template in [references/report-template.md](references/report-template.md). Every Warn or Fail must have a concrete remedy.
+2. Fill in the per-skill template in [references/report-template.md](references/report-template.md). Every Warn or Fail must have a concrete remedy. Output all paths and locations as unadorned raw strings.
 3. In batch mode, also produce the cross-skill summary (verdict matrix, cross-skill issues, prioritized backlog).
 4. Present the reports in the conversation. If the user wants them saved, write them only to a location the user chooses outside the reviewed skills, such as the agent's scratch or artifact area.
-5. Recommend a next skill for the user to approve, such as `step-gate` for phased fixes or `refactor` for structural changes.
+5. Recommend a next skill for the user to approve, such as `step-gate` for phased fixes, `refactor` for structural changes, or `doc-refactor` for documentation or comment refinements.
 
 Verify: Every report is complete, and `git status --short` matches the baseline from Step 1.
 
@@ -94,7 +94,7 @@ Verify: Every report is complete, and `git status --short` matches the baseline 
 ## Guidelines
 
 - **Strictly read-only**: Never edit, format, or scaffold files in the reviewed skills or the repository. Report findings, then hand remediation off.
-- **Evidence over impression**: Back every finding with an automated check result or a specific `file#Lxx-Lyy` location.
+- **Evidence over impression**: Back every finding with an automated check result or a specific unadorned location (path/to/file#Lxx-Lyy).
 - **Uniform standard**: Apply the same checklist and verdict rules to every skill, including this one. Record any interpretation you make in the report.
 - **Actionable recommendations**: For every Warn or Fail, give a concrete remedy or example.
-- **Sequential hand-off**: Recommend mutation skills (`step-gate`, `refactor`) for the user to approve instead of applying fixes yourself.
+- **Sequential hand-off**: Recommend mutation skills (`step-gate`, `refactor`, `doc-refactor`) for the user to approve instead of applying fixes yourself.

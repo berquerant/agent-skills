@@ -71,6 +71,8 @@ When a criterion is ambiguous for a particular skill, record the interpretation 
   4. `## Step N: …` sections
   5. `## Guidelines`
 - [ ] **[W] Verify checkpoints**: Every `## Step N` section contains an explicit `Verify:` line that a reader can actually check.
+- [ ] **[W] Output presentation compliance**: Instructions, report templates, and procedural steps communicate file paths, line ranges, and web URLs as plain, unadorned raw strings without Markdown links or inline backticks, following `output-presentation`.
+- [ ] **[W] Command snippet modularity**: Inline shell commands avoid long chained scripts (≥4 operators, ≥120 characters, or complex inline payloads) and delegate multi-line or complex execution to `scripts/` or parameterized snippets, following `command-snippet`.
 - [ ] **[W] Platform and project agnostic**: The skill does not hardcode vendor-specific tool names, proprietary variables, fixed directory layouts, or a single tech stack, unless it labels them as examples and gives a generic fallback.
 
 ---
@@ -80,7 +82,7 @@ When a criterion is ambiguous for a particular skill, record the interpretation 
 - [ ] **[F] No hard subroutine invocation**: The skill does not require another skill to run as a mandatory nested step.
 - [ ] **[W] Sequential hand-off**: The skill communicates through clear outputs or artifacts, and recommends a next skill for the user to approve.
 - [ ] **[F] Read-only versus mutation separation**: An audit or review skill never edits, creates, or deletes files in the target. A mutation skill does not mutate files before the user approves, if its own workflow requires approval.
-- [ ] **[W] Actionable recommendations**: When the skill identifies improvements or fixes, it names the existing mutation skill that applies, such as `refactor` or `step-gate`.
+- [ ] **[W] Actionable recommendations**: When the skill identifies improvements or fixes, it names the existing mutation skill that applies, such as `refactor`, `step-gate`, or `doc-refactor` (for documentation and comment refinements).
 
 ---
 
