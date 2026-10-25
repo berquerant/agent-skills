@@ -1,6 +1,7 @@
 # Approval Gates and Reporting Templates
 
 The multi-repo change workflow relies on four explicit user approval checkpoints to prevent unintended mutations. Use the standardized templates below.
+Per output-presentation, communicate all file paths, repository directories, worktree paths, and PR/MR URLs as unadorned raw strings without backticks or Markdown links.
 
 ---
 
@@ -15,8 +16,8 @@ Present this report before creating any worktrees, branches, or modifying files.
 
 | Repository | Local Path | Remote Origin | Target Branch | Status |
 |---|---|---|---|---|
-| `<repo-1>` | `<path>` | `<remote-url>` | `<branch>` | Target |
-| `<repo-2>` | `<path>` | `<remote-url>` | `<branch>` | Skipped: `<reason (e.g. uncommitted changes)>` |
+| `<repo-1>` | <path> | <remote-url> | `<branch>` | Target |
+| `<repo-2>` | <path> | <remote-url> | `<branch>` | Skipped: `<reason (e.g. uncommitted changes)>` |
 
 ### Proposed Branch Name
 `<branch-name>`
@@ -27,7 +28,7 @@ Present this report before creating any worktrees, branches, or modifying files.
 ### Repository Plans
 
 #### `<repo-1>`
-- **Target Files**: `<file-1>`, `<file-2>`
+- **Target Files**: <file-1>, <file-2>
 - **Changes**: `<bullet points of modifications>`
 - **Repository Notes**: `<repo-specific conventions, template paths, or dependencies>`
 - **Validation**: `<lint command>`, `<test command>`
@@ -70,8 +71,8 @@ Present this review after applying changes and executing local verification in e
 
 ### `<repo-1>`
 - **Changed Files**:
-  - `<file-1>`
-  - `<file-2>`
+  - <file-1>
+  - <file-2>
 - **Diff Stat**:
   ```text
   <git diff --stat HEAD>
@@ -166,8 +167,8 @@ Approve opening these Change Requests?
 ### Created Change Requests
 | Repository | Branch | Commit | Change Request (PR/MR) |
 |---|---|---|---|
-| `<repo-1>` | `<branch>` | `<sha>` | `<PR/MR URL>` |
-| `<repo-2>` | `<branch>` | `<sha>` | `<PR/MR URL>` |
+| `<repo-1>` | `<branch>` | `<sha>` | <PR/MR URL> |
+| `<repo-2>` | `<branch>` | `<sha>` | <PR/MR URL> |
 
 ### Verification Status
 | Repository | Lint / Format | Test Suite | Additional Checks |
@@ -182,8 +183,8 @@ Approve opening these Change Requests?
 ### Active Worktrees (Retained)
 | Repository | Worktree Path |
 |---|---|
-| `<repo-1>` | `<worktree-path>` |
-| `<repo-2>` | `<worktree-path>` |
+| `<repo-1>` | <worktree-path> |
+| `<repo-2>` | <worktree-path> |
 
 > [!NOTE]
 > All Change Requests are opened as Draft / WIP.

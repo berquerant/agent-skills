@@ -72,7 +72,7 @@ When halting due to an edit-pacing interval threshold or unexpected investigatio
 ### ⏸️ Paced Execution Checkpoint
 
 **Current Threshold**: <X minutes / Y non-edit tool calls> (Current: <elapsed or tool count>)
-**Last File Edited**: `<path/to/last/file>` (or "None yet")
+**Last File Edited**: <path/to/last/file> (or "None yet")
 
 #### 1. Current Status & Findings
 - <What has been examined, executed, or verified so far>
@@ -104,7 +104,7 @@ When a command or background task appears stalled or abnormal during periodic st
 #### 1. Observed Liveness Signals
 - **Resource Usage**: CPU <e.g. 0% for past Y minutes>, Memory <e.g. constant Z MB>
 - **Log Activity**: <e.g. No new lines for Y minutes / Repeating loop: "...">
-- **File & Artifact Side Effects**: <e.g. Target artifact `<path>` unmodified since HH:MM>
+- **File & Artifact Side Effects**: <e.g. Target artifact <path> unmodified since HH:MM>
 
 #### 2. Diagnostic Assessment
 - <Evaluation of whether the process is deadlocked, hung on network I/O, or merely computationally intensive>

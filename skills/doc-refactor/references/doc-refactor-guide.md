@@ -9,7 +9,7 @@ This document provides checklists, inventory templates, and zero-code-diff verif
 Before modifying existing comments or documentation in Step 1, catalog all context using this template:
 
 ```markdown
-### 📝 Target Information Inventory: `<path/to/file.ext#Lxx-Lyy>`
+### 📝 Target Information Inventory: <path/to/file.ext#Lxx-Lyy>
 
 #### 1. Core Purpose & Intent
 - [ ] <What is the stated high-level goal of this component/doc?>
