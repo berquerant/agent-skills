@@ -9,18 +9,17 @@ description: >-
 
 # Resolve Dependency PRs
 
-Triage open dependency update and security patch PRs/MRs, audit their legitimacy and security safety, verify them in isolated worktrees, ensure they are up to date with the default branch, validate through CI, remediate failures under user approval, manage multi-repository pipelines without idle waiting, and safely merge.
+Triage open dependency and security PRs/MRs, audit legitimacy and safety, verify in isolated worktrees, validate through CI, remediate failures under user approval, manage multi-repo pipelines without idle waiting, and merge safely.
 
-This workflow coordinates [`explore-plan-execute`](../explore-plan-execute/SKILL.md) to explore candidates and establish an agreed execution plan before modifying any branches, [`git-worktree`](../git-worktree/SKILL.md) for branch isolation, and [`step-gate`](../step-gate/SKILL.md) for remediation approval gates without duplicating procedures. For multi-repository coordination and idle-wait switching, it applies the cooperative scheduling principles defined in [`task-dependency-pipeline`](../task-dependency-pipeline/SKILL.md). In `thorough` mode, it also consults review criteria from [`code-review`](../code-review/SKILL.md) for deep micro/macro audits.
+Coordinates [`explore-plan-execute`](../explore-plan-execute/SKILL.md) for upfront planning, [`git-worktree`](../git-worktree/SKILL.md) for branch isolation, [`step-gate`](../step-gate/SKILL.md) for remediation gates, [`task-dependency-pipeline`](../task-dependency-pipeline/SKILL.md) for cooperative multi-repo scheduling, and [`code-review`](../code-review/SKILL.md) for thorough mode audits.
 
 ---
 
 ## Execution Modes
 
 This skill supports two execution modes:
-
 - **`standard` (Default)**: Standard automated triage, manifest-level security check, rebase, local test/lint, CI verification, and safe merge.
-- **`thorough`**: In-depth micro-level code reviews per candidate (via [`code-review`](../code-review/SKILL.md)), holistic macro reviews of the entire candidate set (detecting transitive conflicts, bundling co-upgrades, optimizing execution order, recommending holds/deprecations), and exhaustive multi-faceted local and environmental verification prior to merge.
+- **`thorough`**: Deep micro reviews per candidate via [`code-review`](../code-review/SKILL.md), holistic macro conflict detection, co-upgrade bundling, and exhaustive multi-faceted verification prior to merge per [references/thorough-audit-and-verification.md](references/thorough-audit-and-verification.md).
 
 ---
 
@@ -28,10 +27,8 @@ This skill supports two execution modes:
 
 - `git` is installed and the current directory is inside a git repository (or target repositories are available locally).
 - A supported platform tool is authenticated (`gh` CLI for GitHub or `glab` CLI for GitLab; refer to [`multi-repo-change/references/platform-tools.md`](../multi-repo-change/references/platform-tools.md)).
-- Follow cost-aware principles (`AGENTS.md` Rule 5 and [`command-cache-protocol.md`](../explore-plan-execute/references/command-cache-protocol.md)): batch API queries, cache candidate state locally (leveraging `cache-memoizer` if available), avoid excessive CI polling, and rely strictly on local references and PR descriptions.
-- **Confirm API Rate Limit & Cost Tracking**: External API queries must respect a rate-limit interval (recommended default: **10 seconds per call**; explicitly confirm with the user during Step 2 planning, and track total API calls as a cost metric).
-- **Determine Execution Mode**: Check if the user specified `standard` or `thorough`. If unspecified, default to `standard` (or present `thorough` as an option in Step 2).
-- **Explore & Plan First**: Do not jump directly into creating worktrees or checking out branches upon invocation. Adhere to [`explore-plan-execute`](../explore-plan-execute/SKILL.md) by exploring open PRs, auditing requirements, and presenting a concrete triage and resolution plan for user approval before modifying any local branches.
+- **Cost & Rate Limits**: Follow cost-aware principles (`AGENTS.md` Rule 5 and [`command-cache-protocol.md`](../explore-plan-execute/references/command-cache-protocol.md)). Confirm API rate limit (default: 10s/call) and execution mode (`standard` or `thorough`).
+- **Explore & Plan First**: Follow [`explore-plan-execute`](../explore-plan-execute/SKILL.md) to triage candidates and present a concrete resolution plan before modifying branches.
 
 ---
 
@@ -49,12 +46,8 @@ Filter PRs according to [references/filter-criteria.md](references/filter-criter
 
 ### 1.3 Context, Legitimacy & Security Audit
 Audit each remaining candidate against [references/security-and-reputation-check.md](references/security-and-reputation-check.md):
-1. **Context & SemVer Check**: Check version delta (patch, minor, major) and verify past repository context via local git history (e.g. `git log -S "<pkg>"`).
-2. **PR Description & Changelog Review**: Confirm release notes or changelogs are referenced, and check for deprecations or license alterations.
-3. **Security & Supply Chain Audit**:
-   - Check exact package name match (guard against typosquatting).
-   - Check lockfile download URLs to confirm official package registry endpoints (guard against arbitrary git URLs or unvetted hosts).
-   - Confirm security vulnerability alignment (CVE / GHSA patched version matches declared bump).
+1. **Context & SemVer**: Check version delta and past repository context via git log.
+2. **Changelog & Supply Chain**: Confirm release notes, official registry endpoints (guarding against typosquatting/arbitrary git URLs), and CVE/GHSA alignment.
 
 ### 1.4 Safety Halt on Doubts
 If ANY warning signal is detected (typosquatting risk, unknown registry URL, unannounced major breaking change, sudden dependency tree bloat, missing changelog):
@@ -78,13 +71,7 @@ Following [`explore-plan-execute`](../explore-plan-execute/SKILL.md), synthesize
      - SemVer delta (patch / minor / major) and type (routine bump vs. security advisory)
      - Estimated risk and required work (e.g., clean merge expected vs. breaking changes / local test run needed)
    - **Thorough Mode In-Depth Audit (if mode is `thorough`)**:
-     - Follow [references/thorough-audit-and-verification.md](references/thorough-audit-and-verification.md).
-     - **Micro Code-Review**: Deep review per candidate using [`code-review`](../code-review/SKILL.md) standards (changelogs, breaking changes, deprecations, supply chain security).
-     - **Macro Holistic Review**: Review the collective set of candidate PRs:
-       - Detect peer dependency conflicts or transitive duplication across candidates.
-       - Identify co-upgrade bundling opportunities (e.g. bundling related ecosystem libraries into a single branch/PR).
-       - Optimize execution ordering based on dependency topology.
-       - Identify updates recommended for holding or rejection (e.g. unstable upstream, massive breaking refactors).
+     - Follow [references/thorough-audit-and-verification.md](references/thorough-audit-and-verification.md) for micro reviews per candidate via [`code-review`](../code-review/SKILL.md) and macro conflict/topology analysis.
    - **Execution Order**: Planned sequence of processing (e.g. security fixes first, patch updates next, minor/major updates last; or topologically ordered).
    - **Execution Strategy & API Cost Budget**:
      - State whether processing sequentially or concurrently across repositories using [references/multi-repo-scheduling.md](references/multi-repo-scheduling.md).
@@ -96,8 +83,7 @@ Following [`explore-plan-execute`](../explore-plan-execute/SKILL.md), synthesize
    ### Dependency PR Resolution Plan
 
    **Mode**: standard / thorough
-   **API Rate Limit**: 10 seconds / call (default; please adjust if needed)
-   **Estimated API Calls**: ~<X> calls (~<X*10>s API time)
+   **API Rate Limit**: 10s / call (~<X> estimated calls)
 
    #### Candidate Overview
    | PR # | Package | Version Bump | Type | Risk / Expected Action |
@@ -106,8 +92,8 @@ Following [`explore-plan-execute`](../explore-plan-execute/SKILL.md), synthesize
    | #15 | `bar` | `2.1.0` -> `3.0.0` | Major | High; check breaking changes, run local build |
 
    #### Holistic Audit & Optimization (Thorough Mode Only)
-   - Co-upgrade Bundling: Recommend bundling related packages #15 and #16.
-   - Excluded / Halted: PR #10 (non-manifest files), PR #14 (safety halt).
+   - Co-upgrade Bundling: Packages #15 and #16.
+   - Excluded / Halted: PR #10 (non-manifest), PR #14 (safety halt).
 
    #### Proposed Execution Order & Gating
    1. PR #12 (`foo`): Security patch -> Merge -> **Wait Default Branch CI Pass**
@@ -199,13 +185,7 @@ If any local or remote CI checks fail (e.g., breaking API changes, deprecations,
    - Cross-reference failure symptoms against [references/failure-archetypes.md](references/failure-archetypes.md) (outdated base branch, unsynced derived artifacts, snapshot drift) to apply standard playbooks before conjecturing code rewrites.
    - Determine the minimal adaptation needed to accommodate the upgraded dependency.
 2. **Present Remediation Plan (Human-in-the-Loop)**:
-   - Follow the gate structure modeled after [`step-gate`](../step-gate/SKILL.md):
-   ```markdown
-   ### Remediation Plan for PR #<number> (<package-name>)
-   - **Failure Summary**: <Reason for CI failure, e.g. compiler error, deprecated method>
-   - **Proposed Changes**: <Exact file modifications and rationale>
-   - **Verification**: <Commands to run locally and in CI to confirm resolution>
-   ```
+   - Present a concise plan modeled after [`step-gate`](../step-gate/SKILL.md) detailing Failure Summary, Proposed Changes, and Verification commands.
    - Await explicit user approval before modifying files.
 3. **Execute & Sync**:
    - Upon user approval, apply the minimal code adjustments.
@@ -244,11 +224,7 @@ Before proceeding to the next candidate PR in the same repository or concluding 
    - Present a Safety Halt Incident Report to the user with failure logs, and offer remediation options (e.g., revert the merge commit via `git revert <merge-sha>`, or create an immediate patch).
 
 ### 7.3 Clean Up Worktree
-Clean up the worktree following [`git-worktree`](../git-worktree/SKILL.md):
-```bash
-git worktree remove <worktree-path>
-git branch -D <head-branch>
-```
+Clean up the worktree and head branch following [`git-worktree`](../git-worktree/SKILL.md) (`git worktree remove <worktree-path>`, `git branch -D <head-branch>`).
 
 ### 7.4 Follow-Up Skills (Sequential Hand-off)
 - **For post-merge working tree verification**: Recommend [`project-status`](../project-status/SKILL.md).
@@ -260,14 +236,13 @@ Verify: The PR/MR is merged, default branch CI is verified green, and the tempor
 
 ## Guidelines
 
-- **Explore & Plan First**: Never jump directly into branch checkouts or modifications. Always triage open PRs, formulate an explicit resolution plan with candidate breakdown and execution order, and obtain user confirmation first.
-- **External API Rate Limit & Cost Tracking**: Always confirm the API rate limit with the user during planning (default recommended: 10s per call). Treat API requests as billable costs, track total calls, and use cooldowns to execute zero-API local operations.
-- **Post-Merge Default Branch CI Stability**: In any single repository, multiple PRs must be processed strictly sequentially. Never advance to the next candidate PR until the default branch CI triggered by the prior merge commit passes. Halt immediately if default branch CI breaks.
-- **Minimize Total Cost**: Batch API requests upfront (`gh pr list --json ... > prs.json`), cache candidate metadata locally, inspect details locally rather than querying remote APIs per PR, prioritize fast local checks over remote CI runs, and strictly avoid tight polling loops (`--watch` or sleep loops).
+- **Explore & Plan First**: Never mutate branches without an agreed plan. Triage candidates, batch API queries upfront, and confirm execution order with the user.
+- **External API Rate Limit & Cost Tracking**: Pre-confirm API rate limits (default: 10s/call), track total API calls, and avoid polling loops.
+- **Post-Merge Default Branch CI Stability**: In a single repository, process PRs strictly sequentially. Never advance until the default branch CI for the prior merge commit passes. Halt immediately on failure.
 - **Safety First on Doubts**: If there is any suspicion regarding package identity, registry URLs, unexpected dependencies, or security advisories, halt and request user confirmation immediately.
 - **No Idle Blocking in Multi-Repo Tasks**: When waiting for CI (either PR CI or post-merge default branch CI) or user input in one repository, switch to another repository immediately to continue work.
 - **Never Force Without Lease**: Always use `--force-with-lease` when updating rebased remote branches.
 - **Declare Execution Mode Upfront**: Explicitly identify whether running in `standard` or `thorough` mode during plan presentation.
-- **Thorough Mode Holistic Scrutiny**: In `thorough` mode, treat single-PR merges as part of the broader dependency graph: inspect changelogs, audit breaking changes, detect cross-PR peer conflicts, consider bundling co-upgrades, and mandate comprehensive local verification (type checks, audits, clean builds) beyond basic CI.
-- **Strict Scope Preservation**: If a dependency update requires substantial application logic rewrites beyond minor API signature adjustments, pause and consult the user or hand off to [`refactor`](../refactor/SKILL.md).
-- **No Leftover Worktrees**: Always remove worktrees upon completion or cancellation to avoid disk clutter.
+- **Thorough Mode Holistic Scrutiny**: In `thorough` mode, inspect changelogs, audit breaking changes, detect cross-PR peer conflicts, and mandate comprehensive verification per [references/thorough-audit-and-verification.md](references/thorough-audit-and-verification.md).
+- **Strict Scope Preservation**: If updates require logic rewrites beyond minor API adjustments, pause and consult or hand off to [`refactor`](../refactor/SKILL.md).
+- **No Leftover Worktrees**: Clean up worktrees upon completion to avoid disk clutter.

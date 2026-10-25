@@ -1,6 +1,7 @@
 # Checkpoint Log Format Specification
 
 This document defines the structure, conventions, and entry templates for checkpoint logs managed by `checkpoint-log`. For file storage paths and directory hierarchy, refer to [path-conventions.md](path-conventions.md).
+Per `output-presentation`, record all file paths, locations, and targets as unadorned raw strings without backticks or Markdown links.
 
 ---
 
@@ -20,7 +21,7 @@ When initializing a new checkpoint log file, write the header block at the top:
 # Task Checkpoint Log: <Short Task Title>
 
 - **Created**: <YYYY-MM-DD HH:MM:SS>
-- **Log Path**: `<exact_file_path>`
+- **Log Path**: <exact_file_path>
 - **Project**: `<project_name>`
 - **Branch**: `<branch_name>`
 - **Context**: `<task_context_slug>`

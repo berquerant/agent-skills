@@ -36,7 +36,7 @@ Before executing exploratory commands or reading files, predict which informatio
    - Prioritize sources agreed upon with the user.
    - You are not strictly forbidden from consulting additional unpredicted sources if genuine inquiry demands it; however, **sources designated as excessive or out-of-scope by the user must be strictly avoided**.
 
-Verify: Planned information sources are forecasted, categorized into priority/fallback tiers, presented to the user, and agreed upon with explicit exclusion of excessive sources.
+Verify: Candidate information sources are categorized into priority/fallback tiers, presented to the user, and explicit user consensus on scope and exclusions is obtained.
 
 ---
 

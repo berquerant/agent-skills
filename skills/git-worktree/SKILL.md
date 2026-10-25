@@ -35,8 +35,7 @@ ls <WORKTREE_ROOT>
 ```
 
 If access is denied, inform the user and request permission before continuing.
-Access to paths outside the sandbox may require running commands with elevated
-permissions (e.g. `BypassSandbox: true` in Antigravity).
+Access to paths outside the sandbox or restricted directories may require elevated user permissions or running outside sandbox isolation.
 
 Verify: WORKTREE_ROOT exists and is writable.
 

@@ -55,7 +55,7 @@ If starting a new task log, write the header block at the top of the file follow
 # Task Checkpoint Log: <Short Task Title>
 
 - **Created**: <YYYY-MM-DD HH:MM:SS>
-- **Log Path**: `<resolved_file_path>`
+- **Log Path**: <resolved_file_path>
 - **Project**: `<project_name>`
 - **Branch**: `<branch_name>`
 - **Context**: `<task_context_slug>`
