@@ -1,10 +1,10 @@
 ---
 name: project-audit
 description: >-
-  Use this skill to conduct a comprehensive repository-wide health check, assess
-  public release readiness and exposure risks, audit project security, or evaluate
-  maintainability and technical debt. Produces a prioritized audit report with
-  clear pass/fail ratings and actionable remedies without modifying files.
+  Use this skill to conduct an exhaustive repository-wide baseline audit, assess
+  public release readiness and exposure risks, evaluate maintainability metrics,
+  and grade technical debt with prioritized ratings. For quick, targeted, or
+  recent-change diagnostics without full-repo letter grades, prefer doctor.
 ---
 
 # Project Audit (Health, Security, Public Release Readiness, & Maintainability)

@@ -3,9 +3,9 @@ name: scrutinize-plan-execute
 description: >-
   Use this skill when the user's task requires rigorous upfront scrutiny, has
   ambiguous conditions or premises, carries high failure risks, or demands
-  iterative plan refinement with the user before execution. Scrutinizes draft
-  plans for obstacles, consults on remedies, manages file archiving for long
-  plans and reports upon user confirmation, and executes safely upon approval.
+  iterative plan refinement before execution (preferring it over
+  explore-plan-execute for high-risk work). Scrutinizes draft plans for obstacles,
+  consults on remedies, manages file archiving, and executes safely upon approval.
 ---
 
 # Scrutinize → Plan → Execute

@@ -1,7 +1,7 @@
 ---
 name: doctor
 description: >-
-  Use this skill to diagnose a project or recent changes across documentation, maintainability, latent bugs, and security risks. Supports project/recent targets and quick/thorough depths, produces an evidence-backed improvement plan, and hands off to mutation skills after approval.
+  Use this skill for focused or mode-selectable (quick/thorough, project/recent changes) health checkups across documentation, maintainability, latent bugs, and security risks. Produces an evidence-backed improvement plan and hands off to mutation skills. For comprehensive, repository-wide baseline audits with letter-grade health ratings, prefer project-audit.
 ---
 
 # Doctor
