@@ -39,3 +39,11 @@ Unless project-specific instructions dictate otherwise, agents must adhere to th
   When crafting git commit messages and PR/MR titles or summaries, adhere to repository conventions and Conventional Commits by following the **`change-message`** skill.
 - **Constructive Review Discussions**:
   When initiating or replying to PR/MR review comments and resolution threads, follow the **`review-discussion`** skill to maintain actionable, constructive dialogue and explicit resolution ownership.
+
+---
+
+## 6. User Notifications
+
+- **Timely Alerts and Preceding Approval Notifications**:
+  Notify the user whenever a requested task completes, when user confirmation or input is required to proceed, or immediately before executing tools or commands that require elevated permissions or sandbox bypassing. For elevated commands, issue the notification in a standalone preceding step before requesting permission. Follow the **`user-notification`** skill for channel selection, preceding step execution, and verification details.
+

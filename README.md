@@ -39,6 +39,7 @@ All skills are maintained under `skills/`.
 | [`snippet-review`](skills/snippet-review/SKILL.md) | Audits ad-hoc execution snippets for cognitive intelligibility, complexity, and safety. | Four-tier complexity scale, 5 evaluation dimensions, automated simplification, 3-choice user consultation gate. |
 | [`task-dependency-pipeline`](skills/task-dependency-pipeline/SKILL.md) | Models task dependencies as a DAG and executes via a cooperative idle-wait scheduler. | DAG decomposition, cooperative context switching, idle-wait interleaving, anti-polling rules. |
 | [`output-presentation`](skills/output-presentation/SKILL.md) | Formats file paths, workspace targets, and URLs as plain raw strings without Markdown decorations. | Raw strings for seamless copy-pasting, no Markdown links or enclosing backticks, pre-flight verification. |
+| [`user-notification`](skills/user-notification/SKILL.md) | Dispatches notifications on completion, approval gates, or before elevated tool execution. | Multi-channel delivery, preceding step protocol for elevated commands, anti-fatigue filtering. |
 
 ## Skill Selection Matrix
 
@@ -71,6 +72,7 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 | Convert long or complex command to snippet | [`command-snippet`](skills/command-snippet/SKILL.md) | `snippet-review` → `step-gate` / `explore-plan-execute` |
 | Audit execution snippet intelligibility & safety | [`snippet-review`](skills/snippet-review/SKILL.md) | `command-snippet` |
 | Format output paths & URLs for clean copy-paste | [`output-presentation`](skills/output-presentation/SKILL.md) | — |
+| Alert user on completion, gates, or elevated tools | [`user-notification`](skills/user-notification/SKILL.md) | — |
 
 ## Project Structure
 
@@ -132,8 +134,9 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │   ├── snippet-review/
 │   │   └── references/          # Intelligibility rubric & complexity metrics
 │   ├── step-gate/
-│   └── task-dependency-pipeline/
-│       └── references/          # DAG modeling & cooperative scheduling guide
+│   ├── task-dependency-pipeline/
+│   │   └── references/          # DAG modeling & cooperative scheduling guide
+│   └── user-notification/
 ├── global/
 │   └── AGENTS.md            # Portable/global agent guidelines for external projects
 ├── AGENTS.md                    # Operational guidelines & context for AI agents

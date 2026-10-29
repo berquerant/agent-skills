@@ -82,6 +82,7 @@ flowchart TD
         CM["change-message<br/>(Commit & PR/MR messages)"]
         CS["command-snippet<br/>(Command script & parameterization)"]
         OP["output-presentation<br/>(Unadorned copy-paste formatting)"]
+        UN["user-notification<br/>(Alerts, gates & preceding permission notice)"]
         TDP["task-dependency-pipeline<br/>(DAG modeling & cooperative idle-wait scheduler)"]
     end
 
@@ -135,6 +136,9 @@ flowchart TD
     MRC -.->|message guidelines| CM
     EPE -.->|complex command scripts| CS
     SG -.->|complex command scripts| CS
+    EPE -.->|completion & gate notification| UN
+    SPE -.->|completion & gate notification| UN
+    SG -.->|gate alert & preceding notice| UN
     CS -.->|audits snippet intelligibility| SNR
     SNR -.->|suggests simplification| CS
     CR -.->|shares review criteria| SNR
