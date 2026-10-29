@@ -15,6 +15,7 @@ skills/skill-review/scripts/run-checks.sh skills/<target-skill>
 ```
 
 The script runs read-only commands and prints a report covering checks A through J.
+It exits with status 0 if all mechanical checks pass, or 1 if any errors are detected.
 
 ---
 
