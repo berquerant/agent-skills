@@ -1,16 +1,18 @@
 ---
 name: command-snippet
 description: >-
-  Use this skill when executing complex, chained, or multi-line shell commands
-  to convert them into structured, documented, and parameterized snippet files,
-  review them for intelligibility via snippet-review, and explain their intent to
-  the user before execution instead of executing long inline commands.
+  Use this skill when executing complex, chained, or multi-line shell commands,
+  or when normalizing command arguments for user approval ease, to convert them
+  into structured, documented, and parameterized snippet files, review them for
+  intelligibility via snippet-review, and explain their intent to the user before
+  execution instead of executing long inline commands.
 ---
 
 # Command Snippet
 
-Use this skill to convert long, chained, or complex shell commands into
-dedicated, documented, and parameterized snippet files before execution.
+Use this skill to convert long, chained, or complex shell commands—or commands
+requiring approval-friendly argument normalization—into dedicated, documented,
+and parameterized snippet files before execution.
 Directly running long inline commands reduces readability and makes inspecting,
 debugging, and verifying execution difficult for users.
 
@@ -38,6 +40,10 @@ Inspect the intended command against the avoidance thresholds:
   - **Module imports**: Contains `import ...`, `from ... import`, or `require(...)`.
   - **Control flow**: Uses loops (`for`, `while`), comprehensions, or conditionals (`if`, `elif`, `else`).
   - **Escaped quotes / string nesting**: Requires escaped quotes (`\"`, `\'`) or complex string nesting.
+- **Infix variable arguments & approval friction**:
+  Commands that embed dynamic context variables in the middle of command lines
+  (e.g., `git -C <dir> status`), which disrupt prefix-based approval rules or
+  obscure the critical action verb during human review.
 
 If the command meets any of these criteria, **do not execute it inline**. Halt
 inline execution and proceed to create a snippet file with the appropriate extension
@@ -82,9 +88,14 @@ Design the snippet's interface:
    - Use safe parameterization patterns:
      - Array parameterization: `cmd=("$@")` or `opts=("-v" "--filter" "$1"); "${cmd[@]}" "${opts[@]}"`
      - Clean subshell invocation: `bash -c '...' _ "$@"`
+4. **Trailing Variable Arguments & Single Responsibility**:
+   - Apply approvable snippet patterns per [references/approvable-patterns.md](references/approvable-patterns.md):
+     - **Right-align dynamic variables**: Curry fixed commands and operations inside the snippet so that context-dependent variables (such as directory paths or hostnames) are exposed exclusively as trailing CLI arguments (`$1`, `$2`).
+     - **Strict single responsibility**: Every snippet must perform exactly one concrete action. Never pass subcommands or action verbs as parameters to a generalized wrapper (e.g., generate `run_git_status.sh` and `run_git_tag.sh` separately instead of a multi-purpose `git -C "$1" "$2"`).
+     - **Shell hardening**: Include `set -euo pipefail`, explicit argument checks (`"${1:?error message}"`), input existence validation, and replace the wrapper process via `exec`.
 
 Verify: All variable inputs are mapped to explicit positional arguments or
-command-line flags, no inputs rely on ambient environment variables, and dynamic command invocations avoid `eval`.
+command-line flags, dynamic arguments are right-aligned to trailing positions without generalized multi-action wrappers, no inputs rely on ambient environment variables, and dynamic command invocations avoid `eval`.
 
 ---
 
@@ -210,3 +221,7 @@ Verify: Unneeded temporary files and superseded snippet versions are disposed of
   Notice block before invoking the execution tool.
 - **Keep snippets focused.** A snippet should accomplish a coherent task, making
   it easy for users to read and understand.
+- **Enforce single-responsibility and trailing arguments for approvability.**
+  Never pass subcommands or arbitrary action verbs as variables to snippets. Curry
+  fixed operations into dedicated snippet files and place context-dependent
+  variables exclusively in trailing CLI arguments per [references/approvable-patterns.md](references/approvable-patterns.md).
