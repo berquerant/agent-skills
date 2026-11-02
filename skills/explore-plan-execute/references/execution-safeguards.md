@@ -1,7 +1,7 @@
 # Execution Safeguards & Environment Protocols
 
 Mandatory safeguards and environment protocols to incorporate during the planning and execution phases of task workflows.
-Per `output-presentation`, communicate all file paths, locations, and URLs as unadorned plain raw strings without backticks or Markdown links.
+Per `output-presentation`, communicate all file paths, locations, and URLs by co-presenting accessible Markdown links and unadorned raw strings in parentheses.
 
 ---
 

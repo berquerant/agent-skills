@@ -81,7 +81,7 @@ flowchart TD
         MRC[multi-repo-change]
         CM["change-message<br/>(Commit & PR/MR messages)"]
         CS["command-snippet<br/>(Command script & parameterization)"]
-        OP["output-presentation<br/>(Unadorned copy-paste formatting)"]
+        OP["output-presentation<br/>(Dual link & raw copy-paste formatting)"]
         UN["user-notification<br/>(Alerts, gates & preceding permission notice)"]
         TDP["task-dependency-pipeline<br/>(DAG modeling & cooperative idle-wait scheduler)"]
     end

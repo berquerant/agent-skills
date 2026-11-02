@@ -1,7 +1,7 @@
 # Approval Gates and Reporting Templates
 
 The multi-repo change workflow relies on four explicit user approval checkpoints to prevent unintended mutations. Use the standardized templates below.
-Per output-presentation, communicate all file paths, repository directories, worktree paths, and PR/MR URLs as unadorned raw strings without backticks or Markdown links.
+Per output-presentation, communicate all file paths, repository directories, worktree paths, and PR/MR URLs by co-presenting accessible Markdown links and unadorned raw strings in parentheses.
 
 ---
 

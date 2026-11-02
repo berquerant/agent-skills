@@ -7,8 +7,8 @@ Unless project-specific instructions dictate otherwise, agents must adhere to th
 
 ## 1. Output Presentation
 
-- **Raw String Presentation for Paths and URLs**:
-  When communicating file paths, workspace targets, or web URLs to the user, output them as plain, unadorned raw strings without Markdown hyperlinks (e.g., `[label](url)`) or inline code backticks (e.g., `` `path` ``). Follow the **`output-presentation`** skill for formatting and verification details.
+- **Dual Presentation for Paths and URLs**:
+  When communicating file paths, workspace targets, or web URLs to the user, co-present a clickable Markdown link followed by an unadorned raw string in parentheses (e.g., `[file.ext](file:///path/to/file.ext) (path/to/file.ext)` or `[PR #1](https://example.com/repo/pull/1) (https://example.com/repo/pull/1)`). Ensure the Markdown link target is an accessible, working reference that does not break upon current working directory shifts. Follow the **`output-presentation`** skill for formatting, link viability guarantees, and verification details.
 
 ---
 

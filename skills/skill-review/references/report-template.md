@@ -1,7 +1,7 @@
 # Skill Review Report Templates
 
 Report formats for skill review findings. Assign statuses and verdicts using the **Verdict Rules** in [skill-review-checklist.md](skill-review-checklist.md).
-Per the output-presentation convention, output all file paths, locations, and URLs as unadorned plain raw strings without inline code backticks or Markdown links.
+Per the output-presentation convention, output all file paths, locations, and URLs by co-presenting accessible Markdown links and unadorned raw strings in parentheses.
 
 ---
 

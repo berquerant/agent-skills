@@ -62,7 +62,7 @@ Verify: Every automated check has a recorded result. False positives, such as li
 
 Using the automated results as evidence, evaluate the target against dimensions **1. Scope & Granularity**, **2. Modularity & File Split**, and **3. Maintainability & Conventions** in [references/skill-review-checklist.md](references/skill-review-checklist.md).
 
-Record each finding with a severity (Fail / Warn) and a plain raw string location (path/to/file#Lxx-Lyy) without Markdown links or backticks, following `output-presentation`.
+Record each finding with a severity (Fail / Warn) and a location following `output-presentation` (co-presenting an accessible Markdown link and an unadorned raw string).
 
 Verify: Each item in dimensions 1–3 has a finding or an explicit pass, and every finding has a location.
 
@@ -82,7 +82,7 @@ Verify: Each item in dimensions 4–6 has a finding or an explicit pass, and cro
 ## Step 5: Generate & Present the Review Report
 
 1. Rate each dimension, then determine the overall verdict using the **Verdict Rules** in [references/skill-review-checklist.md](references/skill-review-checklist.md).
-2. Fill in the per-skill template in [references/report-template.md](references/report-template.md). Every Warn or Fail must have a concrete remedy. Output all paths and locations as unadorned raw strings.
+2. Fill in the per-skill template in [references/report-template.md](references/report-template.md). Every Warn or Fail must have a concrete remedy. Output all paths and locations following `output-presentation`.
 3. In batch mode, also produce the cross-skill summary (verdict matrix, cross-skill issues, prioritized backlog).
 4. Present the reports in the conversation. If the user wants them saved, write them only to a location the user chooses outside the reviewed skills, such as the agent's scratch or artifact area.
 5. Recommend a next skill for the user to approve, such as `step-gate` for phased fixes, `refactor` for structural changes, or `doc-refactor` for documentation or comment refinements.

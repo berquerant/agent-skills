@@ -71,7 +71,7 @@ When a criterion is ambiguous for a particular skill, record the interpretation 
   4. `## Step N: …` sections
   5. `## Guidelines`
 - [ ] **[W] Verify checkpoints**: Every `## Step N` section contains an explicit `Verify:` line that a reader can actually check.
-- [ ] **[W] Output presentation compliance**: Instructions, report templates, and procedural steps communicate file paths, line ranges, and web URLs as plain, unadorned raw strings without Markdown links or inline backticks, following `output-presentation`.
+- [ ] **[W] Output presentation compliance**: Instructions, report templates, and procedural steps communicate file paths, line ranges, and web URLs by co-presenting accessible Markdown links and unadorned raw strings in parentheses without inline backticks on raw targets, following `output-presentation`.
 - [ ] **[W] Command snippet modularity**: Inline shell commands avoid long chained scripts (≥4 operators, ≥120 characters, or complex inline payloads) and delegate multi-line or complex execution to `scripts/` or parameterized snippets, following `command-snippet`.
 - [ ] **[W] Platform and project agnostic**: The skill does not hardcode vendor-specific tool names, proprietary variables, fixed directory layouts, or a single tech stack, unless it labels them as examples and gives a generic fallback.
 

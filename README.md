@@ -38,7 +38,7 @@ All skills are maintained under `skills/`.
 | [`command-snippet`](skills/command-snippet/SKILL.md) | Converts complex, chained, or long commands into documented snippet files before execution. | Avoidance thresholds, reusability evaluation, CLI argument parameterization over env vars, header documentation. |
 | [`snippet-review`](skills/snippet-review/SKILL.md) | Audits ad-hoc execution snippets for cognitive intelligibility, complexity, and safety. | Four-tier complexity scale, 5 evaluation dimensions, automated simplification, 3-choice user consultation gate. |
 | [`task-dependency-pipeline`](skills/task-dependency-pipeline/SKILL.md) | Models task dependencies as a DAG and executes via a cooperative idle-wait scheduler. | DAG decomposition, cooperative context switching, idle-wait interleaving, anti-polling rules. |
-| [`output-presentation`](skills/output-presentation/SKILL.md) | Formats file paths, workspace targets, and URLs as plain raw strings without Markdown decorations. | Raw strings for seamless copy-pasting, no Markdown links or enclosing backticks, pre-flight verification. |
+| [`output-presentation`](skills/output-presentation/SKILL.md) | Co-presents clickable Markdown links and unadorned raw strings for paths, targets, and URLs. | Dual format (`[label](url) (raw_url)`), link viability guarantee, copy-pasting without enclosing backticks. |
 | [`user-notification`](skills/user-notification/SKILL.md) | Dispatches notifications on completion, approval gates, or before elevated tool execution. | Multi-channel delivery, preceding step protocol for elevated commands, anti-fatigue filtering. |
 
 ## Skill Selection Matrix
@@ -71,7 +71,7 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 | Scaffold new Model Context Protocol server | [`mcp-creator`](skills/mcp-creator/SKILL.md) | `explore-plan-execute` |
 | Convert long or complex command to snippet | [`command-snippet`](skills/command-snippet/SKILL.md) | `snippet-review` → `step-gate` / `explore-plan-execute` |
 | Audit execution snippet intelligibility & safety | [`snippet-review`](skills/snippet-review/SKILL.md) | `command-snippet` |
-| Format output paths & URLs for clean copy-paste | [`output-presentation`](skills/output-presentation/SKILL.md) | — |
+| Co-present clickable links and raw copy-paste paths & URLs | [`output-presentation`](skills/output-presentation/SKILL.md) | — |
 | Alert user on completion, gates, or elevated tools | [`user-notification`](skills/user-notification/SKILL.md) | — |
 
 ## Project Structure

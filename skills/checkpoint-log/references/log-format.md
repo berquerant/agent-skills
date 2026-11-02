@@ -1,7 +1,7 @@
 # Checkpoint Log Format Specification
 
 This document defines the structure, conventions, and entry templates for checkpoint logs managed by `checkpoint-log`. For file storage paths and directory hierarchy, refer to [path-conventions.md](path-conventions.md).
-Per `output-presentation`, record all file paths, locations, and targets as unadorned raw strings without backticks or Markdown links.
+Per `output-presentation`, record all file paths, locations, and targets by co-presenting accessible Markdown links and unadorned raw strings in parentheses (or unadorned raw strings where plain text logs are required).
 
 ---
 
