@@ -2,10 +2,11 @@
 name: command-snippet
 description: >-
   Use this skill when executing complex, chained, or multi-line shell commands,
-  or when normalizing command arguments for user approval ease, to convert them
+  when normalizing command arguments, or when constraining operational scope to
+  reduce user review friction and facilitate continuous approval, to convert them
   into structured, documented, and parameterized snippet files, review them for
   intelligibility via snippet-review, and explain their intent to the user before
-  execution instead of executing long inline commands.
+  execution instead of executing long or overly broad inline commands.
 ---
 
 # Command Snippet
@@ -44,6 +45,11 @@ Inspect the intended command against the avoidance thresholds:
   Commands that embed dynamic context variables in the middle of command lines
   (e.g., `git -C <dir> status`), which disrupt prefix-based approval rules or
   obscure the critical action verb during human review.
+- **Overly broad command scope & persistent approval friction**:
+  Commands invoking omnipotent CLI tools with wide capability blast radiuses
+  (e.g., `gh`, `aws`, `gcloud`, `kubectl`), where approving raw commands imposes
+  high cognitive review friction or where continuous/session-long approval requires
+  restricting the tool to narrow, benign subcommands or exact targets.
 
 If the command meets any of these criteria, **do not execute it inline**. Halt
 inline execution and proceed to create a snippet file with the appropriate extension
@@ -92,6 +98,7 @@ Design the snippet's interface:
    - Apply approvable snippet patterns per [references/approvable-patterns.md](references/approvable-patterns.md):
      - **Right-align dynamic variables**: Curry fixed commands and operations inside the snippet so that context-dependent variables (such as directory paths or hostnames) are exposed exclusively as trailing CLI arguments (`$1`, `$2`).
      - **Strict single responsibility**: Every snippet must perform exactly one concrete action. Never pass subcommands or action verbs as parameters to a generalized wrapper (e.g., generate `run_git_status.sh` and `run_git_tag.sh` separately instead of a multi-purpose `git -C "$1" "$2"`).
+     - **Constrain operational scope granularity**: Apply the 4-tier scope granularity model. Select parameter-constrained snippets (Level 2) for recurring read-only queries across multiple items, and fully fixed resource snippets (Level 3) for state-mutating operations or workflows strictly focused on a single target, minimizing human review friction without introducing approval fatigue.
      - **Shell hardening**: Include `set -euo pipefail`, explicit argument checks (`"${1:?error message}"`), input existence validation, and replace the wrapper process via `exec`.
 
 Verify: All variable inputs are mapped to explicit positional arguments or
@@ -225,3 +232,7 @@ Verify: Unneeded temporary files and superseded snippet versions are disposed of
   Never pass subcommands or arbitrary action verbs as variables to snippets. Curry
   fixed operations into dedicated snippet files and place context-dependent
   variables exclusively in trailing CLI arguments per [references/approvable-patterns.md](references/approvable-patterns.md).
+- **Minimize operational scope to reduce review friction.** Constrain omnipotent CLI
+  tools (`gh`, `aws`, `kubectl`) to specific subcommands or exact targets. Choose
+  between parameter-constrained (Level 2) and fixed-resource (Level 3) snippets based
+  on the balance between review anxiety and approval fatigue per [references/approvable-patterns.md](references/approvable-patterns.md).
