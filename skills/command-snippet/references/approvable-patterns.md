@@ -64,6 +64,33 @@ What constitutes a "variable argument" is not fixed by the command's syntax alon
 
 Evaluate the execution pattern across the overall workflow before deciding which inputs to parameterize.
 
+### Principle 4: Scope Granularity & Cognitive Review Ease (Principle of Least Privilege)
+Review friction is directly tied to the ambiguity and blast radius of the command. When an agent presents a command using an omnipotent CLI tool (such as `gh`, `aws`, `gcloud`, or `kubectl`), human reviewers face high cognitive load: they must verify that no destructive subcommands, hidden options, or privilege escalation paths exist anywhere in the command string.
+
+Constraining broad CLI tools into specialized snippet files minimizes capability scope to the exact operation needed, drastically lowering the cognitive threshold for human approval and enabling safe, continuous approval across sessions.
+
+#### The 4-Tier Scope Granularity Model
+
+| Tier | Granularity Level | Invocation Form | Review Burden & Approval Predictability |
+|---|---|---|---|
+| **Level 0** | **Raw Broad CLI** | `gh pr view 123` | **High Review Burden**: Approving `gh` grants blanket permissions to destructive capabilities (`gh repo delete`, etc.). Every single invocation must be audited end-to-end. |
+| **Level 1** | **Subcommand-Constrained** | `./run_gh_pr_view.sh "$@"` | **Moderate Review Ease**: Locks the action to `pr view`, blocking destructive subcommands, but permits arbitrary flags and targets. Suitable for ad-hoc exploration. |
+| **Level 2** | **Parameter-Constrained** | `./view_pr_details.sh "$1"` | **Low Review Friction (Continuous Approval)**: Subcommand and flags (e.g. `--json number,title,body`) are hardcoded. Reviewer only audits the trailing target `$1`. Optimal for repetitive inspection across items. |
+| **Level 3** | **Fully Fixed Resource** | `./view_target_pr.sh` | **Zero Cognitive Friction**: Both the action and the target (e.g. PR #123) are curried inside the snippet. Zero blast radius, trivial approval. Ideal for single-resource tasks and mutating operations. |
+
+#### Trade-off Analysis: Per-Approval Anxiety vs. Approval Fatigue
+
+Constraining scope to Level 3 offers maximum safety and easiest per-step approval, but creating dedicated files for every single dynamic resource introduces **Approval Fatigue** (excessive approval gates and scratch file proliferation).
+
+- **Use Level 2 (Parameter-Constrained)** when:
+  - Performing **read-only queries across multiple items** (e.g., inspecting several PRs or commit SHAs during a single investigation).
+  - A single snippet can be audited once and safely reused with trailing positional arguments.
+  - Shell argument validation (`[[ "$1" =~ ^[0-9]+$ ]]`) guarantees the parameter format.
+- **Use Level 3 (Fully Fixed Resource)** when:
+  - Executing **state-mutating or irreversible operations** (e.g., commenting on or merging a specific PR, deploying a specific tag).
+  - The entire workflow is known to target exactly one single item from the start.
+  - Absolute confinement is required so the agent cannot inadvertently target an incorrect resource.
+
 ---
 
 ## 3. Robust Shell Implementation Guidelines
@@ -138,6 +165,61 @@ fi
 exec git -C "${target_dir}" tag
 ```
 
+### Example C: Parameter-Constrained GitHub PR Viewer (Level 2)
+
+```bash
+#!/usr/bin/env bash
+#
+# Description:
+#   Fetches metadata for a specific GitHub pull request within the current repository.
+#   Restricts gh CLI execution strictly to read-only pr view operations.
+#
+# Arguments:
+#   $1 - pr_number (numeric pull request ID)
+#
+# Usage:
+#   ./view_pr_details.sh 123
+#
+# Prerequisites:
+#   gh (GitHub CLI), authenticated
+#
+set -euo pipefail
+
+pr_number="${1:?Error: PR number is required}"
+
+if [[ ! "${pr_number}" =~ ^[0-9]+$ ]]; then
+  echo "Error: PR number must be positive integer: ${pr_number}" >&2
+  exit 1
+fi
+
+exec gh pr view "${pr_number}" --json number,title,state,author,url
+```
+
+### Example D: Fixed-Resource Targeted GitHub PR Viewer (Level 3)
+
+```bash
+#!/usr/bin/env bash
+#
+# Description:
+#   Fetches details for target pull request #123.
+#   Completely curries the target resource to eliminate dynamic parameter risks.
+#
+# Arguments:
+#   None
+#
+# Usage:
+#   ./view_target_pr_123.sh
+#
+# Prerequisites:
+#   gh (GitHub CLI), authenticated
+#
+set -euo pipefail
+
+readonly TARGET_PR="123"
+
+exec gh pr view "${TARGET_PR}" --json number,title,state,body,url
+```
+
 ---
 
 ## 5. Verification Checklist
@@ -145,8 +227,10 @@ exec git -C "${target_dir}" tag
 Before presenting an approvable snippet for user execution:
 
 - [ ] Does the snippet perform exactly one action (no dynamic subcommands)?
-- [ ] Are dynamic variables exposed exclusively as trailing CLI arguments (`$1`, `$2`)?
-- [ ] Are required parameters guarded with `${1:?message}`?
+- [ ] Is the scope granularity tier (Level 1–3) chosen appropriately to minimize review friction without causing approval fatigue?
+- [ ] Are omnipotent tools (e.g., `gh`, `aws`, `kubectl`) constrained to explicit, minimal subcommands?
+- [ ] Are dynamic variables exposed exclusively as trailing CLI arguments (`$1`, `$2`), or curried internally (Level 3) when targeting a fixed resource?
+- [ ] Are required parameters guarded with `${1:?message}` and format-validated (e.g., regex pattern check)?
 - [ ] Is input validation in place for paths or required entities?
 - [ ] Is the final command executed via `exec` with fully quoted variables?
 - [ ] Has the snippet been audited via `snippet-review` and preceded by the mandatory Pre-Execution Notice?
