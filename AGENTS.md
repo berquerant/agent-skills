@@ -91,7 +91,7 @@ flowchart TD
         PS["project-status<br/>(Micro working-tree & drift check)"]
         CR["code-review<br/>(Meso diff/PR review & security audit)"]
         RD["review-discussion<br/>(PR/MR comments & thread resolution)"]
-        EI["evidentiary-inquiry<br/>(Source scoping, fact verification, logical deductions)"]
+        EI["evidentiary-inquiry<br/>(Premise clarification, source scoping, version-pinned fact verification, logical deductions)"]
         DOC["doctor<br/>(Mode-selectable checkup: docs, maintainability, bugs, security; diagnoses and plans)"]
         SNR["snippet-review<br/>(Ad-hoc snippet intelligibility & complexity audit)"]
     end
@@ -158,6 +158,7 @@ flowchart TD
     EI -->|suggests doc remediation| DR
     EI -->|suggests remediation| SG
     EI -->|suggests planning| EPE
+    EI -->|suggests scrutiny planning| SPE
 
     PA -->|suggests remediation| RF
     PA -->|suggests phased fixes| SG
