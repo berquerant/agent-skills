@@ -24,7 +24,7 @@ This reference provides the intent classification criteria, recommended entry sk
 | **Cross-Repo Dependency Discovery** | "Check open dependency PRs across all repositories" | `resolve-recent-dependency-prs` | `resolve-dependency-prs` |
 | **Commit & PR Message Crafting** | "Write a commit message", "Describe this PR" | `change-message` | — |
 | **PR Comment Discussion & Resolution** | "Reply to review comments", "Resolve PR discussion" | `review-discussion` | `refactor` / `change-message` |
-| **Evidence-Backed Investigation** | "Investigate root cause with evidence", "Verify facts" | `evidentiary-inquiry` | `explore-plan-execute` / `refactor` |
+| **Evidence-Backed Investigation** | "Investigate root cause with evidence", "Verify facts across versions", "Evaluate tool/library capabilities" | `evidentiary-inquiry` | `explore-plan-execute` / `scrutinize-plan-execute` / `refactor` |
 | **Creating New Skills** | "Create a new agent skill", "Add a skill for XYZ" | `skill-creator` | `skill-review` |
 | **Auditing Skills** | "Review this skill against specs", "Check skills consistency" | `skill-review` | `step-gate` / `refactor` / `doc-refactor` |
 | **Task Dependency & Idle Wait Scheduling** | "Schedule dependent tasks as DAG", "Parallel tasks with CI wait", "Interleave tasks when waiting" | `task-dependency-pipeline` | `step-gate` → `change-message` |

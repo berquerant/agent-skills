@@ -22,7 +22,7 @@ Unless project-specific instructions dictate otherwise, agents must adhere to th
 ## 3. Investigation & Fact Verification
 
 - **Evidence-Backed Inquiry**:
-  Do not act on speculation, unverified assumptions, or unchecked premises during root-cause analysis, bug diagnosis, or codebase exploration. Follow the **`evidentiary-inquiry`** skill to scope sources, distinguish verifiable facts from deductions, and avoid hallucinated diagnoses.
+  Do not act on speculation, unverified assumptions, or unchecked premises during root-cause analysis, bug diagnosis, technical evaluation, or codebase exploration. Follow the **`evidentiary-inquiry`** skill to clarify ambiguous premises (architecture, requirements, out-of-scope boundaries, inviolable constraints, target versions), scope sources, pin facts to exact versions alongside surrounding deltas and unresolved/recently resolved issues, distinguish verifiable facts from deductions, and avoid hallucinated diagnoses.
 
 ---
 

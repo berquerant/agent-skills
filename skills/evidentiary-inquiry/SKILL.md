@@ -1,81 +1,103 @@
 ---
 name: evidentiary-inquiry
 description: >-
-  Use this skill when an investigation or diagnostic task requires rigorous evidence,
-  transparent source scoping, pre-report fact verification, and clear separation between
-  observed facts and logical interpretations. Scopes and agrees on information sources
-  with the user before exploring, validates facts prior to reporting, explains reasoning,
-  and avoids excessive or unauthorized sources.
+  Use this skill when an investigation, technical evaluation, or diagnostic task requires
+  rigorous evidence, premise clarification, version-contextualized fact verification,
+  transparent source scoping, and clear separation between observed facts and logical
+  interpretations. Analyzes ambiguous requests to clarify architecture, functional and
+  non-functional requirements, out-of-scope boundaries, inviolable constraints, and target
+  versions before exploring; agrees on information sources; distinguishes exact version contexts,
+  surrounding version feature deltas, and unresolved or recently resolved issues; validates
+  facts prior to reporting; and explains deductive reasoning.
 ---
 
 # Evidentiary Inquiry
 
-Use this skill when conducting investigations, root cause analyses, technical evaluations, or fact-finding tasks where precision, traceability, and verifiable evidence are required.
-The agent forecasts and agrees upon information sources before exploring, verifies all findings before presenting them, clearly separates observed facts from inferences, and explains the logical deduction behind every judgment.
+Use this skill when conducting investigations, root cause analyses, technical evaluations, or fact-finding tasks where precision, traceability, version accuracy, and verifiable evidence are required.
+Before exploring, the agent analyzes ambiguous requests to clarify core premises with the user and agrees upon information sources. During investigation, it pins every fact to an exact version, examines feature deltas and unresolved or recently resolved issues across surrounding versions, verifies all findings before presenting them, clearly separates observed facts from inferences, and explains the logical deduction behind every judgment.
 
-For reporting templates, source scoping formats, and fact-checking checklists, refer to [references/source-scoping-and-verification.md](references/source-scoping-and-verification.md).
+For premise clarification checklists, source scoping formats, version delta matrices, and reporting templates, refer to [references/source-scoping-and-verification.md](references/source-scoping-and-verification.md).
 
 ---
 
-## Step 1: Forecast and Scope Information Sources
+## Step 1: Clarify Premises and Scope Information Sources
 
-Before executing exploratory commands or reading files, predict which information sources will be needed and confirm them with the user.
+Before executing exploratory commands or reading target files, analyze the user's request to identify ambiguities and predict which information sources will be needed.
 
-1. **Forecast Candidate Sources**:
-   - List the primary information sources anticipated for the inquiry:
-     - Specific repository files and directories (e.g., config files, implementation modules).
+1. **Analyze Request and Clarify Ambiguous Premises**:
+   - If the user's request contains ambiguities that could misdirect the investigation, determine which points must be concretized to ensure a reliable inquiry.
+   - Evaluate the request across six premise dimensions (proposing workspace-derived default hypotheses where possible to minimize user burden):
+     - **Architecture & Environment**: Expected system architecture, runtime topology, and integration boundaries.
+     - **Functional Requirements**: Core capabilities, behaviors, and inputs/outputs to achieve or verify.
+     - **Non-Functional Requirements**: Performance, latency, throughput, security, availability, or maintainability targets.
+     - **Out-of-Scope Boundaries**: Explicit exclusions, non-goals, or scenarios that do not need investigation.
+     - **Inviolable Constraints**: Non-negotiable guardrails, backward compatibility requirements, prohibited modifications, or regulatory/licensing limits.
+     - **Target Versions**: Expected versions of software, libraries, runtimes, or protocols (and whether version upgrades are permitted).
+2. **Forecast and Classify Candidate Sources**:
+   - List the information sources anticipated for the inquiry:
+     - Specific repository files and directories (e.g., config files, manifests, lockfiles, implementation modules).
      - Local tools, linters, or test runners (e.g., `git`, test suites, static analysis tools).
+     - Version history and issue sources (e.g., release notes, changelogs, migration guides, commit logs, issue trackers) when evaluating software or tooling capabilities.
      - Documentation or spec files within local references.
-2. **Classify and Propose Sources**:
    - Categorize the candidate sources:
      - **Primary / Priority Sources**: First-line sources essential to resolving the inquiry.
      - **Secondary / Fallback Sources**: Used only if primary sources yield incomplete evidence.
-   - Present the anticipated sources to the user and request review:
-     > *"Before investigating, I plan to examine the following sources: [List priority and fallback sources]. Are any of these excessive, insufficient, or in need of adjustment?"*
-3. **Establish Source Constraints**:
+   - Present the clarifying questions (with proposed default assumptions) alongside the anticipated sources in a single prompt:
+     > *"To ensure an accurate investigation, please confirm or adjust these premises: [List key premise questions/hypotheses]. Based on these, I plan to examine: [List priority and fallback sources]. Are any premises off-target or any sources excessive/missing?"*
+3. **Establish Premise and Source Constraints**:
+   - Lock in the confirmed requirements, out-of-scope boundaries, inviolable constraints, and target versions as baseline invariants for the investigation.
    - Prioritize sources agreed upon with the user.
    - You are not strictly forbidden from consulting additional unpredicted sources if genuine inquiry demands it; however, **sources designated as excessive or out-of-scope by the user must be strictly avoided**.
 
-Verify: Candidate information sources are categorized into priority/fallback tiers, presented to the user, and explicit user consensus on scope and exclusions is obtained.
+Verify: Ambiguous premises (architecture, functional/non-functional requirements, out-of-scope items, inviolable constraints, target versions) are clarified, candidate information sources are categorized into priority/fallback tiers, and explicit user consensus on premises, scope, and exclusions is obtained.
 
 ---
 
-## Step 2: Investigate and Self-Verify Evidence
+## Step 2: Investigate, Contextualize Versions, and Self-Verify Evidence
 
-Execute the investigation focusing on the agreed sources, and verify all facts before formulating reports.
+Execute the investigation focusing on the agreed sources, contextualize findings by version, and verify all facts before formulating reports.
 
 1. **Targeted Exploration**:
-   - Probe the prioritized sources first.
+   - Probe the prioritized sources first while respecting confirmed constraints and out-of-scope boundaries.
    - Record exact tool commands, file paths, line ranges, and raw tool outputs.
-   - For high-cost or external commands (e.g. CI logs, platform APIs), evaluate idempotency and prioritize using a dedicated caching or memoization skill, tool, or MCP server if available; otherwise, follow the caching and TTL protocol in [`command-cache-protocol.md`](../explore-plan-execute/references/command-cache-protocol.md) to preserve evidence locally while minimizing repetitive queries.
+   - For high-cost or external commands (e.g., CI logs, release metadata, issue queries, platform APIs), evaluate idempotency and prioritize using a dedicated caching or memoization skill, tool, or MCP server if available; otherwise, follow the caching and TTL protocol in [`command-cache-protocol.md`](../explore-plan-execute/references/command-cache-protocol.md) to preserve evidence locally while minimizing repetitive queries.
    - If investigation threatens to become prolonged or stalls, respect interval pacing or consult pacing guidelines.
-2. **Pre-Report Fact-Checking (Self-Verification)**:
+2. **Version Contextualization and Neighborhood Analysis**:
+   - When investigating software, libraries, frameworks, or tooling as implementation means, rigorously track temporal and version boundaries:
+     - **Pin Version Context**: Explicitly distinguish which exact version (version tag, commit hash, or release date) every observed fact, behavior, or specification belongs to. Never treat version-unanchored claims as verified facts.
+     - **Compare Feature Deltas Across Surrounding Versions**: Examine differences in the target version and its surrounding versions (e.g., adjacent minor/major releases and latest stable) regarding feature **additions (Added)**, **removals (Removed / Breaking)**, and **behavioral changes or deprecations (Changed / Deprecated)**.
+     - **Inspect Surrounding Issues (Unresolved & Recently Resolved)**: Investigate known problems in and around the target version:
+       - **Unresolved Issues**: Open bugs, known limitations, edge-case failures, and required workarounds affecting the target version.
+       - **Recently Resolved Issues**: Bugs or regressions fixed in the target version or immediately adjacent releases. Pay special attention to patch-level boundaries (whether the target version includes the fix), subtle behavioral side effects introduced by the fix, and incomplete fixes or residual regression risks.
+3. **Pre-Report Fact-Checking (Self-Verification)**:
    - Before presenting any fact to the user, verify its truth and reproducibility:
-     - Did the command exit with status 0, or did it fail silently?
+     - Did the command exit with status `0`, or did it fail silently?
      - Does the cited file and line range actually contain the stated code or configuration?
-     - Are commit hashes, workspace-relative paths, and exact line numbers rigorously identified for versioned changes and code locations?
+     - Are exact versions, commit hashes, workspace-relative paths, and line numbers rigorously identified for versioned changes and code locations?
+     - Is the observed phenomenon verified for the target version rather than conflated with an older or newer release?
      - Is the observed phenomenon consistently reproducible or a transient side effect?
      - Cross-check against alternative evidence if the finding seems counterintuitive.
    - Discard unverified claims or clearly label them as unconfirmed anomalies.
 
-Verify: All candidate facts have been directly checked against actual tool outputs or file contents, and no unverified claims remain in the findings.
+Verify: All candidate facts have been directly checked against actual tool outputs or file contents, exact version contexts and surrounding version deltas/issues (both unresolved and recently resolved) are identified, and no unverified claims remain in the findings.
 
 ---
 
 ## Step 3: Articulate Logical Interpretation & Decisions
 
-Transform verified facts into conclusions by explicitly detailing the deductive or inductive chain of reasoning.
+Transform verified facts into conclusions by explicitly detailing the deductive or inductive chain of reasoning against the confirmed premises.
 
 1. **Strictly Separate Facts from Inferences**:
-   - **Facts (Observed Reality)**: Direct observations, exact tool outputs, committed file contents, and exit codes.
-   - **Inferences / Interpretations (Agent Reasoning)**: Hypotheses, conclusions, causality deductions, or risk assessments derived from those facts.
+   - **Facts (Observed Reality)**: Direct observations, exact tool outputs, version-pinned specifications, committed file contents, and exit codes.
+   - **Inferences / Interpretations (Agent Reasoning)**: Hypotheses, conclusions, causality deductions, compatibility assessments, or risk evaluations derived from those facts.
 2. **Explain the Deductive Bridge**:
    - When reaching a judgment or decision based on facts, explain *how* those facts were interpreted to arrive at the conclusion:
-     - State the underlying principle, invariant, or assumption applied to the facts.
-     - Detail why alternative interpretations were rejected.
+     - State the underlying principle, confirmed premise (architecture, functional/non-functional requirement, inviolable constraint), or invariant applied to the facts.
+     - Detail how version deltas, unresolved issues, or recently resolved issues impact the viability of the approach under the target version.
+     - Detail why alternative interpretations or candidate versions/tools were rejected.
    - Continue providing this logical rationale even after decisions or remedies are implemented.
 
-Verify: Every judgment is supported by a documented logical bridge from verified facts to conclusions, maintaining unambiguous separation between observation and speculation.
+Verify: Every judgment is supported by a documented logical bridge from version-pinned verified facts to conclusions, evaluated against confirmed premises and constraints, maintaining unambiguous separation between observation and speculation.
 
 ---
 
@@ -84,30 +106,34 @@ Verify: Every judgment is supported by a documented logical bridge from verified
 Present the structured investigation report to the user with full traceability.
 
 1. **Structure the Evidentiary Report**:
-   - Format the findings using the template from [references/source-scoping-and-verification.md](references/source-scoping-and-verification.md):
+   - Format the findings using the template from [references/source-scoping-and-verification.md](references/source-scoping-and-verification.md), co-presenting all file paths, line ranges, and URLs with clickable Markdown links and unadorned raw strings per [`output-presentation`](../output-presentation/SKILL.md) (e.g., `[file.ext#L10-L20](<accessible-target>) (path/to/file.ext:10-20)`):
+     - **Confirmed Premises & Constraints**: Architecture, functional/non-functional requirements, out-of-scope items, inviolable constraints, and target versions.
      - **Agreed Sources & Scope**: Sources consulted and any sources excluded.
-     - **Verified Facts**: Concrete findings with exact citations:
-       - **Commit Hash**: Explicit commit hash (abbreviated or full) for versioned changes.
-       - **Path & Line Numbers**: Workspace-relative file paths with precise line numbers or ranges (e.g. `src/lib.rs:45-52`).
-       - **Target URL**: Corresponding remote repository permalink URL if a remote (e.g. GitHub/GitLab) is configured; state local relative path if unpushed or operating in a local-only environment.
+     - **Verified Facts (Version-Pinned)**: Concrete findings with exact citations:
+       - **Version / Commit Hash**: Explicit version number and commit hash (abbreviated or full) at which the fact holds true.
+       - **Path & Line Numbers**: Clickable link and workspace-relative file path with precise line numbers or ranges.
+       - **Target URL**: Clickable link and raw URL for the corresponding remote repository permalink if configured; state local relative path if unpushed or operating in a local-only environment.
        - **Outputs**: Exact tool commands and raw output snippets.
-     - **Interpretation & Reasoning**: Step-by-step logic bridging facts to conclusions.
-     - **Conclusions / Judgments**: Explicit verdict, root cause, or architectural decision.
+     - **Version Deltas & Surrounding Issues**: Feature additions/removals/changes across adjacent versions, unresolved issues (with workarounds), and recently resolved issues (with patch boundary and regression notes).
+     - **Interpretation & Reasoning**: Step-by-step logic bridging facts and version behavior to conclusions under the confirmed constraints.
+     - **Conclusions / Judgments**: Explicit verdict, root cause, or architectural/tooling recommendation.
 2. **Recommend Sequential Handoff**:
    - For remediation or code modification, recommend [`step-gate`](../step-gate/SKILL.md) or [`refactor`](../refactor/SKILL.md).
    - For documentation or comment refinement based on findings, recommend [`doc-refactor`](../doc-refactor/SKILL.md).
    - For planning large feature additions based on findings, recommend [`explore-plan-execute`](../explore-plan-execute/SKILL.md).
    - For further adversarial scrutiny of complex trade-offs, recommend [`scrutinize-plan-execute`](../scrutinize-plan-execute/SKILL.md).
 
-Verify: The report provides complete evidentiary traceability for every finding and proposes appropriate next-step skills for user approval.
+Verify: The report provides complete evidentiary and version traceability for every finding, formats all paths and URLs with dual presentation, and proposes appropriate next-step skills for user approval.
 
 ---
 
 ## Guidelines
 
+- **Clarify ambiguous premises before exploring.** When a request leaves architecture, functional/non-functional requirements, out-of-scope boundaries, inviolable constraints, or target versions ambiguous, derive focused questions (with default hypotheses) and confirm with the user before running deep investigations.
+- **Anchor facts to exact versions and inspect surrounding deltas and issues.** When investigating software or tools, always distinguish which version a fact applies to, compare feature additions/removals/changes in adjacent versions, and check both unresolved issues and recently resolved issues around that version.
 - **Pre-report verification is mandatory.** Never communicate an unconfirmed fact to the user as truth; always verify against tool outputs or file contents first.
-- **Rigorously specify evidence targets.** Always cite exact commit hashes, workspace-relative paths, line numbers, and corresponding remote URLs (where applicable) when referencing code, diffs, or commits.
-- **Strictly honor source exclusions.** While exploration may expand to unpredicted sources if necessary, never consult sources that the user flagged as excessive or off-limits.
+- **Rigorously specify evidence targets.** Always cite exact versions, commit hashes, workspace-relative paths, line numbers, and corresponding remote URLs (where applicable) using dual link and raw-string presentation per [`output-presentation`](../output-presentation/SKILL.md).
+- **Strictly honor source exclusions and inviolable constraints.** While exploration may expand to unpredicted sources if necessary, never consult sources that the user flagged as excessive or off-limits, and never propose solutions that violate confirmed guardrails.
 - **Unambiguous demarcation.** Keep "what was observed" (facts) clearly distinct from "what it means" (interpretations and hypotheses) in both internal reasoning and user-facing reports.
 - **Transparent rationale before and after decisions.** Always explain the logical chain of thought leading to a judgment, both when proposing it and after executing it.
-- **Read-only investigation.** This skill investigates and diagnoses; it does not modify repository files. Suggest remediation skills (`refactor`, `step-gate`) when changes are required.
+- **Read-only investigation.** This skill investigates and diagnoses; it does not modify repository files. Suggest remediation skills (`refactor`, `step-gate`, `doc-refactor`) when changes are required.
