@@ -141,6 +141,7 @@ flowchart TD
     SG -.->|gate alert & preceding notice| UN
     CS -.->|audits snippet intelligibility| SNR
     SNR -.->|suggests simplification| CS
+    CS -.->|path presentation| OP
     CR -.->|shares review criteria| SNR
     RRDP -->|sequential hand-off| RDP
     RDP -.->|message guidelines| CM

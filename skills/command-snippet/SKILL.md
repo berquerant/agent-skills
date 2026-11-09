@@ -19,7 +19,8 @@ debugging, and verifying execution difficult for users.
 
 This workflow coordinates [`snippet-review`](../snippet-review/SKILL.md) to audit
 the cognitive intelligibility of every generated snippet and mandate explaining its
-intent and side-effects to the user before execution.
+intent and side-effects to the user before execution, formatting all script, argument,
+and affected file paths per [`output-presentation`](../output-presentation/SKILL.md).
 
 ---
 
@@ -159,21 +160,22 @@ Before executing any snippet, evaluate its cognitive intelligibility and ensure 
    ```markdown
    ### 📋 Snippet Pre-Execution Notice
 
-   - **Script Path**: <raw unadorned snippet path>
+   - **Script Path**: [<script-name>](<accessible-target>) (<raw-target>)
    - **Invocation**: `<interpreter> <script-path> [arguments...]`
    - **Purpose**: <Clear, concrete explanation of what the script does and why a snippet was necessary>
    - **Parameters & Arguments**:
-     - `$1` (or `<flag>`): `<value>` — <what this parameter represents>
+     - `$1` (or `<flag>`): `<value>` (if a file/directory path, co-present per [`output-presentation`](../output-presentation/SKILL.md)) — <what this parameter represents>
    - **Expected Side-Effects & Safety**:
-     - **Filesystem**: <files created, edited, deleted, or "Read-only (no filesystem changes)">
+     - **Filesystem**: <files created, edited, or deleted, co-presented per [`output-presentation`](../output-presentation/SKILL.md), or "Read-only (no filesystem changes)">
      - **Environment / Network**: <network calls, environment changes, or "None">
      - **Reversibility**: <Reversible / Non-destructive / Irreversible>
    ```
 
+   - **Output Presentation Compliance**: Format all file and directory paths (including the script path itself, argument target files, and affected filesystem paths) by co-presenting an accessible Markdown link and an unadorned raw string in parentheses per [`output-presentation`](../output-presentation/SKILL.md) (e.g., `[script.sh](<file:///path/to/script.sh>) (path/to/script.sh)`).
    - Informal, single-sentence mentions (e.g., "Running script now to check files.") are strictly prohibited. The structured notice must be presented clearly.
    - **Approval Invalidation**: If any change or correction is made to the snippet after this notice is presented, the previous approval is automatically void. A new versioned file must be created and a new notice presented.
 
-Verify: The snippet's intelligibility is audited, any high complexity is simplified into a new versioned file or consulted on, and the mandatory Pre-Execution Notice is output before execution.
+Verify: The snippet's intelligibility is audited, any high complexity is simplified into a new versioned file or consulted on, and the mandatory Pre-Execution Notice is output before execution with all script and related file paths formatted per `output-presentation`.
 
 ---
 
@@ -225,7 +227,8 @@ Verify: Unneeded temporary files and superseded snippet versions are disposed of
   via [`snippet-review`](../snippet-review/SKILL.md) regardless of line count.
 - **Always output the Pre-Execution Notice.** Never execute snippets silently or
   with casual one-line chat messages. Always output the structured Pre-Execution
-  Notice block before invoking the execution tool.
+  Notice block before invoking the execution tool, co-presenting the script path
+  and all referenced or affected file/directory paths per [`output-presentation`](../output-presentation/SKILL.md).
 - **Keep snippets focused.** A snippet should accomplish a coherent task, making
   it easy for users to read and understand.
 - **Enforce single-responsibility and trailing arguments for approvability.**

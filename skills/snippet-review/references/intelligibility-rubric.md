@@ -101,7 +101,7 @@ If the snippet cannot be simplified to Level 1 or 2 because the task inherently 
 ```markdown
 ### Snippet Intelligibility Consultation
 
-**Snippet Path / Command**: <target snippet path or name>
+**Snippet Path / Command**: [<script-name>](<accessible-target>) (<raw-target>)
 **Intelligibility Rating**: Level 3 (Complex) / Level 4 (Opaque)
 
 #### Why is this snippet complex?
