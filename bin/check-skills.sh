@@ -13,7 +13,7 @@ for skill_dir in skills/*; do
   [ -d "${skill_dir}" ] || continue
   [ -f "${skill_dir}/SKILL.md" ] || continue
 
-  if ! output="$("${checker}" "${skill_dir}" 2>&1)"; then
+  if ! output="$("${checker}" --strict "${skill_dir}" 2>&1)"; then
     echo "========================================" >&2
     echo "Check failed for ${skill_dir}:" >&2
     echo "${output}" >&2

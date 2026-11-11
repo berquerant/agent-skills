@@ -16,7 +16,7 @@ skills/skill-review/scripts/run-checks.sh skills/<target-skill>
 
 The script runs read-only inspection commands and prints a structured report covering checks A through K:
 - **Hard errors (`[F]`)** increment the `errors` counter and cause the script to exit with status `1`.
-- **Convention & model-alignment warnings (`[W]`)** increment the `warnings` counter and are surfaced in the output while exiting with status `0` when `errors` is `0`.
+- **Convention & model-alignment warnings (`[W]`)** increment the `warnings` counter and are surfaced in the output while exiting with status `0` when `errors` is `0` (or status `1` when invoked with `--strict`, as in `bin/check-skills.sh`).
 
 ---
 

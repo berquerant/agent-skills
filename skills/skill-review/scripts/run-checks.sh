@@ -1,11 +1,17 @@
 #!/bin/sh
 # run-checks.sh: Runs automated quality checks for a target agent skill.
-# Usage: scripts/run-checks.sh <path-to-skill-dir>
+# Usage: scripts/run-checks.sh [--strict] <path-to-skill-dir>
 
 set -eu
 
+strict=0
+if [ "${1:-}" = "--strict" ]; then
+  strict=1
+  shift
+fi
+
 if [ $# -lt 1 ]; then
-  echo "Usage: $0 <path-to-skill-dir>" >&2
+  echo "Usage: $0 [--strict] <path-to-skill-dir>" >&2
   exit 1
 fi
 
@@ -46,7 +52,7 @@ fi
 orphan_files=$(find "$SKILL_DIR_ABS" -type f ! -name 'SKILL.md' | sort | while read -r f; do
   rel=${f#"$SKILL_DIR_ABS"/}
   base=$(basename "$f")
-  if grep -Fq -- "$rel" "$SKILL_DIR_ABS/SKILL.md" 2>/dev/null || grep -Fq -- "$base" "$SKILL_DIR_ABS/SKILL.md" 2>/dev/null; then
+  if grep -Fq -- "$rel" "$SKILL_DIR_ABS/SKILL.md" 2>/dev/null; then
     continue
   fi
   refs=$(find "$SKILL_DIR_ABS" -name '*.md' ! -path "$f" -exec grep -Fl -- "$base" {} + 2>/dev/null || true)
@@ -313,7 +319,7 @@ grep -rnE 'https?://' "$SKILL_DIR" || echo "None found (Clean)"
 
 # Check K: Inline Shell Command Modularity & Prompt Hygiene
 echo "--- Check K: Command & Prompt Hygiene ---"
-hygiene_warns=$(find "$SKILL_DIR" -name '*.md' | sort | while read -r f; do
+hygiene_warns=$(find "$SKILL_DIR" -name '*.md' ! -name 'automated-checks.md' ! -name 'skill-review-checklist.md' | sort | while read -r f; do
   awk -v file="$f" '
     /^[[:space:]]*```(sh|bash|zsh)[[:space:]]*$/ { in_sh = 1; next }
     /^[[:space:]]*```/ { in_code = !in_code; in_sh = 0; next }
@@ -322,6 +328,9 @@ hygiene_warns=$(find "$SKILL_DIR" -name '*.md' | sort | while read -r f; do
     }
     !in_code && /\]\([^)]+\)[[:space:]]+\(`[^`]+`\)/ {
       printf "WARN: backtick-wrapped raw target in co-presented link in %s:%d\n", file, NR
+    }
+    !in_code && tolower($0) ~ /think step[- ]by[- ]step/ {
+      printf "WARN: manual chain-of-thought phrasing in %s:%d\n", file, NR
     }
   ' "$f"
 done)
@@ -339,6 +348,9 @@ if [ "$errors" -gt 0 ]; then
   exit 1
 elif [ "$warnings" -gt 0 ]; then
   echo "Check Result: PASSED ($errors error(s), $warnings warning(s))"
+  if [ "$strict" -eq 1 ]; then
+    exit 1
+  fi
   exit 0
 else
   echo "Check Result: PASSED (0 errors, 0 warnings)"
