@@ -136,12 +136,15 @@ Verify: <How to confirm this step succeeded>
 **Generation guidelines:**
 - Do not include general coding knowledge (the agent already knows this)
 - Focus only on procedures, commands, and notes specific to this workflow
-- Include a verification method for each step
-- Move heavy documentation to `references/` and link to it from SKILL.md
+- Keep the `description` between 100 and 350 characters for Layer 1 context efficiency
+- Include a measurable `Verify:` checkpoint for each step (beginning `## Step 1:` within the first 100 lines)
+- Move heavy documentation to `references/` and link every file under `references/`, `scripts/`, `examples/`, and `resources/` directly (1-hop) from `SKILL.md`
+- Format all file, directory, and reference links per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md): `[label](relative/path.md) (relative/path.md)`
+- Pair negative constraints in `## Guidelines` with affirmative guidance and brief rationale ("Why")
 - Keep the skill platform-agnostic: present platform-specific tools or commands only as non-exclusive examples
 - If the target repository defines its own skill conventions (e.g. `AGENTS.md`, `CONTRIBUTING.md`), follow them over this template
 
-Verify: Generated `SKILL.md` strictly adheres to the frontmatter specification, includes explicit `Verify:` checkpoints in every step, ends with a `## Guidelines` section, and keeps core instructions concise.
+Verify: Generated `SKILL.md` strictly adheres to the frontmatter specification, includes explicit `Verify:` checkpoints in every step, links all auxiliary files 1-hop per `output-presentation`, ends with a `## Guidelines` section, and keeps core instructions concise.
 
 ---
 
@@ -155,7 +158,7 @@ Verify: Generated `SKILL.md` strictly adheres to the frontmatter specification, 
    - `examples/` — Reference implementation stubs
    - `resources/` — Directory for templates and assets
 4. **Update repository indexes** (only if they exist): add the new skill to skill listings
-   such as `README.md` tables, directory trees, or architecture diagrams in `AGENTS.md`.
+   such as `README.md` tables, architecture diagrams in `AGENTS.md`, and routing matrices like [intent-matrix.md](../skill-router/references/intent-matrix.md) (../skill-router/references/intent-matrix.md).
    If existing skills should hand off to or reference the new skill, propose those edits.
    **Always obtain explicit user confirmation before modifying any files outside the new skill directory.**
 

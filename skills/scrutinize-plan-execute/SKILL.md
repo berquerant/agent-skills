@@ -118,43 +118,16 @@ architecture, or multi-phase steps):
     to save it.
   - If the user provides a path, write the plan to that exact file.
 
-### 2. Execution Mode Selection (`standard` vs. `step-gate`)
-Determine whether to apply the [`step-gate`](../step-gate/SKILL.md) skill
-protocol during execution:
+### 2. Companion Workflow & Execution Mode Selection
+Select the execution mode and companion guardrails (following the same companion patterns as [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md)):
 
-- **Use `step-gate` mode** if the plan involves:
-  - Destructive or low-reversibility operations (DB changes, file deletions).
-  - High blast-radius refactors or high failure costs.
-  - Multi-step dependencies where each step must be verified before proceeding.
-  - Explicit user preference for checkpointed, step-by-step approval.
-- **Use `standard` mode** if actions are easily reversible and safe to execute
-  as a single continuous batch with internal verification checks.
+- **Execution Mode (`step-gate` vs. `standard`)**: Use [step-gate](../step-gate/SKILL.md) (../step-gate/SKILL.md) mode for destructive/low-reversibility operations, high blast-radius refactors, multi-step dependencies, or explicit user preference; use `standard` mode when actions are easily reversible and safe to execute as a continuous batch with internal verification. State the mode explicitly (`Execution mode: step-gate / standard`).
+- **Pacing Guard (`edit-paced-execution`)**: Recommend [edit-paced-execution](../edit-paced-execution/SKILL.md) (../edit-paced-execution/SKILL.md) when unexpected investigation delays or trial-and-error loops risk stalling between file edits.
+- **Milestone Logging (`checkpoint-log`)**: Propose [checkpoint-log](../checkpoint-log/SKILL.md) (../checkpoint-log/SKILL.md) for complex multi-phase work, asking the user for their desired log file path (never assume a default path).
+- **Execution Safeguards**: Pre-confirm commit identity/SSH/assignee, isolate work in a worktree per [git-worktree](../git-worktree/SKILL.md) (../git-worktree/SKILL.md), and route complex commands through [command-snippet](../command-snippet/SKILL.md) (../command-snippet/SKILL.md) per [execution-safeguards.md](../explore-plan-execute/references/execution-safeguards.md) (../explore-plan-execute/references/execution-safeguards.md).
 
-State the chosen execution mode to the user:
-> **Execution mode**: `step-gate` / `standard`
-
-### 3. Pacing Guard Proposal (`edit-paced-execution`)
-Assess if unexpected investigation delays or trial-and-error loops risk stalling execution between file edits.
-If appropriate, recommend [`edit-paced-execution`](../edit-paced-execution/SKILL.md) alongside the plan:
-> **Pacing guard**: Recommend [`edit-paced-execution`](../edit-paced-execution/SKILL.md) (threshold: <X minutes / Y non-edit calls>) to halt and consult if file edits are delayed.
-
-### 4. Milestone Checkpoint Logging (`checkpoint-log`)
-If the task spans complex multi-phase execution or the user wants persistent step-by-step records, propose [`checkpoint-log`](../checkpoint-log/SKILL.md). Always ask the user for their desired log file path (never assume a default path).
-
-### 5. Execution Safeguards Pre-Confirmation
-Incorporate mandatory environment and safety protocols per [`../explore-plan-execute/references/execution-safeguards.md`](../explore-plan-execute/references/execution-safeguards.md):
-- Pre-confirm commit author identity, SSH configuration, and PR/MR assignee.
-- Plan work inside an isolated worktree created from the remote default branch per [`git-worktree`](../git-worktree/SKILL.md).
-- Route complex shell commands through parameterized snippet files per [`command-snippet`](../command-snippet/SKILL.md).
-
-### 6. Explicit Execution Permission
-Confirm the user gives explicit approval to proceed with execution.
-
-
-Ask the user:
-> "Are you ready to proceed with executing this plan in <standard/step-gate> mode?"
-
-Do **not** execute any modifications until the user explicitly approves.
+### 3. Explicit Execution Permission
+Ask the user: `"Are you ready to proceed with executing this plan in <standard/step-gate> mode?"` and wait for explicit approval before modifying any files.
 
 Verify: The execution mode is decided, pacing guard proposals are stated if applicable, the user has given explicit permission to
 execute, and if requested, the plan has been saved to the user-specified file path.

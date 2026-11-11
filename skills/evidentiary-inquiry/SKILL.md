@@ -21,6 +21,7 @@ For premise clarification checklists, source scoping formats, version delta matr
 Before executing exploratory commands or reading target files, analyze the user's request to identify ambiguities and predict which information sources will be needed.
 
 1. **Analyze Request and Clarify Ambiguous Premises**:
+   - **Local Manifest Fast-Path**: Before pausing to ask the user about target versions, architecture, or toolchain constraints, check whether local repository manifests (such as `go.mod`, `package.json`, `Cargo.toml`, `pyproject.toml`, or `README.md`) already answer those objective facts unambiguously. Only pause to ask the user when genuine ambiguity, unstated requirements, or external source authorization remains.
    - If the user's request contains ambiguities that could misdirect the investigation, determine which points must be concretized to ensure a reliable inquiry.
    - Evaluate the request across six premise dimensions (proposing workspace-derived default hypotheses where possible to minimize user burden):
      - **Architecture & Environment**: Expected system architecture, runtime topology, and integration boundaries.

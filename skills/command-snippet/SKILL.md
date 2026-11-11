@@ -54,6 +54,9 @@ If the command meets any of these criteria, **do not execute it inline**. Halt
 inline execution and proceed to create a snippet file with the appropriate extension
 (e.g., `.sh`, `.py`, `.js`).
 
+- **Risk-Proportional Lightweight Path for Read-Only Local Inspection**:
+  When a command is strictly **read-only, local, and side-effect-free** (e.g., local `find`/`grep`/`awk` inspection pipelines that do not mutate files, access external networks, or require elevated sandbox permissions), prefer splitting it into simple $<120$-character commands first; only escalate to full snippet creation and `snippet-review` when the inspection logic must be reused or exceeds simple command splitting.
+
 Verify: You have checked the command against all avoidance thresholds and confirmed
 that it requires snippet creation.
 

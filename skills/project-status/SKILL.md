@@ -10,22 +10,14 @@ description: >-
 
 # Project Status
 
-Use this skill to get a reliable, structured picture of the project's current
-state — either on user request or whenever a change produces a diff that
-differs from what was expected.
+Use this skill to get a reliable, structured picture of the project's current working tree, git state, and test/lint status—either when the user requests a status check (e.g. "what's the status?", "confirm the changes") or when an applied change produces a diff that differs from what was expected (drift detected).
 
 ---
 
-## Triggers
+## Prerequisites
 
-Activate this skill in either of the following situations:
-
-1. **User request** — the user asks to check the current state, review what
-   has changed, or verify the diff (e.g. "what's the status?", "confirm the
-   changes", "something looks off").
-2. **Drift detected** — after applying changes, the resulting diff contains
-   unexpected modifications, missing edits, or unintended side-effects that
-   were not part of the plan.
+- `git` is installed and the target directory is inside a git repository.
+- Project test/lint commands are known or discoverable (optional; skipped gracefully if not applicable).
 
 ---
 

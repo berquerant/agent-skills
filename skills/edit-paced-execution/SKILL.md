@@ -21,7 +21,8 @@ For reporting templates and threshold heuristics, refer to [references/pace-moni
 Before beginning task execution, analyze the task requirements and propose pacing thresholds and execution modes to the user.
 
 1. **Establish Baseline Edit-Pacing Thresholds**:
-   - Default: **3 minutes** or **20 non-edit tool calls** (commands, searches, reads, test runs without modifying project files).
+   - Default: **3 minutes** or **20 non-edit tool calls / 6–8 non-edit reasoning turns** (commands, searches, reads, test runs without modifying project files).
+   - **Parallel Tool-Call Accounting**: When a model issues multiple read-only tool calls (such as parallel `read_file` or `grep` calls) within a single reasoning turn, count that parallel batch as **1 non-edit turn** (or weight it proportionally) so efficient parallel exploration does not prematurely trigger a stall checkpoint.
 2. **Determine Task & Command Execution Mode**:
    - When executing commands or background tasks, determine their execution mode based on duration, retryability, and external volatility:
      - **`standard`**: Routine tasks; easy & fast to retry (e.g. unit tests, linters). Default check interval: **3 minutes**.

@@ -14,19 +14,14 @@ project hygiene and build health, identifies security vulnerabilities and public
 exposure risks (in both current state and recent commit history), evaluates code
 maintainability and technical debt, and provides prioritized, actionable remedies.
 
-This skill is strictly read-only and never modifies files directly. For security and
-vulnerability criteria, refer to [`../code-review/references/security-checklist.md`](../code-review/references/security-checklist.md).
-For maintainability heuristics, refer to [`references/maintainability-metrics.md`](references/maintainability-metrics.md).
+This skill is strictly read-only and never modifies files directly. Activate it when auditing repository health, preparing a project for public release or open-sourcing, or grading maintainability and technical debt across the codebase (beyond the working-tree check provided by [project-status](../project-status/SKILL.md) (../project-status/SKILL.md)). For security criteria, refer to [security-checklist.md](../code-review/references/security-checklist.md) (../code-review/references/security-checklist.md). For maintainability heuristics, refer to [maintainability-metrics.md](references/maintainability-metrics.md) (references/maintainability-metrics.md).
 
 ---
 
-## Triggers
+## Prerequisites
 
-Activate this skill when:
-- The user requests a general health check, audit, or diagnostic of the repository (e.g. "audit this project", "check repository health").
-- The project is being prepared for public release, open-sourcing, or external deployment, and needs an exposure risk assessment.
-- Evaluating code quality, technical debt, or refactoring opportunities across the codebase.
-- A comprehensive macro-level status audit is needed beyond the lightweight working-tree check provided by `project-status`.
+- Read access to the target git repository and commit history.
+- Project toolchain or static analysis tools (optional; audit degrades gracefully if unavailable).
 
 ---
 

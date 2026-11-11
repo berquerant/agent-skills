@@ -210,18 +210,10 @@ Once remote and local CI checks succeed:
 ### 7.2 Post-Merge Default Branch CI Verification Gate
 Before proceeding to the next candidate PR in the same repository or concluding the workflow, verify that the default branch CI triggered by the merge commit passes:
 
-1. Identify and inspect the default branch CI run triggered by the merge commit per [references/ci-detection.md](references/ci-detection.md) (e.g., `gh run list --branch <default-branch> --commit "$MERGE_SHA" --limit 1` or `glab ci status --branch <default-branch>`).
-2. **Idle Wait Handling**:
-   - While the default branch CI is running (`WAITING_DEFAULT_CI`), do NOT block in a loop.
-   - If processing across multiple repositories, immediately switch focus to another repository per [references/multi-repo-scheduling.md](references/multi-repo-scheduling.md).
-3. **Verify Pass**:
-   - Check the run status using single-shot commands after an appropriate interval.
-   - Once the default branch CI succeeds:
-     - If more candidate PRs remain in this repository: rebase the next candidate PR onto this new default branch commit and proceed to Step 4.
-     - If all approved candidate PRs in this repository are resolved: proceed to cleanup.
-4. **Safety Halt on Default Branch Failure**:
-   - If default branch CI fails, freeze all further PR merges immediately.
-   - Present a Safety Halt Incident Report to the user with failure logs, and offer remediation options (e.g., revert the merge commit via `git revert <merge-sha>`, or create an immediate patch).
+1. Identify and inspect the default branch CI run triggered by the merge commit per [ci-detection.md](references/ci-detection.md) (references/ci-detection.md) (e.g., `gh run list --branch <default-branch> --commit "$MERGE_SHA" --limit 1` or `glab ci status --branch <default-branch>`).
+2. **Idle Wait Handling**: While default branch CI is running (`WAITING_DEFAULT_CI`), do NOT block in a loop; if processing multiple repositories, switch focus to another repository per [multi-repo-scheduling.md](references/multi-repo-scheduling.md) (references/multi-repo-scheduling.md).
+3. **Verify Pass**: Check the run status using single-shot commands after an appropriate interval. Once default branch CI succeeds, rebase the next candidate PR in this repository onto the new default branch commit (Step 4) or proceed to cleanup if all approved PRs are resolved.
+4. **Safety Halt on Default Branch Failure**: If default branch CI fails, freeze all further PR merges immediately, present a Safety Halt Incident Report with failure logs, and offer remediation options (`git revert <merge-sha>` or immediate patch).
 
 ### 7.3 Clean Up Worktree
 Clean up the worktree and head branch following [`git-worktree`](../git-worktree/SKILL.md) (`git worktree remove <worktree-path>`, `git branch -D <head-branch>`).

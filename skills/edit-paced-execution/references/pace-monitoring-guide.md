@@ -14,7 +14,8 @@ Agents must evaluate work characteristics before execution and dynamically adapt
 | **Standard Implementation** | Typical feature work, light investigation + code change (Default) | 3 minutes | 20 non-edit calls |
 | **Deep Investigation / Multi-Repo** | Heavy log analysis, unfamiliar codebase exploration, distributed tracing | 5 minutes | 30 non-edit calls |
 
-### Adjusting Thresholds
+### Adjusting Thresholds & Parallel Tool Calls
+- **Parallel Read Batches**: Frontier models often dispatch 5–10 read-only tool calls in parallel within a single reasoning turn. Treat a single-turn parallel read/search batch as **1 non-edit step** (or evaluate against **6–8 consecutive non-edit turns**) so parallel context gathering is not penalized as a runaway loop.
 - **Pre-execution Proposal**: When starting a task, state the suggested threshold along with the rationale:
   > *"Because this task involves exploratory debugging across 4 packages, I propose a threshold of 4 minutes or 25 non-edit tool calls before reporting progress."*
 - **User Override**: If the user specifies explicit limits (e.g., "1 minute", "every 5 tool calls"), honor them strictly.
