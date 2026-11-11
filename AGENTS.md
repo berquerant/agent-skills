@@ -12,7 +12,7 @@ Additionally, [`global/AGENTS.md`](global/AGENTS.md) provides portable, general-
 ## Development & Maintenance Rules
 
 ### 1. Skill Directory Conventions
-- Every skill lives under `skills/<skill-name>/`.
+- Every distributable skill lives under `skills/<skill-name>/`; repository-specific maintenance skills live under `.agent/skills/<skill-name>/`.
 - Must contain a valid `SKILL.md` with required frontmatter (`name`, `description`).
 - Keep `SKILL.md` concise. Move extensive technical references or specifications to `references/` within the skill directory.
 - `name` must be lowercase, alphanumeric with hyphens (e.g. `explore-plan-execute`).
@@ -68,6 +68,7 @@ flowchart TD
     subgraph Meta ["Meta & Skill Creation"]
         SC[skill-creator]
         SR["skill-review<br/>(Read-only skill audit)"]
+        SM["skill-modernize<br/>(Model-aligned criteria & skill evolution)"]
         MC[mcp-creator]
     end
 
@@ -185,6 +186,11 @@ flowchart TD
     SR -->|suggests phased fixes| SG
     SR -->|suggests remediation| RF
     SR -->|suggests doc refinement| DR
+    SM -->|updates criteria & audits via| SR
+    SM -.->|syncs generator rules| SC
+    SM -->|orchestrates phased fixes| SG
+    SM -->|orchestrates structural fixes| RF
+    SM -->|orchestrates doc polish| DR
 ```
 
 ### Interoperability Principles

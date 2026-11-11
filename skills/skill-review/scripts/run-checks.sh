@@ -23,6 +23,7 @@ if [ ! -f "$SKILL_DIR/SKILL.md" ]; then
 fi
 
 SKILL_DIR_ABS=$(cd "$SKILL_DIR" && pwd)
+REPO_ROOT=$(git -C "$SKILL_DIR" rev-parse --show-toplevel 2>/dev/null || (cd "$SKILL_DIR_ABS/../.." 2>/dev/null && pwd) || pwd)
 SKILLS_ROOT=$(dirname "$SKILL_DIR_ABS")
 NAME=$(basename "$SKILL_DIR_ABS")
 
@@ -251,7 +252,8 @@ fi
 
 # Check G: Sibling References
 echo "--- Check G: Sibling Skill References ---"
-for s in "$SKILLS_ROOT"/*/; do
+for s in "$REPO_ROOT"/skills/*/ "$SKILLS_ROOT"/*/; do
+  [ -d "$s" ] || continue
   s=$(basename "$s")
   [ "$s" = "$NAME" ] && continue
   case "$s" in
@@ -259,12 +261,11 @@ for s in "$SKILLS_ROOT"/*/; do
   esac
   c=$(grep -rnE "(^|[^a-zA-Z0-9_-])$s([^a-zA-Z0-9_-]|$)" "$SKILL_DIR" 2>/dev/null | wc -l | tr -d ' ')
   [ "$c" -gt 0 ] && echo "$s: $c"
-done
+done | sort -u
 grep -rnE '\.\./[a-z0-9-]+/' "$SKILL_DIR" || true
 
 # Check H: Repository Registration
 echo "--- Check H: Repository Registration ---"
-REPO_ROOT=$(git -C "$SKILL_DIR" rev-parse --show-toplevel 2>/dev/null || (cd "$SKILLS_ROOT/.." 2>/dev/null && pwd) || pwd)
 for doc in README.md AGENTS.md skills/skill-router/references/intent-matrix.md; do
   doc_path="$REPO_ROOT/$doc"
   if [ -f "$doc_path" ]; then
@@ -303,7 +304,7 @@ if [ -d "$SKILL_DIR/references" ]; then
         }
       }
     }
-  ' "$SKILLS_ROOT"/*/references/*.md 2>/dev/null | sort || true)
+  ' "$REPO_ROOT"/skills/*/references/*.md "$SKILLS_ROOT"/*/references/*.md 2>/dev/null | sort || true)
   if [ -n "$dup_headings" ]; then
     printf '%s\n' "$dup_headings"
   else
@@ -326,11 +327,15 @@ hygiene_warns=$(find "$SKILL_DIR" -name '*.md' ! -name 'automated-checks.md' ! -
     in_sh && $0 !~ /^[[:space:]]*#/ && length($0) >= 120 {
       printf "WARN: long inline shell command (%d chars >= 120) in %s:%d\n", length($0), file, NR
     }
-    !in_code && /\]\([^)]+\)[[:space:]]+\(`[^`]+`\)/ {
-      printf "WARN: backtick-wrapped raw target in co-presented link in %s:%d\n", file, NR
-    }
-    !in_code && tolower($0) ~ /think step[- ]by[- ]step/ {
-      printf "WARN: manual chain-of-thought phrasing in %s:%d\n", file, NR
+    !in_code {
+      line = $0
+      if (line ~ /\]\([^)]+\)[[:space:]]+\(`[^`]+`\)/) {
+        printf "WARN: backtick-wrapped raw target in co-presented link in %s:%d\n", file, NR
+      }
+      gsub(/`[^`]*`/, "", line)
+      if (tolower(line) ~ /think step[- ]by[- ]step/) {
+        printf "WARN: manual chain-of-thought phrasing in %s:%d\n", file, NR
+      }
     }
   ' "$f"
 done)

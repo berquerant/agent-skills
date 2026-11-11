@@ -24,6 +24,7 @@ All skills are maintained under `skills/`.
 | [`doctor`](skills/doctor/SKILL.md) | One-shot project checkup across docs/comments, maintainability, latent bugs, and security, ending in a prioritized improvement plan. | Mode selection (project/recent × quick/thorough), evidence-backed findings, reuses code-review/project-audit/evidentiary-inquiry criteria, approval gate, hand-off to refactor/doc-refactor/step-gate. |
 | [`skill-creator`](skills/skill-creator/SKILL.md) | Scaffolds and writes new agent skills. | Frontmatter quality checklist, progressive disclosure, standard directory templates. |
 | [`skill-review`](skills/skill-review/SKILL.md) | Reviews agent skills against the Agent Skills Specification and repository conventions. | Read-only, automated shell checks, six-dimension verdict rules, batch cross-skill summary, hand-off to step-gate/refactor. |
+| [`skill-modernize`](.agent/skills/skill-modernize/SKILL.md) | Repository-local meta-skill that evolves `skills/` and review criteria to align with new frontier model capabilities, harness updates, or SDK versions. | 5-axis model delta analysis, criteria & checker updates, self-review baseline lock, 3-phase repository remediation. |
 | [`mcp-creator`](skills/mcp-creator/SKILL.md) | Scaffolds and implements Model Context Protocol (MCP) servers. | Python/TS templates, tool/resource/prompt support, host setup guides. |
 | [`scrutinize-plan-execute`](skills/scrutinize-plan-execute/SKILL.md) | Enforces critical obstacle review, user consultation, and archiving checks. | Self-critical risk scrutiny, remedy consultation, iterative refinement, no-default file archiving. |
 | [`step-gate`](skills/step-gate/SKILL.md) | Executes tasks incrementally with explicit user checkpoints. | Step decomposition, verification criteria, user approval gates between steps. |
@@ -68,6 +69,7 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 | Fact-checking, version & source scoping investigation | [`evidentiary-inquiry`](skills/evidentiary-inquiry/SKILL.md) | `explore-plan-execute` / `scrutinize-plan-execute` / `refactor` |
 | Scaffold new agent skill | [`skill-creator`](skills/skill-creator/SKILL.md) | `skill-review` |
 | Audit existing agent skills against spec | [`skill-review`](skills/skill-review/SKILL.md) | `step-gate` / `refactor` |
+| Evolve skills & criteria for new models, harnesses, or SDKs (repo-local) | [`skill-modernize`](.agent/skills/skill-modernize/SKILL.md) | `skill-review` → `step-gate` → `refactor` → `doc-refactor` |
 | Scaffold new Model Context Protocol server | [`mcp-creator`](skills/mcp-creator/SKILL.md) | `explore-plan-execute` |
 | Convert long or complex command to snippet | [`command-snippet`](skills/command-snippet/SKILL.md) | `snippet-review` → `step-gate` / `explore-plan-execute` |
 | Audit execution snippet intelligibility & safety | [`snippet-review`](skills/snippet-review/SKILL.md) | `command-snippet` |
@@ -78,6 +80,10 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 
 ```text
 .
+├── .agent/
+│   └── skills/
+│       └── skill-modernize/
+│           └── references/      # 5-axis model delta matrix & 3-phase remediation playbook (repo-local)
 ├── .github/
 │   ├── dependabot.yml           # Dependabot configuration
 │   └── workflows/

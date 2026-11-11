@@ -9,7 +9,7 @@ cd "${repo_root}"
 
 failed=0
 
-for skill_dir in skills/*; do
+for skill_dir in skills/* .agent/skills/*; do
   [ -d "${skill_dir}" ] || continue
   [ -f "${skill_dir}/SKILL.md" ] || continue
 
