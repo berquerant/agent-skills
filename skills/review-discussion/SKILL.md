@@ -46,7 +46,7 @@ Verify: Comment conventions and language preferences are established.
 ## Step 3: Draft Comment or Response
 
 - **When Reviewing (Drafting Comments)**:
-  - Follow [references/comment-conventions.md](references/comment-conventions.md).
+  - Follow [comment-conventions.md](references/comment-conventions.md) (references/comment-conventions.md) and [conventional-comments-spec.md](references/conventional-comments-spec.md) (references/conventional-comments-spec.md).
   - Use appropriate labels (`issue`, `suggestion`, `question`, `nitpick`, `praise`).
   - Mark decorations (`(blocking)` or `(non-blocking)`) when ambiguity exists.
   - State the rationale (why) and provide concrete replacement code or patch where practical.

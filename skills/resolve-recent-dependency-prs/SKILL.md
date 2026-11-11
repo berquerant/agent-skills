@@ -45,7 +45,7 @@ If no explicit repositories were provided:
 2. Calculate the start date (`SINCE_DATE`) based on the confirmed duration:
    ```bash
    # Calculate date in YYYY-MM-DD format (cross-platform fallback)
-   SINCE_DATE=$(python3 -c "from datetime import date, timedelta; print(date.today() - timedelta(days=7))" 2>/dev/null || date -d '7 days ago' +%Y-%m-%d 2>/dev/null || date -v-7d +%Y-%m-%d)
+   SINCE_DATE=$(date -d '7 days ago' +%Y-%m-%d 2>/dev/null || date -v-7d +%Y-%m-%d)
    ```
 3. Query the platform CLI for non-archived repositories updated since `SINCE_DATE`:
    - **GitHub**:
@@ -54,7 +54,8 @@ If no explicit repositories were provided:
      ```
    - **GitLab**:
      ```bash
-     glab api "/projects?membership=true&archived=false&last_activity_after=${SINCE_DATE}T00:00:00Z" --paginate > active_repos.json
+     GL_QUERY="/projects?membership=true&archived=false&last_activity_after=${SINCE_DATE}T00:00:00Z"
+     glab api "$GL_QUERY" --paginate > active_repos.json
      ```
 
 Verify: The target repository list is established either from user-specified input or from confirmed platform search results.

@@ -145,6 +145,11 @@ Use:
 - ❌ when action is required.
 - — when the check was intentionally skipped.
 
+When follow-up actions are needed, recommend the appropriate workflow skill for user approval:
+- **For continuing an incomplete WIP diff pattern**: Recommend [diff-continue](../diff-continue/SKILL.md) (../diff-continue/SKILL.md).
+- **For drafting commit messages or PR/MR descriptions when clean**: Recommend [change-message](../change-message/SKILL.md) (../change-message/SKILL.md).
+- **For planning fixes to unexpected test/lint failures**: Recommend [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md) or [refactor](../refactor/SKILL.md) (../refactor/SKILL.md).
+
 Verify: Every scope item from Step 1 has a corresponding entry in the report.
 
 ---

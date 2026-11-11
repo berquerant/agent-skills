@@ -2,13 +2,9 @@
 name: evidentiary-inquiry
 description: >-
   Use this skill when an investigation, technical evaluation, or diagnostic task requires
-  rigorous evidence, premise clarification, version-contextualized fact verification,
-  transparent source scoping, and clear separation between observed facts and logical
-  interpretations. Analyzes ambiguous requests to clarify architecture, functional and
-  non-functional requirements, out-of-scope boundaries, inviolable constraints, and target
-  versions before exploring; agrees on information sources; distinguishes exact version contexts,
-  surrounding version feature deltas, and unresolved or recently resolved issues; validates
-  facts prior to reporting; and explains deductive reasoning.
+  rigorous evidence, premise clarification, and version-pinned fact verification. Scopes
+  trusted sources, separates observed facts from logical deductions, and prevents
+  speculative diagnoses.
 ---
 
 # Evidentiary Inquiry

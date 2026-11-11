@@ -45,8 +45,8 @@ Verify: Language, commit format, and description template are decided, with the 
 
 ## Step 3: Draft the Message
 
-- Commit message: follow [references/commit-message.md](references/commit-message.md).
-- PR/MR title and description: follow [references/pr-description.md](references/pr-description.md).
+- Commit message: follow [commit-message.md](references/commit-message.md) (references/commit-message.md) and [conventional-commits-spec.md](references/conventional-commits-spec.md) (references/conventional-commits-spec.md).
+- PR/MR title and description: follow [pr-description.md](references/pr-description.md) (references/pr-description.md).
 
 Verify: A draft exists for every requested artifact (commit message, PR/MR title, description).
 

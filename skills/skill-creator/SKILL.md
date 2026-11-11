@@ -66,7 +66,7 @@ Verify: Target directory is confirmed with the user, no name conflict exists, an
 
 ### 3.1 Quality Checklist for the `name` Field
 
-Refer to [references/skill-spec.md](references/skill-spec.md) for character set and length constraints.
+Refer to [skill-spec.md](references/skill-spec.md) (references/skill-spec.md) and [agent-skills-spec.md](references/agent-skills-spec.md) (references/agent-skills-spec.md) for character set and length constraints.
 Key principles:
 - Lowercase, hyphen-separated (e.g., `my-skill`, `deploy-checker`)
 - Must match the parent directory name exactly

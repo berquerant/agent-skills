@@ -1,11 +1,9 @@
 ---
 name: explore-plan-execute
 description: >-
-  Use this skill when the user gives a request or prompt requiring non-trivial
-  work without extreme ambiguity or high architectural risk. Guides the agent
-  to explore the codebase, build a concrete plan with success criteria, secure
-  user approval, and execute safely. For high-risk, ambiguous, or architecturally
-  uncertain tasks, prefer scrutinize-plan-execute.
+  Use this skill when a non-trivial task requires structured exploration, concrete
+  planning with verification criteria, and user approval before execution. For
+  high-risk or architecturally ambiguous tasks, prefer scrutinize-plan-execute.
 ---
 
 # Explore → Plan → Execute

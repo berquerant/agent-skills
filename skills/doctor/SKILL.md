@@ -1,7 +1,7 @@
 ---
 name: doctor
 description: >-
-  Use this skill for focused or mode-selectable (quick/thorough, project/recent changes) health checkups across documentation, maintainability, latent bugs, and security risks. Produces an evidence-backed improvement plan and hands off to mutation skills. For comprehensive, repository-wide baseline audits with letter-grade health ratings, prefer project-audit.
+  Use this skill for focused, mode-selectable (quick/thorough, project/recent changes) health checkups across documentation, maintainability, latent bugs, and security risks. Produces an evidence-backed remediation plan; for full-repo letter-grade baseline audits, prefer project-audit.
 ---
 
 # Doctor

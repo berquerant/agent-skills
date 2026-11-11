@@ -60,7 +60,9 @@ After merging a candidate PR into the default branch, the default branch CI must
 1. Confirm the PR has finalized merging (especially if `--auto` was queued), then retrieve the merge commit SHA:
    ```bash
    # Ensure PR is merged, then retrieve the merge commit SHA
-   MERGE_SHA=$(gh pr view <number> --json state,mergeCommit --jq 'select(.state=="MERGED") | .mergeCommit.oid' 2>/dev/null || git rev-parse origin/<default-branch>)
+   JQ_MERGE='select(.state=="MERGED") | .mergeCommit.oid'
+   MERGE_SHA=$(gh pr view <number> --json state,mergeCommit --jq "$JQ_MERGE" 2>/dev/null)
+   MERGE_SHA=${MERGE_SHA:-$(git rev-parse origin/<default-branch>)}
    ```
 2. Query the workflow run triggered on the default branch for that merge commit:
    ```bash

@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Specification Overview
+## 1. Conventional Commits Overview
 
 The Conventional Commits specification provides a lightweight convention on top of commit messages. It creates an explicit commit history that is easy for humans to review and machines to parse.
 

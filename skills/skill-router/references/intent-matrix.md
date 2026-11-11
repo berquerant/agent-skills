@@ -32,6 +32,7 @@ This reference provides the intent classification criteria, recommended entry sk
 | **Command Scripting & Snippet Parameterization** | "Save command as script", "Format complex command into snippet", "Parameterize command" | `command-snippet` | `snippet-review` → `step-gate` / `explore-plan-execute` |
 | **Snippet Intelligibility & Complexity Review** | "Audit this snippet", "Is this script too complex?", "Check snippet readability" | `snippet-review` | `command-snippet` |
 | **Output Co-Presentation & Copy-Paste** | "Format output with clickable link and raw string", "Make paths/URLs copy-pasteable and clickable" | `output-presentation` | — |
+| **User Alerts & Approval Gate Notifications** | "Notify me when done", "Alert before elevated permissions or approval gates" | `user-notification` | `explore-plan-execute` / `step-gate` |
 
 ---
 

@@ -1,8 +1,12 @@
-"""Example FastMCP server (Python mcp 2.0+ SDK)."""
+"""Example MCP server using the Python mcp 2.0+ SDK (MCPServer).
 
-from mcp.server.fastmcp import FastMCP
+Note: For legacy mcp 1.x environments, replace `from mcp.server import MCPServer`
+with `from mcp.server.fastmcp import FastMCP`.
+"""
 
-mcp = FastMCP("my-server")
+from mcp.server import MCPServer
+
+mcp = MCPServer("my-server")
 
 # Sample in-memory store for demonstration
 data_store = {"example": "sample content"}

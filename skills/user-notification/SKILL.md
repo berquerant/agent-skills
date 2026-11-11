@@ -86,7 +86,7 @@ Verify: The notification is dispatched cleanly via the resolved channel with con
 
 1. Confirm that the dispatch call completed successfully.
 2. If the preferred notification channel fails or is unsupported in the current environment, fall back to the next available channel without failing the overall user task.
-3. Resume the primary workflow: pause for user confirmation, wait for gate input, or present the completed deliverables.
+3. Resume the primary workflow (such as [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md), [scrutinize-plan-execute](../scrutinize-plan-execute/SKILL.md) (../scrutinize-plan-execute/SKILL.md), or [step-gate](../step-gate/SKILL.md) (../step-gate/SKILL.md)): pause for user confirmation, wait for gate input, or present the completed deliverables.
 
 Verify: Notification delivery or fallback is confirmed, and the subsequent workflow action proceeds smoothly.
 

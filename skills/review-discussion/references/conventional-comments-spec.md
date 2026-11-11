@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Specification Overview
+## 1. Conventional Comments Overview
 
 Conventional Comments standardizes the format and labels used in code review comments. It makes expectations clear, avoids miscommunication, and reduces friction between reviewers and authors.
 

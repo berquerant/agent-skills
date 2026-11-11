@@ -10,7 +10,8 @@ description: >-
 # Git Worktree Workflow
 
 Use this skill to create a git worktree for a new branch, work inside it,
-and remove it when the work is complete.
+and remove it when the work is complete. See [git-worktree-commands.md](references/git-worktree-commands.md) (references/git-worktree-commands.md)
+for the complete command and URL parsing reference.
 
 ---
 
@@ -34,7 +35,7 @@ Once you have a value, verify read/write access:
 ls <WORKTREE_ROOT>
 ```
 
-If access is denied, inform the user and request permission before continuing.
+If access is denied, inform the user and request permission before continuing (following [user-notification](../user-notification/SKILL.md) (../user-notification/SKILL.md) for elevated permission prompts).
 Access to paths outside the sandbox or restricted directories may require elevated user permissions or running outside sandbox isolation.
 
 Verify: WORKTREE_ROOT exists and is writable.
@@ -103,7 +104,7 @@ Perform all file edits and commands within the worktree directory:
 <WORKTREE_ROOT>/<owner>/<repo>/<branch-name>/
 ```
 
-Treat this directory as the project root for the duration of the task.
+Treat this directory as the project root for the duration of the task, and proceed with the primary task workflow (such as [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md), [scrutinize-plan-execute](../scrutinize-plan-execute/SKILL.md) (../scrutinize-plan-execute/SKILL.md), or [multi-repo-change](../multi-repo-change/SKILL.md) (../multi-repo-change/SKILL.md)).
 
 ### Parallel Work with Subagents (optional)
 

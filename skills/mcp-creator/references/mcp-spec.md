@@ -87,13 +87,13 @@ Protocol methods: `prompts/list`, `prompts/get`
 
 ## Python SDK Quick Reference (mcp 2.0+)
 
-For a complete runnable FastMCP server example, see
-[examples/server_fastmcp.py](../examples/server_fastmcp.py).
+For a complete runnable server example, see
+[server_fastmcp.py](../examples/server_fastmcp.py) (../examples/server_fastmcp.py).
 
 ```python
-from mcp.server.fastmcp import FastMCP
+from mcp.server import MCPServer
 
-mcp = FastMCP("my-server")
+mcp = MCPServer("my-server")
 
 @mcp.tool()
 async def my_tool(x: int, y: int) -> int:
@@ -103,6 +103,8 @@ async def my_tool(x: int, y: int) -> int:
 if __name__ == "__main__":
     mcp.run()
 ```
+
+> Note: In legacy MCP Python SDK v1 (`mcp<2.0.0`), the high-level server class was imported via `from mcp.server.fastmcp import FastMCP`. In `mcp>=2.0.0`, use `from mcp.server import MCPServer`.
 
 Dev/inspection:
 ```bash

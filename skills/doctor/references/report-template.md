@@ -42,7 +42,7 @@ For axis B, use the impact-versus-effort matrix in [`project-audit`'s maintainab
 **Scope**: <what was examined, and the rule that selected it>
 **Limits**: <files not read, tools not run or unavailable>
 
-## Summary
+## Diagnostic Summary
 | Axis | Status | Findings (🔴/🟡/🟢) |
 |---|---|---|
 | A. Documentation & comments | <Good / Needs work / Poor> | <n/n/n> |

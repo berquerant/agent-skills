@@ -97,10 +97,11 @@ Verify: `uv run mcp dev server.py` (Python) or equivalent starts without errors.
 
 ## Step 4: Implement the Server
 
-Follow the patterns in [references/mcp-spec.md](references/mcp-spec.md) for
-detailed protocol rules. Key implementation points:
+Follow the patterns in [mcp-spec.md](references/mcp-spec.md) (references/mcp-spec.md) for
+detailed protocol rules and see [server_fastmcp.py](examples/server_fastmcp.py) (examples/server_fastmcp.py)
+for a complete runnable Python server example. Key implementation points:
 
-### Tools (Python example)
+### Tools (Python example, `mcp>=2.0.0`)
 
 ```python
 from mcp.server import MCPServer
@@ -183,6 +184,7 @@ Verify: The host discovers the server, lists its capabilities (tools/resources/p
 3. Suggest next steps:
    - Add error handling and logging
    - Write tests using `mcp.test_client()`
+   - Run a quality and security audit using [code-review](../code-review/SKILL.md) (../code-review/SKILL.md) or plan larger feature expansions with [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md)
    - Publish to the MCP Registry if intended for public distribution
 
 > [!TIP]

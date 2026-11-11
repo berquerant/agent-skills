@@ -2,11 +2,9 @@
 name: command-snippet
 description: >-
   Use this skill when executing complex, chained, or multi-line shell commands,
-  when normalizing command arguments, or when constraining operational scope to
-  reduce user review friction and facilitate continuous approval, to convert them
-  into structured, documented, and parameterized snippet files, review them for
-  intelligibility via snippet-review, and explain their intent to the user before
-  execution instead of executing long or overly broad inline commands.
+  normalizing CLI arguments, or constraining operational scope. Converts inline
+  commands into documented, parameterized snippet files and audits them via
+  snippet-review before execution.
 ---
 
 # Command Snippet
