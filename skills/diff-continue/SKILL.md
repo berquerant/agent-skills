@@ -12,14 +12,14 @@ Use this skill to extend a work-in-progress change set.
 Read the existing `git diff`, extract the intent and patterns, then
 apply those patterns to the files or sections that haven't been touched yet.
 
-This workflow coordinates [`explore-plan-execute`](../explore-plan-execute/SKILL.md) to explore the diff, extract patterns, identify targets, and establish an agreed continuation plan before applying edits to remaining files.
+This workflow coordinates [`explore-plan-execute`](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md) to explore the diff, extract patterns, identify targets, and establish an agreed continuation plan before applying edits to remaining files.
 
 ---
 
 ## Prerequisites
 
 - Working directory is inside a git repository with an active uncommitted diff or specified base diff.
-- **Explore & Plan First**: Do not immediately edit files upon invocation. Adhere to [`explore-plan-execute`](../explore-plan-execute/SKILL.md) by analyzing the existing diff, cataloging remaining target locations, and presenting a concrete continuation plan for user approval before modifying files.
+- **Explore & Plan First**: Do not immediately edit files upon invocation. Adhere to [`explore-plan-execute`](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md) by analyzing the existing diff, cataloging remaining target locations, and presenting a concrete continuation plan for user approval before modifying files.
 
 ---
 
@@ -88,7 +88,7 @@ Verify: The remaining-targets list is complete and correct.
 
 ## Step 4: Formulate and Present Continuation Plan (Explore-Plan-Execute Gate)
 
-Following [`explore-plan-execute`](../explore-plan-execute/SKILL.md), synthesize the findings into a structured continuation plan before modifying any files:
+Following [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md), synthesize the findings into a structured continuation plan before modifying any files:
 
 1. **Construct the Continuation Plan**:
    - **Inferred Transformation Rule**: Concise description of the rule extracted from existing diff hunks.
@@ -146,7 +146,7 @@ After all targets are done:
    git diff HEAD
    ```
 3. Confirm that every intended target has been covered and no unintended
-   files were modified.
+   files were modified (or recommend [project-status](../project-status/SKILL.md) (../project-status/SKILL.md) and [change-message](../change-message/SKILL.md) (../change-message/SKILL.md) to finalize).
 
 Verify: Build/tests pass. Diff is consistent end-to-end. No regressions.
 
@@ -154,14 +154,9 @@ Verify: Build/tests pass. Diff is consistent end-to-end. No regressions.
 
 ## Guidelines
 
-- **Explore & Plan First.** Never modify code immediately upon receiving a WIP diff. Thoroughly extract patterns, catalogue remaining files, formulate a clear continuation plan with success criteria, and get user approval first.
-- **Pattern first, code second.** Always write down the rule (Step 2) before
-  editing files. This prevents drift as you go through many files.
-- **Preserve style exactly.** Micro-differences in indentation, spacing, or
-  naming create noisy diffs and reviewer confusion.
-- **Do not over-reach.** Only apply the change the diff demonstrates. If you
-  spot other improvements, note them for the user but do not apply them now.
-- **Ask before expanding scope.** If the remaining-targets list is ambiguous
-  (e.g., "should this apply to test files too?"), ask the user first.
-- **One file at a time for large changes.** Commit-sized batches are easier
-  to review and easier to roll back.
+- **Formulate and approve the continuation plan first**: Extract the transformation rule, catalog remaining files, and obtain explicit user sign-off in Step 4 before editing any files.
+- **Write down the inferred rule before applying edits**: Document the exact transformation pattern in Step 2 to prevent drift across large file sets.
+- **Match existing style and formatting**: Replicate the indentation, naming, and comment conventions of the existing diff hunks so the resulting diff is uniform.
+- **Stay strictly within the inferred pattern's scope**: Apply only the transformation demonstrated by the WIP diff, noting unrelated improvement ideas separately for user consideration.
+- **Clarify ambiguous targets upfront**: Ask the user before modifying borderline files (such as test mocks or generated code).
+- **Apply changes in reviewable batches**: Edit one file or logical group at a time and inspect `git diff` after each batch so mistakes are easy to isolate.

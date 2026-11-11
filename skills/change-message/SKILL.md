@@ -59,7 +59,7 @@ Check the draft against every item below and fix any failures:
 - [ ] Every claim matches the actual diff; nothing is speculative or invented.
 - [ ] Breaking changes, migrations, and risks are explicitly called out.
 - [ ] Verification steps reflect commands actually run (or are marked as not run).
-- [ ] No secrets, credentials, internal hostnames, or personal data are included (consult [../code-review/references/security-checklist.md](../code-review/references/security-checklist.md)).
+- [ ] No secrets, credentials, internal hostnames, or personal data are included (consult [security-checklist.md](../code-review/references/security-checklist.md) (../code-review/references/security-checklist.md)).
 - [ ] Language and format match the decisions in Step 2.
 
 Verify: All checklist items pass.
@@ -71,7 +71,7 @@ applied (language, format, template source).
 
 - **Standalone use**: ask the user to approve or edit the message. After approval,
   recommend a workflow skill for committing, pushing, or opening the PR/MR
-  (e.g. `explore-plan-execute`, or `multi-repo-change` for multi-repository work).
+  (e.g. [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md), or [multi-repo-change](../multi-repo-change/SKILL.md) (../multi-repo-change/SKILL.md) for multi-repository work).
 - **Used within another workflow** (e.g. `multi-repo-change`, `explore-plan-execute`):
   return the draft to that workflow and present it at its own approval gate.
   Do not request a separate approval here.
@@ -82,9 +82,9 @@ Verify: The user has approved or edited the message, either directly (standalone
 
 ## Guidelines
 
-- **Repository conventions first.** Defaults (English, Conventional Commits, default template) apply only when the repository has no clear convention.
-- **Lead with the conclusion.** Reviewers should understand the change from the first line.
-- **Why over what.** The diff shows *what*; the message must explain *why*.
-- **Summarize, do not enumerate.** Group changes by meaning, not by file; keep bullets few.
-- **Never fabricate.** Do not invent issue numbers, test results, or motivations.
-- **One logical change per commit.** If the diff mixes unrelated changes, suggest splitting it before writing the message.
+- **Follow repository conventions first**: Inspect recent git history and templates first, falling back to English and Conventional Commits when the repository has no established pattern.
+- **Lead with a self-contained subject line**: Summarize the core outcome in the first line so reviewers immediately grasp the intent.
+- **Focus the body on the "Why"**: Explain the motivation, trade-offs, and context behind the change rather than narrating the diff file by file.
+- **Group changes by logical meaning**: Summarize related edits into concise bullets to keep PR descriptions scannable.
+- **Ground every claim in verified diff evidence**: Cite only actual changes, issue numbers, and commands that were genuinely run.
+- **Keep commits atomic**: Recommend splitting mixed, unrelated changes into separate commits before finalizing the message.

@@ -122,6 +122,7 @@ flowchart TD
     EPE -.->|delegates complex risk| SPE
     EPE -.->|proposes pacing guard| EPE_PACE
     SPE -.->|proposes pacing guard| EPE_PACE
+    SG -.->|proposes pacing guard| EPE_PACE
     EPE -.->|proposes milestone logging| CPL
     SPE -.->|proposes milestone logging| CPL
     SG -.->|records step milestones| CPL
@@ -183,6 +184,7 @@ flowchart TD
     SR -.->|shares skill spec| SC
     SR -->|suggests phased fixes| SG
     SR -->|suggests remediation| RF
+    SR -->|suggests doc refinement| DR
 ```
 
 ### Interoperability Principles

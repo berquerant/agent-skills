@@ -26,7 +26,7 @@ Read the task carefully and decompose it into subtasks.
   confirmed without completing later steps.
 - Each subtask should be **easy to roll back** if it fails.
 - Prefer smaller steps over larger ones when in doubt.
-- Order steps by dependency (prerequisite steps come first). If the task structure contains multiple independent branches or asynchronous idle wait states (e.g. CI or remote builds) that can be interleaved, consider structuring the execution via [`task-dependency-pipeline`](../task-dependency-pipeline/SKILL.md).
+- Order steps by dependency (prerequisite steps come first). If the task structure contains multiple independent branches or asynchronous idle wait states (e.g. CI or remote builds) that can be interleaved, consider structuring the execution via [task-dependency-pipeline](../task-dependency-pipeline/SKILL.md) (../task-dependency-pipeline/SKILL.md).
 
 **Avoid these pitfalls:**
 
@@ -62,7 +62,7 @@ Present the plan in this format:
 ...
 ```
 
-If persistent milestone tracking is desired, propose using [`checkpoint-log`](../checkpoint-log/SKILL.md) to log each step's progress and decisions to a user-confirmed file path.
+If persistent milestone tracking is desired, propose using [checkpoint-log](../checkpoint-log/SKILL.md) (../checkpoint-log/SKILL.md) to log each step's progress and decisions to a user-confirmed file path. If investigation stalls between file edits are a risk, consider pairing with [edit-paced-execution](../edit-paced-execution/SKILL.md) (../edit-paced-execution/SKILL.md).
 
 Verify: Every step has all three elements defined and each completion criterion
 is measurable.
@@ -91,7 +91,7 @@ For each step in the approved plan, repeat this loop:
    - Extract and display the relevant portion of the approved plan/procedure (the `Execute`, `Verify`, and `Done when` criteria for this step) before taking action.
    - Check whether the current workspace or environment state aligns with the assumptions in the procedure.
    - If discrepancies or drift (Plan Drift) are detected, stop and adjust the plan or procedure to match reality, confirming revisions with the user before proceeding.
-2. **Execute** the step as defined in the plan. When running complex, chained, or long commands (≥4 operators, ≥120 characters, or ≥3 lines), adhere to [`command-snippet`](../command-snippet/SKILL.md) by saving and running from a documented snippet file with explicit CLI arguments.
+2. **Execute** the step as defined in the plan. When running complex, chained, or long commands (≥4 operators, ≥120 characters, or ≥3 lines), adhere to [command-snippet](../command-snippet/SKILL.md) (../command-snippet/SKILL.md) by saving and running from a documented snippet file with explicit CLI arguments.
 3. **Verify** using the defined verification method.
 4. **Evaluate** against the completion criterion:
    - ✅ **Pass**: proceed to logging and reporting.
@@ -99,8 +99,8 @@ For each step in the approved plan, repeat this loop:
      to proceed. Do **not** continue to the next step.
 5. **Log & Report**:
    - Maintain execution history by recording what was done, what verification showed, whether completion criteria were met, and key decisions.
-   - If [`checkpoint-log`](../checkpoint-log/SKILL.md) is enabled, append the completed step entry to the user-confirmed log file.
-   - Present the concise report to the user.
+   - If [checkpoint-log](../checkpoint-log/SKILL.md) (../checkpoint-log/SKILL.md) is enabled, append the completed step entry to the user-confirmed log file.
+   - Present the concise report to the user (notifying via [user-notification](../user-notification/SKILL.md) (../user-notification/SKILL.md) when appropriate).
 6. **Ask for approval** to continue:
    > "Step N complete. Shall I proceed to Step N+1: `<title>`?"
 
@@ -119,9 +119,9 @@ After all steps are complete, report:
 - Any deviations from the original plan and the reasons.
 - The overall outcome.
 - Propose appropriate follow-up skills (Sequential Hand-off):
-  - **For crafting commit messages and PR/MR descriptions**: Recommend [`change-message`](../change-message/SKILL.md).
-  - **For inspecting post-execution working tree state and diff drift**: Recommend [`project-status`](../project-status/SKILL.md).
-  - **For comprehensive quality and security audit of the final diff**: Recommend [`code-review`](../code-review/SKILL.md).
+  - **For crafting commit messages and PR/MR descriptions**: Recommend [change-message](../change-message/SKILL.md) (../change-message/SKILL.md).
+  - **For inspecting post-execution working tree state and diff drift**: Recommend [project-status](../project-status/SKILL.md) (../project-status/SKILL.md).
+  - **For comprehensive quality and security audit of the final diff**: Recommend [code-review](../code-review/SKILL.md) (../code-review/SKILL.md).
 
 Verify: All completion criteria from the plan are satisfied.
 
@@ -129,11 +129,10 @@ Verify: All completion criteria from the plan are satisfied.
 
 ## Guidelines
 
-- **One step at a time.** Never execute the next step without explicit user approval.
-- **Pre-execution alignment.** Always display the relevant plan excerpt and verify alignment against the workspace state before executing each step.
-- **Maintain execution history.** Record step-by-step progress, verification evidence, and rationale throughout execution.
-- **Stop on failure.** Do not silently skip or work around a failed step.
-- **Measurable criteria only.** Completion criteria must be observable, not vague ("looks good").
-- **Prefer reversible actions.** When multiple approaches exist, prefer the one easiest to undo.
-- **Avoid long inline commands.** Follow [`command-snippet`](../command-snippet/SKILL.md) to convert long (≥120 chars), chained (≥4 operators), or multi-line (≥3 lines) commands into documented snippet files with explicit CLI arguments.
-- **No implicit continuation.** Even if the user seems in a hurry, always ask before proceeding.
+- **Execute one step at a time with explicit approval**: Pause after each step and wait for user sign-off so errors are caught before they compound across subsequent steps.
+- **Align with workspace state before each step**: Display the current step's `Execute`, `Verify`, and `Done when` criteria and verify workspace assumptions before acting to prevent plan drift.
+- **Maintain a clear execution history**: Record progress, verification evidence, and rationale at every step to support rapid recovery and review.
+- **Halt immediately on verification failure**: Diagnose failures and consult the user rather than working around broken preconditions.
+- **Define measurable completion criteria**: Express every `Done when` condition as an observable exit code, file state, or test outcome rather than subjective impressions.
+- **Prefer reversible actions**: Choose the approach that is easiest to roll back when multiple valid options exist.
+- **Keep shell commands concise**: Follow [command-snippet](../command-snippet/SKILL.md) (../command-snippet/SKILL.md) to convert long (≥120 chars), chained (≥4 operators), or multi-line (≥3 lines) commands into documented snippet files with explicit CLI arguments.

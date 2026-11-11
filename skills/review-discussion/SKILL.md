@@ -51,7 +51,7 @@ Verify: Comment conventions and language preferences are established.
   - Mark decorations (`(blocking)` or `(non-blocking)`) when ambiguity exists.
   - State the rationale (why) and provide concrete replacement code or patch where practical.
 - **When Responding (Replying to Threads)**:
-  - Follow [references/resolution-rules.md](references/resolution-rules.md).
+  - Follow [resolution-rules.md](references/resolution-rules.md) (references/resolution-rules.md).
   - Clearly state what action was taken (referencing commit SHA or change details).
   - If deferring to a follow-up issue or declining, provide technical justification and tracking link.
 
@@ -62,7 +62,7 @@ Verify: The drafted comment or reply has a clear label/intent, rationale, and ac
 ## Step 4: Evaluate Resolution Readiness
 
 If proposing to resolve a thread:
-- Verify resolution criteria against [references/resolution-rules.md](references/resolution-rules.md).
+- Verify resolution criteria against [resolution-rules.md](references/resolution-rules.md) (references/resolution-rules.md).
 - Check ownership: ensure blocking issues are resolved only with reviewer agreement or verification.
 - Ensure external tasks are tracked with issue links if deferred.
 
@@ -75,6 +75,7 @@ Verify: Resolution criteria are verified before marking any thread as resolved.
 Present the drafted comments or replies to the user in a formatted block.
 - For new comments: show file, line reference, label, and full markdown preview.
 - For thread replies: show thread context, proposed response, and resolution status change (e.g. "Mark as Resolved: Yes/No").
+- When follow-up code changes or commit messages are needed, recommend [refactor](../refactor/SKILL.md) (../refactor/SKILL.md) or [change-message](../change-message/SKILL.md) (../change-message/SKILL.md).
 
 Do not post comments or resolve threads via API/CLI tools without explicit user approval.
 
@@ -84,8 +85,8 @@ Verify: The user has reviewed and approved the drafted comment, response, or res
 
 ## Guidelines
 
-- **Critique the code, not the person.** Keep discussions objective, constructive, and empathetic.
-- **Explain the rationale.** Never request changes without stating the underlying reason or risk.
-- **Explicit blocking status.** Prevent stalled PRs by distinguishing blocking defects from optional suggestions.
-- **Concrete over abstract.** Provide executable replacement diffs or code snippets when suggesting changes.
-- **Respect resolution ownership.** Do not resolve reviewer-blocking issues unilaterally without confirmation or clear code fix verification.
+- **Critique the code objectively**: Keep discussions constructive, empathetic, and focused on technical behavior rather than the author.
+- **State the rationale behind every request**: Explain the underlying risk or maintainability reason whenever suggesting a change so the author can evaluate trade-offs.
+- **Label blocking status explicitly**: Distinguish blocking defects (`(blocking)`) from optional improvements (`(non-blocking)`) to prevent stalled review cycles.
+- **Provide concrete replacement snippets**: Include actionable code suggestions or diffs rather than abstract complaints.
+- **Respect resolution ownership**: Confirm reviewer agreement or verified fix completion before marking blocking review threads as resolved.

@@ -15,7 +15,7 @@ It benefits both the user and the agent:
 - **For the user**: Clear, persistent visibility into the agent's reasoning, executed actions, and ongoing progress without losing track in long chat transcripts.
 - **For the agent**: Reliable, low-cost grounding and context recovery across conversation turns or after token context compaction.
 
-For directory hierarchy, generation management, and path conventions, refer to [references/path-conventions.md](references/path-conventions.md). For detailed entry templates and field conventions, refer to [references/log-format.md](references/log-format.md).
+For directory hierarchy, generation management, and path conventions, refer to [path-conventions.md](references/path-conventions.md) (references/path-conventions.md). For detailed entry templates and field conventions, refer to [log-format.md](references/log-format.md) (references/log-format.md).
 
 ---
 
@@ -23,7 +23,7 @@ For directory hierarchy, generation management, and path conventions, refer to [
 
 **Never create or write to a path without explicit user confirmation.**
 
-Resolve the candidate path following [references/path-conventions.md](references/path-conventions.md):
+Resolve the candidate path following [path-conventions.md](references/path-conventions.md) (references/path-conventions.md):
 1. **Identify Base Root**: Identify the designated storage root directory configured in the environment or request it from the user.
 2. **Derive Project & Branch**:
    - Project: Top-level repository directory name (e.g. `basename $(git rev-parse --show-toplevel)`).
@@ -49,7 +49,7 @@ Verify: The exact file path is confirmed by the user, and the parent directory i
 
 ## Step 2: Initialize the Checkpoint Log
 
-If starting a new task log, write the header block at the top of the file following [references/log-format.md](references/log-format.md):
+If starting a new task log, write the header block at the top of the file following [log-format.md](references/log-format.md) (references/log-format.md):
 
 ```markdown
 # Task Checkpoint Log: <Short Task Title>
@@ -83,7 +83,7 @@ At each milestone (e.g. at the completion of each step in `explore-plan-execute`
    - **Decisions & Rationale**: Why decisions were made, obstacles handled, or alternatives rejected.
    - **Next Step**: Immediate next action or awaiting user decision.
 2. **Append to the file**: Append the entry to the end of the log file without modifying prior entries.
-3. **Notify the user**: In the chat update, briefly note that the checkpoint has been appended to `<log_path>`.
+3. **Notify the user**: In the chat update, briefly note that the checkpoint has been appended to `<log_path>` (formatted per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md)).
 
 Verify: The new milestone entry is cleanly appended to the log file and reflects verified outcomes and rationale.
 
@@ -94,7 +94,7 @@ Verify: The new milestone entry is cleanly appended to the log file and reflects
 When recovering an interrupted task, starting a new session on an ongoing task, or recovering from lost context:
 
 1. **Identify the log file**:
-   - Follow [references/path-conventions.md](references/path-conventions.md) Section 4 to locate `<root>/<project>/<branch>/<context>/`.
+   - Follow [path-conventions.md](references/path-conventions.md) (references/path-conventions.md) Section 4 to locate `<root>/<project>/<branch>/<context>/`.
    - Select the latest generation (`checkpoint-<YYYYMMDD-HHMMSS>.md`) and verify that header metadata (`Project`, `Branch`, `Context`) matches the active task environment.
 2. **Read the log file**: Read the entire checkpoint log file (or the latest N entries).
 3. **Identify current state**:
@@ -120,8 +120,8 @@ Verify: The log reflects overall task completion and final verification results.
 
 ## Guidelines
 
-- **Explicit path confirmation with context-scoped conventions.** Propose structured paths incorporating project, branch, and task context with generation timestamps per [references/path-conventions.md](references/path-conventions.md), and always confirm with the user before creating or writing files. Never write to unconfirmed paths.
-- **Append-only by default.** Never overwrite, delete, or scramble historical checkpoint entries unless explicitly requested by the user.
-- **Record both facts and decisions.** Include not only what was run, but also what the verification showed and why decisions were made.
-- **Exclude secrets and massive payloads.** Never record API tokens, private keys, or enormous log dumps. Keep summaries focused and link to raw outputs when necessary.
-- **Platform-agnostic & self-contained.** Keep log files standard GitHub-flavored Markdown that can be read by any editor, script, or agent.
+- **Confirm context-scoped paths explicitly**: Propose structured paths incorporating project, branch, and task context with generation timestamps per [path-conventions.md](references/path-conventions.md) (references/path-conventions.md), and confirm with the user before writing so logs are stored in predictable, approved locations.
+- **Maintain append-only history**: Append new milestone entries without overwriting or deleting prior entries so the audit trail remains intact across sessions.
+- **Record both verified facts and rationale**: Document what was executed, what verification showed, and why decisions were made to enable rapid context recovery after compaction.
+- **Keep logs sanitized and concise**: Omit API tokens, private keys, and raw log dumps, linking to external output files when needed to prevent secret exposure and file bloat.
+- **Use portable GitHub-flavored Markdown**: Format logs in standard Markdown so any editor, script, or agent can read them without proprietary tooling.

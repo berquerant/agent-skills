@@ -47,10 +47,10 @@ Perform a self-critical review of the draft plan to uncover potential failure
 points and ambiguities before presenting it to the user.
 
 Inspect the plan across the following dimensions (refer to
-[references/scrutiny-checklist.md](references/scrutiny-checklist.md) for detailed checklists and remedy patterns):
+[scrutiny-checklist.md](references/scrutiny-checklist.md) (references/scrutiny-checklist.md) for detailed checklists and remedy patterns):
 
 1. **Ambiguous Conditions & Premises**: Are any assumptions unverified? What
-   happens if environment states or inputs differ from expectations? (When core premises lack verifiable evidence, consult [`evidentiary-inquiry`](../evidentiary-inquiry/SKILL.md) to validate them before finalizing the plan.)
+   happens if environment states or inputs differ from expectations? (When core premises lack verifiable evidence, consult [evidentiary-inquiry](../evidentiary-inquiry/SKILL.md) (../evidentiary-inquiry/SKILL.md) to validate them before finalizing the plan.)
 2. **Vague Verification Criteria**: Is any success criterion subjective or hard
    to measure? How exactly will success or failure be confirmed?
 3. **Execution Obstacles & Side Effects**: What could fail during execution?
@@ -136,10 +136,10 @@ execute, and if requested, the plan has been saved to the user-specified file pa
 
 ## Step 6: Execute the Plan
 
-Execute the approved plan according to the mode selected in Step 5, strictly enforcing the environment safeguards in [`../explore-plan-execute/references/execution-safeguards.md`](../explore-plan-execute/references/execution-safeguards.md) (worktree isolation, snippet execution, and confirmed commit identities):
+Execute the approved plan according to the mode selected in Step 5, strictly enforcing the environment safeguards in [execution-safeguards.md](../explore-plan-execute/references/execution-safeguards.md) (../explore-plan-execute/references/execution-safeguards.md) (worktree isolation, snippet execution, and confirmed commit identities):
 
 ### Mode: `step-gate`
-Follow the [`step-gate`](../step-gate/SKILL.md) skill protocol:
+Follow the [step-gate](../step-gate/SKILL.md) (../step-gate/SKILL.md) skill protocol:
 1. Execute **one step at a time**.
 2. Run the defined verification check for that step.
 3. Report the result to the user and **request explicit approval** before
@@ -150,7 +150,7 @@ Follow the [`step-gate`](../step-gate/SKILL.md) skill protocol:
 Execute the plan step by step with internal verification checks:
 1. Follow the sequenced steps agreed upon in Step 4.
 2. Apply verification checks after each step to ensure expected behavior.
-3. If [`checkpoint-log`](../checkpoint-log/SKILL.md) is enabled, append a checkpoint entry to the user-confirmed log file after each step.
+3. If [checkpoint-log](../checkpoint-log/SKILL.md) (../checkpoint-log/SKILL.md) is enabled, append a checkpoint entry to the user-confirmed log file after each step.
 4. If an unforeseen error or roadblock arises, stop execution, diagnose the
    cause, and consult the user rather than making unilateral assumptions.
 
@@ -162,7 +162,7 @@ passes under the selected execution mode.
 
 ## Step 7: Post-Execution Report and Archiving
 
-Present the results to the user:
+Present the results to the user (notifying via [user-notification](../user-notification/SKILL.md) (../user-notification/SKILL.md) when appropriate):
 
 1. **Execution Summary**: What was accomplished versus the agreed success
    criteria.
@@ -181,9 +181,9 @@ Evaluate whether the post-execution report is extensive:
 
 ### Sequential Hand-off
 Propose appropriate follow-up skills based on the outcome:
-- **For commit messages and PR/MR descriptions**: Recommend [`change-message`](../change-message/SKILL.md).
-- **For post-execution state and diff verification**: Recommend [`project-status`](../project-status/SKILL.md).
-- **For full quality and security audit of changes**: Recommend [`code-review`](../code-review/SKILL.md).
+- **For commit messages and PR/MR descriptions**: Recommend [change-message](../change-message/SKILL.md) (../change-message/SKILL.md).
+- **For post-execution state and diff verification**: Recommend [project-status](../project-status/SKILL.md) (../project-status/SKILL.md).
+- **For full quality and security audit of changes**: Recommend [code-review](../code-review/SKILL.md) (../code-review/SKILL.md).
 
 Verify: The user receives the full completion report, and if requested, the
 report is saved to the user-specified file path.
@@ -192,21 +192,10 @@ report is saved to the user-specified file path.
 
 ## Guidelines
 
-- **Active Obstacle Hunting**: Never assume a plan is complete without
-  critically checking for ambiguous assumptions, untestable conditions, and
-  hidden edge cases in Step 2.
-- **No Unilateral Execution**: Never begin modifying code or state without
-  explicit user approval in Step 5.
-- **Prefer `step-gate` for High Risk**: If the scrutinized plan carries low
-  reversibility, critical dependencies, or destructive operations, actively
-  recommend and use `step-gate` execution mode.
-- **Never Assume File Paths for Archiving**: When asking the user whether to
-  save an extensive plan or report, never recommend or pick a default path.
-  Always ask the user for their desired file path.
-- **Iterative Alignment**: Do not skip the dialogue in Step 4; align thoroughly
-  before committing to execution.
-- **Transparent Reporting**: Report all deviations or unexpected findings
-  encountered during execution.
-- **Cost-Aware Investigation**: When using APIs or expensive operations to
-  explore context, minimize total cost across time and resources by fetching
-  content once into a local file or cache and referencing it locally.
+- **Scrutinize plans proactively for obstacles**: Audit every draft plan for ambiguous assumptions, untestable conditions, and hidden edge cases in Step 2 so failure modes are resolved before execution.
+- **Obtain explicit approval in Step 5 before mutating state**: Present scrutinized findings and remedies first so the user controls high-risk trade-offs.
+- **Prefer `step-gate` mode for high-risk work**: Recommend and apply [step-gate](../step-gate/SKILL.md) (../step-gate/SKILL.md) whenever the plan involves low reversibility, critical dependencies, or destructive operations.
+- **Ask the user for archiving file paths**: Request the exact target path from the user when saving extensive plans or reports rather than assuming a default location.
+- **Align iteratively in Step 4**: Resolve every open question with the user before locking the plan for execution.
+- **Report deviations transparently**: Document any unexpected findings or adjustments encountered during execution.
+- **Cache high-cost investigation queries**: Fetch expensive API or remote query outputs once into a dedicated cache tool or local file per [command-cache-protocol.md](../explore-plan-execute/references/command-cache-protocol.md) (../explore-plan-execute/references/command-cache-protocol.md) to minimize time and resource cost.

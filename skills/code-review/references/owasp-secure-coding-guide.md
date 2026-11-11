@@ -4,7 +4,7 @@ This reference provides core secure coding principles and actionable checklists 
 It condenses key guidance from the OWASP Developer Guide (v4.2.0) and OWASP Top 10 Proactive Controls into an offline, self-contained reference.
 
 > **Human Reference Citation**:
-> Origin: [OWASP Developer Guide (DevGuide)](https://github.com/OWASP/DevGuide/)
+> Origin: OWASP Developer Guide v4.2.0 (`https://github.com/OWASP/DevGuide/`, local snapshot retrieved 2026-03).
 > *Note for AI agents: Per AGENTS.md Rule 6, external URLs are strictly for human citation. Rely solely on the local checklist below.*
 
 ---

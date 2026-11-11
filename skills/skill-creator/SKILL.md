@@ -13,7 +13,7 @@ Use this skill to create a new agent skill.
 Collect requirements, generate a `SKILL.md` with proper frontmatter and instructions,
 and scaffold the directory structure.
 
-For the skill specification, refer to [references/skill-spec.md](references/skill-spec.md).
+For the skill specification, refer to [skill-spec.md](references/skill-spec.md) (references/skill-spec.md).
 
 ---
 
@@ -74,7 +74,7 @@ Key principles:
 ### 3.2 Quality Checklist for the `description` Field
 
 The `description` is the most critical field — it determines whether the agent activates the skill.
-Refer to [references/skill-spec.md](references/skill-spec.md) for length constraints.
+Refer to [skill-spec.md](references/skill-spec.md) (references/skill-spec.md) for length constraints.
 All of the following must be satisfied:
 
 - [ ] Written in **third person** (convention: starts with "Use this skill when..." followed by effects like "Guides the agent to...", "Analyzes...")
@@ -174,7 +174,7 @@ Verify: Target directory layout is created with correct permissions, all relativ
    - Whether the skill will be auto-discovered or requires manual registration (depends on the agent platform)
    - That the skill can be invoked via a slash command `/<name>` (if supported)
 3. Encourage the user to review and edit the content as needed.
-4. Recommend reviewing the new skill with `skill-review` (if available).
+4. Recommend reviewing the new skill with [skill-review](../skill-review/SKILL.md) (../skill-review/SKILL.md) (if available).
 
 Verify: File manifest and invocation instructions are presented to the user, and user confirmation is received.
 
@@ -182,7 +182,7 @@ Verify: File manifest and invocation instructions are presented to the user, and
 
 ## Guidelines
 
-- **Never assume placement locations.** Always ask and confirm the target directory directly with the user before creating files.
-- **Third-person descriptions with triggers.** Ensure the `description` frontmatter states both when to use the skill and what it does.
-- **Explicit verification for every step.** Provide measurable `Verify:` checkpoints for all procedural steps.
-- **Concise core instructions.** Keep `SKILL.md` lean; extract expansive references or specs into `references/`.
+- **Confirm placement locations explicitly**: Ask and verify the target directory with the user before creating files, because discovery roots vary across agent platforms and workspaces.
+- **Write third-person descriptions with clear triggers**: State both when to use the skill and what it does within 100–350 characters so Layer 1 skill routing activates accurately without bloating the system prompt.
+- **Provide measurable verification for every step**: Include observable `Verify:` checkpoints in all procedural steps so agents can self-check before advancing.
+- **Keep core instructions concise**: Keep `SKILL.md` focused on top-loaded workflow steps and offload expansive specifications or templates into `references/` with direct 1-hop links.

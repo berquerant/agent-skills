@@ -15,10 +15,10 @@ and parameterized snippet files before execution.
 Directly running long inline commands reduces readability and makes inspecting,
 debugging, and verifying execution difficult for users.
 
-This workflow coordinates [`snippet-review`](../snippet-review/SKILL.md) to audit
+This workflow coordinates [snippet-review](../snippet-review/SKILL.md) (../snippet-review/SKILL.md) to audit
 the cognitive intelligibility of every generated snippet and mandate explaining its
 intent and side-effects to the user before execution, formatting all script, argument,
-and affected file paths per [`output-presentation`](../output-presentation/SKILL.md).
+and affected file paths per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md).
 
 ---
 
@@ -97,7 +97,7 @@ Design the snippet's interface:
      - Array parameterization: `cmd=("$@")` or `opts=("-v" "--filter" "$1"); "${cmd[@]}" "${opts[@]}"`
      - Clean subshell invocation: `bash -c '...' _ "$@"`
 4. **Trailing Variable Arguments & Single Responsibility**:
-   - Apply approvable snippet patterns per [references/approvable-patterns.md](references/approvable-patterns.md):
+   - Apply approvable snippet patterns per [approvable-patterns.md](references/approvable-patterns.md) (references/approvable-patterns.md):
      - **Right-align dynamic variables**: Curry fixed commands and operations inside the snippet so that context-dependent variables (such as directory paths or hostnames) are exposed exclusively as trailing CLI arguments (`$1`, `$2`).
      - **Strict single responsibility**: Every snippet must perform exactly one concrete action. Never pass subcommands or action verbs as parameters to a generalized wrapper (e.g., generate `run_git_status.sh` and `run_git_tag.sh` separately instead of a multi-purpose `git -C "$1" "$2"`).
      - **Constrain operational scope granularity**: Apply the 4-tier scope granularity model. Select parameter-constrained snippets (Level 2) for recurring read-only queries across multiple items, and fully fixed resource snippets (Level 3) for state-mutating operations or workflows strictly focused on a single target, minimizing human review friction without introducing approval fatigue.
@@ -147,11 +147,11 @@ purpose, arguments, usage, and prerequisites.
 Before executing any snippet, evaluate its cognitive intelligibility and ensure the user understands its operation:
 
 1. **Intelligibility Audit & Immutability**:
-   - Audit the snippet using [`snippet-review`](../snippet-review/SKILL.md) against its four-tier rubric (Transparent, Moderate, Complex, Opaque).
+   - Audit the snippet using [snippet-review](../snippet-review/SKILL.md) (../snippet-review/SKILL.md) against its four-tier rubric (Transparent, Moderate, Complex, Opaque).
    - If the snippet is rated **Level 3 (Complex)** or **Level 4 (Opaque)**:
      - Attempt to simplify the logic (inline single-use functions, remove dense regex, linearize control flow, add Why comments).
      - **Snippet Immutability Rule**: When simplifying or modifying a snippet, **never edit an existing snippet file in place**. Modifying an existing snippet risks Time-of-Check to Time-of-Use (TOCTOU) discrepancies where code is executed that the user never saw or approved. Always write the simplified code to a **new versioned file** (e.g. `script_v2.sh`).
-     - If simplification is not feasible, open the **User Consultation Gate** per [`snippet-review`](../snippet-review/SKILL.md) and present the three options:
+     - If simplification is not feasible, open the **User Consultation Gate** per [snippet-review](../snippet-review/SKILL.md) (../snippet-review/SKILL.md) and present the three options:
        1. Split into smaller, sequential steps
        2. Proceed as-is under explicit user acknowledgment
        3. Abandon the snippet and switch to an alternative method
@@ -165,14 +165,14 @@ Before executing any snippet, evaluate its cognitive intelligibility and ensure 
    - **Invocation**: `<interpreter> <script-path> [arguments...]`
    - **Purpose**: <Clear, concrete explanation of what the script does and why a snippet was necessary>
    - **Parameters & Arguments**:
-     - `$1` (or `<flag>`): `<value>` (if a file/directory path, co-present per [`output-presentation`](../output-presentation/SKILL.md)) — <what this parameter represents>
+     - `$1` (or `<flag>`): `<value>` (if a file/directory path, co-present per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md)) — <what this parameter represents>
    - **Expected Side-Effects & Safety**:
-     - **Filesystem**: <files created, edited, or deleted, co-presented per [`output-presentation`](../output-presentation/SKILL.md), or "Read-only (no filesystem changes)">
+     - **Filesystem**: <files created, edited, or deleted, co-presented per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md), or "Read-only (no filesystem changes)">
      - **Environment / Network**: <network calls, environment changes, or "None">
      - **Reversibility**: <Reversible / Non-destructive / Irreversible>
    ```
 
-   - **Output Presentation Compliance**: Format all file and directory paths (including the script path itself, argument target files, and affected filesystem paths) by co-presenting an accessible Markdown link and an unadorned raw string in parentheses per [`output-presentation`](../output-presentation/SKILL.md) (e.g., `[script.sh](<file:///path/to/script.sh>) (path/to/script.sh)`).
+   - **Output Presentation Compliance**: Format all file and directory paths (including the script path itself, argument target files, and affected filesystem paths) by co-presenting an accessible Markdown link and an unadorned raw string in parentheses per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md) (e.g., `[script.sh](<file:///path/to/script.sh>) (path/to/script.sh)`).
    - Informal, single-sentence mentions (e.g., "Running script now to check files.") are strictly prohibited. The structured notice must be presented clearly.
    - **Approval Invalidation**: If any change or correction is made to the snippet after this notice is presented, the previous approval is automatically void. A new versioned file must be created and a new notice presented.
 
@@ -212,31 +212,12 @@ Verify: Unneeded temporary files and superseded snippet versions are disposed of
 
 ## Guidelines
 
-- **Never run complex one-liners or inline scripts.** Adhere strictly to the
-  avoidance thresholds (≥4 operators, ≥120 characters, ≥3 lines, or inline
-  interpreter scripts `-c`/`-e` with ≥50 chars, imports, multiple statements, or control flow).
-- **Explicit arguments over environment variables.** Never use environment
-  variables to pass input to snippets; use explicit CLI arguments instead.
-- **Avoid eval and dynamic string evaluation.** Use positional arrays (`"${cmd[@]}"`) or explicit parameter lists instead of `eval` to prevent quoting bugs, injection hazards, and excessive cognitive complexity.
-- **Document upfront.** Every snippet must include a clear documentation header
-  explaining purpose, arguments, and usage.
-- **Snippets are immutable (Write-Once).** Never modify an existing snippet file
-  in place once created or presented to the user. Any revision, bug fix, or
-  simplification must be written to a new versioned file (e.g., `_v2`), invalidating
-  previous reviews and requiring a fresh Pre-Execution Notice.
-- **Audit intelligibility before execution.** Every snippet must undergo review
-  via [`snippet-review`](../snippet-review/SKILL.md) regardless of line count.
-- **Always output the Pre-Execution Notice.** Never execute snippets silently or
-  with casual one-line chat messages. Always output the structured Pre-Execution
-  Notice block before invoking the execution tool, co-presenting the script path
-  and all referenced or affected file/directory paths per [`output-presentation`](../output-presentation/SKILL.md).
-- **Keep snippets focused.** A snippet should accomplish a coherent task, making
-  it easy for users to read and understand.
-- **Enforce single-responsibility and trailing arguments for approvability.**
-  Never pass subcommands or arbitrary action verbs as variables to snippets. Curry
-  fixed operations into dedicated snippet files and place context-dependent
-  variables exclusively in trailing CLI arguments per [references/approvable-patterns.md](references/approvable-patterns.md).
-- **Minimize operational scope to reduce review friction.** Constrain omnipotent CLI
-  tools (`gh`, `aws`, `kubectl`) to specific subcommands or exact targets. Choose
-  between parameter-constrained (Level 2) and fixed-resource (Level 3) snippets based
-  on the balance between review anxiety and approval fatigue per [references/approvable-patterns.md](references/approvable-patterns.md).
+- **Extract complex commands into documented snippet files**: Convert commands meeting the avoidance thresholds (≥4 operators, ≥120 characters, ≥3 lines, or non-trivial `-c`/`-e` payloads) into snippet files so users can inspect and approve them cleanly.
+- **Pass inputs via explicit CLI arguments**: Expose inputs as positional arguments or flags rather than ambient environment variables so every invocation is self-contained in terminal history.
+- **Use array parameterization instead of `eval`**: Construct dynamic command lists with positional arrays (`"${cmd[@]}"`) rather than `eval` to prevent quoting bugs and injection hazards.
+- **Include a complete documentation header**: Document purpose, arguments, usage, and prerequisites at the top of every snippet file.
+- **Treat saved snippets as write-once (immutable)**: Write any revision, bug fix, or simplification to a new versioned file (e.g., `_v2`) rather than editing in place to prevent TOCTOU approval discrepancies.
+- **Audit intelligibility before execution**: Evaluate every snippet with [snippet-review](../snippet-review/SKILL.md) (../snippet-review/SKILL.md) prior to execution.
+- **Output the structured Pre-Execution Notice**: Present the `### 📋 Snippet Pre-Execution Notice` block before invoking the execution tool, co-presenting all script and target paths per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md).
+- **Enforce single responsibility and trailing arguments**: Curry fixed operations into dedicated snippet files and place dynamic variables in trailing CLI arguments per [approvable-patterns.md](references/approvable-patterns.md) (references/approvable-patterns.md) to support prefix-based approval rules.
+- **Constrain operational scope**: Restrict broad CLI tools (`gh`, `aws`, `kubectl`) to specific subcommands or exact targets per [approvable-patterns.md](references/approvable-patterns.md) (references/approvable-patterns.md) to reduce review friction.

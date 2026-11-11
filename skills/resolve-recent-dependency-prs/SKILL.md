@@ -12,7 +12,7 @@ description: >-
 
 Coordinate discovery, prioritization, and resolution of open dependency update and security advisory Pull Requests / Merge Requests (PRs/MRs) across specified or recently active repositories.
 
-This skill orchestrates repository discovery (via explicit user input or recent platform activity search), multi-repository triage modes (`batch` vs `interactive`), and delegates repository-level triage, worktree isolation, CI validation, and safe merging to [`resolve-dependency-prs`](../resolve-dependency-prs/SKILL.md) upon user confirmation without idle waiting.
+This skill orchestrates repository discovery (via explicit user input or recent platform activity search), multi-repository triage modes (`batch` vs `interactive`), and delegates repository-level triage, worktree isolation, CI validation, and safe merging to [resolve-dependency-prs](../resolve-dependency-prs/SKILL.md) (../resolve-dependency-prs/SKILL.md) upon user confirmation without idle waiting.
 
 ---
 
@@ -22,7 +22,7 @@ This skill orchestrates repository discovery (via explicit user input or recent 
 - A supported remote platform CLI tool is authenticated:
   - GitHub: `gh` CLI (`gh auth status`).
   - GitLab: `glab` CLI (`glab auth status`).
-- Sibling skill [`resolve-dependency-prs`](../resolve-dependency-prs/SKILL.md) is available in the environment to perform per-repository PR/MR audits and merges.
+- Sibling skill [resolve-dependency-prs](../resolve-dependency-prs/SKILL.md) (../resolve-dependency-prs/SKILL.md) is available in the environment to perform per-repository PR/MR audits and merges.
 
 ---
 
@@ -128,7 +128,7 @@ For each repository to be processed:
 1. **Obtain Explicit User Approval**:
    Following the Sequential Hand-off principle, present the repository's triage plan and request explicit user confirmation before initiating file modifications or branch checkouts.
 2. **Execute via `resolve-dependency-prs`**:
-   Upon user approval, switch working directory to the repository and carry out the [`resolve-dependency-prs`](../resolve-dependency-prs/SKILL.md) workflow:
+   Upon user approval, switch working directory to the repository and carry out the [resolve-dependency-prs](../resolve-dependency-prs/SKILL.md) (../resolve-dependency-prs/SKILL.md) workflow:
    - Respect the user-confirmed API rate limit (recommended default: 10s per call) and account for API call costs.
    - Filter changes to package manifests and lockfiles.
    - Run context, legitimacy, and security audits.
@@ -138,11 +138,11 @@ For each repository to be processed:
    - Ensure the default branch CI triggered by the merge passes before advancing to subsequent candidate PRs in the same repository.
 3. **Idle-Wait Switching (Non-Blocking Progress)**:
    - When remote CI pipelines are running (either PR branch CI `WAITING_PR_CI` or post-merge default branch CI `WAITING_DEFAULT_CI`), do NOT block in active sleep or polling loops.
-   - Follow [`multi-repo-scheduling.md`](../resolve-dependency-prs/references/multi-repo-scheduling.md) and [`task-dependency-pipeline`](../task-dependency-pipeline/SKILL.md) to manage repository state transitions and cooperative context switching.
+   - Follow [multi-repo-scheduling.md](../resolve-dependency-prs/references/multi-repo-scheduling.md) (../resolve-dependency-prs/references/multi-repo-scheduling.md) and [task-dependency-pipeline](../task-dependency-pipeline/SKILL.md) (../task-dependency-pipeline/SKILL.md) to manage repository state transitions and cooperative context switching.
    - **Immediately switch focus** to the next pending repository (or a previously held repository) to perform discovery, local audit, or testing.
    - Re-check pending CI status only when transitioning between repository checkpoints and after the agreed rate limit cooldown has elapsed.
 
-Verify: Each repository is processed through [`resolve-dependency-prs`](../resolve-dependency-prs/SKILL.md) under user approval, and idle CI waits are interleaved productively.
+Verify: Each repository is processed through [resolve-dependency-prs](../resolve-dependency-prs/SKILL.md) (../resolve-dependency-prs/SKILL.md) under user approval, and idle CI waits are interleaved productively.
 
 ---
 
@@ -172,10 +172,10 @@ Verify: All held repositories have been addressed or explicitly acknowledged, an
 
 ## Guidelines
 
-- **Sequential Hand-Off over Hard Coupling**: Do not invoke sibling skills as non-interactive automated subroutines. Always present findings, formulate a concrete plan, and obtain explicit user approval before delegating execution to [`resolve-dependency-prs`](../resolve-dependency-prs/SKILL.md).
-- **Respect User-Specified Scope**: When explicit repository paths or URLs are provided, strictly honor the input and bypass time-window restrictions. Audit all open PRs/MRs for those repositories.
-- **Pre-Flight Duration & Rate Limit Confirmation**: When discovering repositories automatically via platform activity, always confirm the scan window with the user. Always confirm the API rate limit interval (default: 10s/call) and track API costs.
-- **Platform-Agnostic Workflows**: Keep core instructions portable across platforms (GitHub, GitLab) and avoid tying workflows to proprietary tools. Provide platform commands (`gh`, `glab`) as non-exclusive examples.
-- **Never Idle-Wait on Remote CI**: When a repository is waiting for remote CI completion (PR CI or default branch CI), switch to another candidate repository immediately to ensure continuous forward progress.
-- **Enforce Default Branch Stability**: Ensure default branch CI is green after each merge before allowing subsequent PRs in the same repository to proceed.
-- **Clear Decision Semantics in Interactive Mode**: Adhere strictly to the three triage states (`start` executes and advances; `defer` postpones and reminds at the end; `skip` drops the repository completely).
+- **Delegate sequentially with user approval**: Present discovered repositories and triage plans for explicit user sign-off before handing off per-repository execution to [resolve-dependency-prs](../resolve-dependency-prs/SKILL.md) (../resolve-dependency-prs/SKILL.md).
+- **Honor explicit repository lists directly**: Bypass recent-activity time-window prompts whenever the user specifies exact repository paths, URLs, or `owner/repo` names.
+- **Pre-confirm scan windows and API rate limits**: Confirm the discovery time window (default: 7 days) and API rate limit (default: 10s/call) up front to keep remote API usage predictable.
+- **Keep discovery workflows platform-agnostic**: Present `gh` and `glab` commands as non-exclusive examples while preserving portable multi-repository state transitions.
+- **Switch repositories immediately during remote CI waits**: Interleave local triage and testing across pending repositories whenever a repository enters `WAITING_PR_CI` or `WAITING_DEFAULT_CI`.
+- **Enforce default-branch CI stability per repository**: Confirm default-branch CI passes after each merge before advancing to the next PR in the same repository.
+- **Follow explicit triage semantics in `interactive` mode**: Apply `start` (execute now), `defer` (hold and remind in Step 5), and `skip` (drop from queue) consistently.

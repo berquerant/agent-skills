@@ -18,15 +18,15 @@ This skill is a specialized branch of code review, specifically tailored for cod
 
 ## Prerequisites
 
-- An execution snippet has been drafted or saved to a file (e.g. via [`command-snippet`](../command-snippet/SKILL.md)).
+- An execution snippet has been drafted or saved to a file (e.g. via [command-snippet](../command-snippet/SKILL.md) (../command-snippet/SKILL.md)).
 - The snippet code is accessible for read-only inspection.
-- The evaluation criteria in [references/intelligibility-rubric.md](references/intelligibility-rubric.md) are available.
+- The evaluation criteria in [intelligibility-rubric.md](references/intelligibility-rubric.md) (references/intelligibility-rubric.md) are available.
 
 ---
 
 ## Step 1: Inventory Snippet Structure & Metrics
 
-Inspect the snippet against the five evaluation dimensions in [references/intelligibility-rubric.md](references/intelligibility-rubric.md):
+Inspect the snippet against the five evaluation dimensions in [intelligibility-rubric.md](references/intelligibility-rubric.md) (references/intelligibility-rubric.md):
 
 1. **Code Scale & Function Count**:
    - Count the non-empty, non-comment lines of code (SLOC).
@@ -48,7 +48,7 @@ Verify: All five structural metrics are measured and recorded for the candidate 
 
 ## Step 2: Rate Intelligibility & Complexity Tier
 
-Score the snippet using the Four-Tier Rubric in [references/intelligibility-rubric.md](references/intelligibility-rubric.md):
+Score the snippet using the Four-Tier Rubric in [intelligibility-rubric.md](references/intelligibility-rubric.md) (references/intelligibility-rubric.md):
 
 - **Level 1 (Transparent)**: Simple, linear command flow (≤ 10 SLOC, no custom functions, ≤ 1 pipe, trivial branching).
 - **Level 2 (Moderate)**: Clear logic with minor branching or a simple loop (11–20 SLOC, explicit comments, cleanly documented inputs).
@@ -66,18 +66,18 @@ Determine the workflow path based on the tier assigned in Step 2:
 ### Path A: Low Complexity (Level 1 or Level 2)
 The snippet is sufficiently intelligible for execution.
 1. Ensure all non-obvious blocks contain concise "Why" comments.
-2. Formulate the mandatory **Pre-Execution Notice** block (`### 📋 Snippet Pre-Execution Notice`) detailing Script Path, Invocation, Purpose, Parameters & Arguments, and Expected Side-Effects & Safety per [`command-snippet`](../command-snippet/SKILL.md), formatting all paths per [`output-presentation`](../output-presentation/SKILL.md).
+2. Formulate the mandatory **Pre-Execution Notice** block (`### 📋 Snippet Pre-Execution Notice`) detailing Script Path, Invocation, Purpose, Parameters & Arguments, and Expected Side-Effects & Safety per [command-snippet](../command-snippet/SKILL.md) (../command-snippet/SKILL.md), formatting all paths per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md).
 3. Proceed directly to presenting the notice block to the user before running.
 
 ### Path B: High Complexity (Level 3 or Level 4)
 The snippet requires intervention to prevent black-box execution:
 1. **Attempt Simplification under Immutability Rule**:
-   - Apply simplification strategies from [references/intelligibility-rubric.md](references/intelligibility-rubric.md) (inlining single-use helpers, breaking dense pipes into temporary variables, adding explanatory comments).
+   - Apply simplification strategies from [intelligibility-rubric.md](references/intelligibility-rubric.md) (references/intelligibility-rubric.md) (inlining single-use helpers, breaking dense pipes into temporary variables, adding explanatory comments).
    - **Snippet Immutability**: NEVER edit an existing snippet file in place. Save the simplified logic to a **new versioned file** (e.g. `<name>_v2.sh`). Any prior audit rating or user notice for the previous version is void; re-evaluate the new file from Step 1.
    - If the score drops to Level 1 or Level 2, transition to Path A.
 2. **Open User Consultation Gate (If Simplification Fails)**:
    - If the task's inherent nature prevents reducing complexity to Level 1 or 2, do NOT execute silently.
-   - Present the **Snippet Intelligibility Consultation** using the template in [references/intelligibility-rubric.md](references/intelligibility-rubric.md):
+   - Present the **Snippet Intelligibility Consultation** using the template in [intelligibility-rubric.md](references/intelligibility-rubric.md) (references/intelligibility-rubric.md):
      - Explain why the snippet is complex.
      - Detail the intended logic, arguments, and potential side-effects.
      - Present the three user choices:
@@ -100,7 +100,7 @@ Verify: The snippet is either confirmed intelligible (Level 1/2) with pre-execut
    - **Intelligibility Status**: Approved for execution / Simplified / Awaiting consultation
    ```
 2. If user consultation was required, present the consultation options and wait for direction.
-3. If approved for execution, proceed back to [`command-snippet`](../command-snippet/SKILL.md) to explain the intent to the user and execute.
+3. If approved for execution, proceed back to [command-snippet](../command-snippet/SKILL.md) (../command-snippet/SKILL.md) to explain the intent to the user and execute.
 
 Verify: The intelligibility evaluation report is communicated clearly to the user with no unverified assumptions.
 
@@ -108,10 +108,7 @@ Verify: The intelligibility evaluation report is communicated clearly to the use
 
 ## Guidelines
 
-- **Zero Black-Box Execution**: Never execute ad-hoc snippets without auditing how understandable they are to human reviewers.
-- **Universal Application**: Apply this review to all generated execution snippets, regardless of line count.
-- **Snippet Immutability**: Never mutate an existing snippet file in place. Any simplification or fix must create a new versioned file and undergo a fresh review to prevent TOCTOU approval bypass.
-- **Prioritize Simplification over Consultation**: Always attempt to refactor and simplify complex snippets first before escalating to the user consultation gate.
-- **Mandatory Pre-Execution Notice Block**: Every snippet execution must be preceded by the explicit, structured Pre-Execution Notice block (`### 📋 Snippet Pre-Execution Notice`) detailing purpose, parameters, and side-effects, with all file and directory paths formatted per [`output-presentation`](../output-presentation/SKILL.md).
-- **Output Presentation Compliance**: Format all snippet paths, argument targets, and referenced resources by co-presenting accessible Markdown links and unadorned raw strings per [`output-presentation`](../output-presentation/SKILL.md).
-- **Three-Choice Consultation**: When high complexity is unavoidable, always offer the user the choice to split, proceed as-is, or adopt an alternative approach.
+- **Audit intelligibility before execution**: Evaluate every generated execution snippet against the 4-tier rubric so human reviewers can verify its intent and side-effects without black-box friction.
+- **Preserve snippet immutability**: Write any simplification or revision to a new versioned file (`_v2`) and re-audit it rather than editing in place, preventing TOCTOU approval discrepancies.
+- **Simplify before escalating to consultation**: Refactor Level 3/4 snippets toward Level 1/2 first, and open the 3-choice consultation gate only when complexity cannot be reduced further.
+- **Require the Pre-Execution Notice block**: Ensure every snippet execution is preceded by `### 📋 Snippet Pre-Execution Notice` with all paths formatted per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md).

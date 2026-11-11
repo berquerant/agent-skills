@@ -14,9 +14,9 @@ Provides clear feedback categorized by severity, covering maintainability,
 correctness, and security risks.
 
 For detailed vulnerability and public exposure audit criteria, refer to
-[references/security-checklist.md](references/security-checklist.md).
+[security-checklist.md](references/security-checklist.md) (references/security-checklist.md).
 For OWASP-aligned secure coding standards and remediation patterns, refer to
-[references/owasp-secure-coding-guide.md](references/owasp-secure-coding-guide.md).
+[owasp-secure-coding-guide.md](references/owasp-secure-coding-guide.md) (references/owasp-secure-coding-guide.md).
 
 ---
 
@@ -30,11 +30,11 @@ Determine the target files and focus area:
 - **Review mode / focus**:
   - **General Review**: Readability, maintainability, consistency, logic bugs, adherence to conventions.
   - **Secure Coding & Vulnerability Audit**:
-    - Audit existing code against [references/owasp-secure-coding-guide.md](references/owasp-secure-coding-guide.md) (input validation, output encoding, injection defense, access control, crypto practices, error handling).
+    - Audit existing code against [owasp-secure-coding-guide.md](references/owasp-secure-coding-guide.md) (references/owasp-secure-coding-guide.md) (input validation, output encoding, injection defense, access control, crypto practices, error handling).
     - Assess compliance: identify where, why, and how non-compliant code should be remediated.
   - **Security & Public Release Audit**:
     - Vulnerability assessment (OWASP-aligned: injection, auth/access control, SSRF, memory safety/concurrency).
-    - **Public Exposure Safety**: Ensure the diff is completely safe to publish to the internet. Verify zero leaks of sensitive information (secrets, API keys, tokens, private keys), internal network details (intranet hostnames, internal IPs, staging endpoints), or proprietary data. (See [references/security-checklist.md](references/security-checklist.md)).
+    - **Public Exposure Safety**: Ensure the diff is completely safe to publish to the internet. Verify zero leaks of sensitive information (secrets, API keys, tokens, private keys), internal network details (intranet hostnames, internal IPs, staging endpoints), or proprietary data. (See [security-checklist.md](references/security-checklist.md) (references/security-checklist.md)).
   - **Documentation Review**: Clarity, completeness, accuracy with code reality, formatting, broken links/examples.
   - **Comprehensive**: All of the above combined.
 
@@ -47,7 +47,7 @@ Verify: Target files, comparison base (e.g., default branch for topic branches),
 Run relevant read-only checks if tools are available:
 
 - Linters, format checkers, type-checkers (e.g., `golangci-lint`, `ruff`, `eslint`, `cargo check`).
-- Security tools or grep searches for secrets / insecure patterns (cross-reference against [references/security-checklist.md](references/security-checklist.md) and [references/owasp-secure-coding-guide.md](references/owasp-secure-coding-guide.md)).
+- Security tools or grep searches for secrets / insecure patterns (cross-reference against [security-checklist.md](references/security-checklist.md) (references/security-checklist.md) and [owasp-secure-coding-guide.md](references/owasp-secure-coding-guide.md) (references/owasp-secure-coding-guide.md)).
 - Inspect files and diffs thoroughly in context against the comparison base.
 - Specifically verify that no files or changes pose a risk if exposed publicly on the internet.
 
@@ -71,7 +71,7 @@ Structure the review feedback by severity levels:
 
 Format each finding with:
 1. **Where (Location)**: Relative file and line reference (e.g. `path/to/filename.ext#L10-L15`).
-2. **Rule & Principle**: Applicable standard or guideline from [references/owasp-secure-coding-guide.md](references/owasp-secure-coding-guide.md).
+2. **Rule & Principle**: Applicable standard or guideline from [owasp-secure-coding-guide.md](references/owasp-secure-coding-guide.md) (references/owasp-secure-coding-guide.md).
 3. **Why (Rationale & Threat)**: Detailed explanation of what is vulnerable/suboptimal, the associated attack vector or failure mode, and why the current logic is unsafe.
 4. **How (Recommended Fix)**: Concrete, language-idiomatic code example illustrating how to fix the issue securely.
 
@@ -83,12 +83,12 @@ Verify: All findings are categorized by severity levels (Critical, Warnings, Sug
 
 Present the structured report to the user.
 - If any public exposure or security risk is detected, highlight a clear warning upfront before other findings.
-- When posting feedback as inline review comments or notes on a PR/MR, format and discuss them following [`review-discussion`](../review-discussion/SKILL.md).
+- When posting feedback as inline review comments or notes on a PR/MR, format and discuss them following [review-discussion](../review-discussion/SKILL.md) (../review-discussion/SKILL.md).
 - Provide an executive summary and recommend sequential hand-off options based on findings:
-  - **For behavior-preserving cleanup & refactoring**: Recommend [`refactor`](../refactor/SKILL.md).
-  - **For pure documentation & comment clarifications**: Recommend [`doc-refactor`](../doc-refactor/SKILL.md).
-  - **For functional fixes, behavioral changes, or feature work**: Recommend [`explore-plan-execute`](../explore-plan-execute/SKILL.md).
-  - **For conducting interactive PR discussions & resolving threads**: Recommend [`review-discussion`](../review-discussion/SKILL.md).
+  - **For behavior-preserving cleanup & refactoring**: Recommend [refactor](../refactor/SKILL.md) (../refactor/SKILL.md).
+  - **For pure documentation & comment clarifications**: Recommend [doc-refactor](../doc-refactor/SKILL.md) (../doc-refactor/SKILL.md).
+  - **For functional fixes, behavioral changes, or feature work**: Recommend [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md).
+  - **For conducting interactive PR discussions & resolving threads**: Recommend [review-discussion](../review-discussion/SKILL.md) (../review-discussion/SKILL.md).
 
 Verify: The report is clear, actionable, alerts on any public release risk, and is non-blocking.
 
@@ -96,8 +96,8 @@ Verify: The report is clear, actionable, alerts on any public release risk, and 
 
 ## Guidelines
 
-- **Read-only enforcement.** Never edit, rewrite, or auto-fix files during review.
-- **Actionable feedback.** Every finding must include concrete rationale and an example fix.
-- **Prioritize safety & public release caution.** Surface critical security risks, crash-inducing bugs, and any potential exposure risk when publishing to the internet prominently at the top. If any risk exists, warn the user without hesitation.
-- **Respect codebase style.** Do not enforce personal styling preferences if the existing project has an established convention.
+- **Maintain a strictly read-only review role**: Inspect and report without editing, rewriting, or auto-fixing files so reviews remain safe and side-effect-free.
+- **Provide actionable rationale and fix examples**: Include `Where`, `Rule`, `Why`, and `How` for every finding so authors understand both the risk and the concrete remedy.
+- **Highlight security and public-exposure risks upfront**: Surface critical vulnerabilities, crash bugs, and any internet exposure hazards prominently at the top of the report.
+- **Respect established codebase conventions**: Evaluate style against the repository's existing patterns and linters rather than imposing external personal preferences.
 

@@ -14,7 +14,7 @@ Collect requirements, scaffold the project, and generate working
 server code that exposes tools, resources, and/or prompts.
 
 For MCP concepts and protocol details, refer to
-[references/mcp-spec.md](references/mcp-spec.md).
+[mcp-spec.md](references/mcp-spec.md) (references/mcp-spec.md).
 
 ---
 
@@ -197,7 +197,7 @@ Verify: Generated files and host registration are confirmed, and next steps are 
 
 ## Guidelines
 
-- **Never pollute stdout in STDIO servers.** Writing non-JSON-RPC output to standard output breaks protocol framing; always send logs to stderr.
-- **Strict schema validation.** Always declare clear types and descriptions for tool inputs so host LLMs can invoke them accurately.
-- **Verify host compatibility.** Ensure registered tool and resource names are unique and match the transport specifications before deployment.
-- **Secure by default.** Validate and sanitize resource URIs and tool parameters to prevent path traversal or unauthorized access.
+- **Send STDIO server logs exclusively to `stderr`**: Keep standard output reserved strictly for JSON-RPC messages, because writing non-protocol text to `stdout` corrupts message framing.
+- **Declare strict input schemas and descriptions**: Provide explicit parameter types and docstrings for every tool so host LLMs can invoke them reliably.
+- **Verify host compatibility before deployment**: Confirm that registered tool and resource names are unique and conform to the transport specification.
+- **Validate and sanitize all inputs by default**: Check resource URIs and tool arguments against allow-lists and canonical base paths to prevent path traversal or unauthorized access.

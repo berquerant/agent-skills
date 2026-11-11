@@ -19,9 +19,9 @@ To prevent unintended modifications, destructive git actions, or unauthorized pu
 
 - `git` is installed and the target repositories are available locally.
 - Platform tools for GitHub or GitLab are configured if opening Change Requests automatically:
-  - GitHub: `github` MCP server or `gh` CLI (see [references/platform-tools.md](references/platform-tools.md)).
-  - GitLab: `gitlab` MCP server or `glab` CLI (see [references/platform-tools.md](references/platform-tools.md)).
-- Operational safeguards and forbidden actions defined in [references/safeguards.md](references/safeguards.md) must be strictly observed.
+  - GitHub: `github` MCP server or `gh` CLI (see [platform-tools.md](references/platform-tools.md) (references/platform-tools.md)).
+  - GitLab: `gitlab` MCP server or `glab` CLI (see [platform-tools.md](references/platform-tools.md) (references/platform-tools.md)).
+- Operational safeguards and forbidden actions defined in [safeguards.md](references/safeguards.md) (references/safeguards.md) must be strictly observed.
 
 ---
 
@@ -57,7 +57,7 @@ Synthesize the inspection findings and build a comprehensive execution plan cove
 - Representative diff preview.
 - Dependencies, execution order, and merge order.
 
-Format the proposal following the **Gate 1: Plan Approval** template in [references/approval-gates.md](references/approval-gates.md).
+Format the proposal following the **Gate 1: Plan Approval** template in [approval-gates.md](references/approval-gates.md) (references/approval-gates.md).
 
 > [!IMPORTANT]
 > **Approval Gate 1**: Stop and present the plan to the user. Do **NOT** create worktrees, branches, or edit files until the user explicitly approves the plan.
@@ -68,7 +68,7 @@ Verify: Explicit user approval of the plan is received before proceeding.
 
 ## Step 3: Set Up Isolated Worktrees and Apply Changes
 
-1. For each target repository, create an isolated worktree under a designated base directory (e.g. `${XDG_CACHE_HOME:-$HOME/.cache}/multi-repo-change/worktrees/<host>/<repo>/<branch-slug>`). For general worktree lifecycle practices and options, consult the sibling [`git-worktree`](../git-worktree/SKILL.md) skill:
+1. For each target repository, create an isolated worktree under a designated base directory (e.g. `${XDG_CACHE_HOME:-$HOME/.cache}/multi-repo-change/worktrees/<host>/<repo>/<branch-slug>`). For general worktree lifecycle practices and options, consult the sibling [git-worktree](../git-worktree/SKILL.md) (../git-worktree/SKILL.md) skill:
    ```bash
    git -C <repo-path> worktree add \
      <worktree-path> \
@@ -90,8 +90,8 @@ Verify: All planned changes are applied and local verification commands pass in 
    git -C <worktree-path> status --short
    git -C <worktree-path> diff HEAD
    ```
-2. Prepare commit messages matching repository conventions, following [`change-message`](../change-message/SKILL.md) (Conventional Commits and English by default).
-3. Present the **Gate 2: Commit Review** report as defined in [references/approval-gates.md](references/approval-gates.md).
+2. Prepare commit messages matching repository conventions, following [change-message](../change-message/SKILL.md) (../change-message/SKILL.md) (Conventional Commits and English by default).
+3. Present the **Gate 2: Commit Review** report as defined in [approval-gates.md](references/approval-gates.md) (references/approval-gates.md).
 
 > [!IMPORTANT]
 > **Approval Gate 2**: Obtain explicit user approval before staging or committing files.
@@ -112,7 +112,7 @@ Verify: Clean working tree in each worktree and commit recorded on `<branch-name
    ```bash
    git -C <worktree-path> diff --stat origin/<default-branch>...HEAD
    ```
-2. Present the **Gate 3: Push Review** report as defined in [references/approval-gates.md](references/approval-gates.md).
+2. Present the **Gate 3: Push Review** report as defined in [approval-gates.md](references/approval-gates.md) (references/approval-gates.md).
 
 > [!IMPORTANT]
 > **Approval Gate 3**: Obtain explicit user approval before pushing branches to remote.
@@ -128,10 +128,10 @@ Verify: Remote branches pushed successfully and tracking upstream is established
 
 ## Step 6: Create Change Requests (PR / MR) and Cross-Link
 
-1. Determine the hosting platform (GitHub or GitLab) and available integration tools (MCP server or official CLI) as described in [references/platform-tools.md](references/platform-tools.md).
+1. Determine the hosting platform (GitHub or GitLab) and available integration tools (MCP server or official CLI) as described in [platform-tools.md](references/platform-tools.md) (references/platform-tools.md).
 2. Check for existing Change Requests on the branch to avoid duplicates.
-3. Prepare titles, descriptions, and labels according to repository templates, following [`change-message`](../change-message/SKILL.md) for title and description content.
-4. Present the **Gate 4: Change Request Approval** report as defined in [references/approval-gates.md](references/approval-gates.md).
+3. Prepare titles, descriptions, and labels according to repository templates, following [change-message](../change-message/SKILL.md) (../change-message/SKILL.md) for title and description content.
+4. Present the **Gate 4: Change Request Approval** report as defined in [approval-gates.md](references/approval-gates.md) (references/approval-gates.md).
 
 > [!IMPORTANT]
 > **Approval Gate 4**: Obtain explicit user approval before opening PRs/MRs.
@@ -139,7 +139,7 @@ Verify: Remote branches pushed successfully and tracking upstream is established
 5. Upon approval, open each PR / MR in Draft / WIP mode:
    - GitHub: using `github` MCP tools or `gh pr create --draft ...`
    - GitLab: using `gitlab` MCP tools or `glab mr create ...` (with `Draft:` prefix)
-6. Once all PRs/MRs are opened, update their descriptions to cross-link all related PR/MR URLs (see [references/platform-tools.md](references/platform-tools.md)).
+6. Once all PRs/MRs are opened, update their descriptions to cross-link all related PR/MR URLs (see [platform-tools.md](references/platform-tools.md) (references/platform-tools.md)).
 
 Verify: All Draft PRs/MRs are open and bidirectional cross-links are present in each description.
 
@@ -147,7 +147,7 @@ Verify: All Draft PRs/MRs are open and bidirectional cross-links are present in 
 
 ## Step 7: Completion Summary and Worktree Lifecycle
 
-1. Present the final report using the **Completion Summary Template** in [references/approval-gates.md](references/approval-gates.md).
+1. Present the final report using the **Completion Summary Template** in [approval-gates.md](references/approval-gates.md) (references/approval-gates.md).
 2. Retain worktrees and local branches by default. Ask the user if they wish to clean up the worktrees:
    ```bash
    git -C <repo-path> worktree remove <worktree-path>
@@ -159,8 +159,8 @@ Verify: The user receives the full summary table with PR/MR URLs and worktree re
 
 ## Guidelines
 
-- **Never bypass approval gates**: Human-in-the-loop checkpoints at Plan, Commit, Push, and PR/MR creation are non-negotiable.
-- **Protect dirty working trees**: Any uncommitted changes in candidate repositories immediately disqualify them from automated modification.
-- **Isolate work in worktrees**: Keep existing user workspaces untouched by creating separate worktrees for cross-repo tasks.
-- **Draft mode by default**: Always open Change Requests as Draft / WIP without configuring automerge or direct merge.
-- **Cross-link coordination**: Always connect related multi-repo PRs/MRs to give reviewers end-to-end visibility.
+- **Honor all four approval gates**: Pause at Plan, Commit, Push, and PR/MR creation so the user retains full control over cross-repository state mutations.
+- **Exclude dirty working trees automatically**: Skip any candidate repository with uncommitted local changes so in-progress user work is never overwritten.
+- **Isolate changes in dedicated worktrees**: Create separate worktrees from `origin/<default-branch>` per [git-worktree](../git-worktree/SKILL.md) (../git-worktree/SKILL.md) to keep primary checkouts untouched.
+- **Open Change Requests in Draft mode**: Create PRs/MRs as Draft / WIP by default so cross-repository dependencies can be verified before merge.
+- **Cross-link related PRs/MRs**: Add bidirectional links across all counterpart PR/MR descriptions to give reviewers end-to-end context.

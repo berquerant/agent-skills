@@ -10,7 +10,7 @@ description: >-
 
 Use this skill to refactor existing code, architecture, or documentation.
 Improves readability, maintainability, modularity, and performance while
-strictly preserving external behavior.
+strictly preserving external behavior. See [refactoring-patterns.md](references/refactoring-patterns.md) (references/refactoring-patterns.md) for the atomic refactoring catalog and safety invariants.
 
 ---
 
@@ -25,7 +25,7 @@ Clarify the specific objective:
   - Modernization / idiom adoption (leveraging newer language features and conventions).
   - Architectural / structural cleanup (separation of concerns, dependency injection, modularity).
   - Documentation reorganization (splitting large docs, standardizing structure).
-  - *Pure documentation & comment refinement*: When refining explanations, docstrings, or code comments without modifying any code or losing existing rationale, prefer [`doc-refactor`](../doc-refactor/SKILL.md).
+  - *Pure documentation & comment refinement*: When refining explanations, docstrings, or code comments without modifying any code or losing existing rationale, prefer [doc-refactor](../doc-refactor/SKILL.md) (../doc-refactor/SKILL.md).
 - **Invariants**: Explicitly list behaviors, public APIs, contracts, and interfaces that must NOT change.
 
 Verify: Invariants, DRY targets, and goals are clearly defined.
@@ -63,7 +63,7 @@ Verify: Tests pass after each atomic change.
 Engage in iterative review to guide and advance the refactoring:
 
 1. Inspect the incremental or intermediate diff (`git diff HEAD`).
-2. Coordinate with the `code-review` skill (or apply its review criteria) to evaluate the diff for code quality, design cleanliness, residual duplication, and potential regressions.
+2. Coordinate with the [code-review](../code-review/SKILL.md) (../code-review/SKILL.md) skill (or apply its review criteria) to evaluate the diff for code quality, design cleanliness, residual duplication, and potential regressions.
 3. Incorporate review findings into subsequent incremental refactoring passes until the code is clean, cohesive, and sufficiently DRY.
 
 Verify: The diff has been reviewed against code-review standards and further refined.
@@ -87,9 +87,9 @@ Verify: All configured lint and test tasks pass completely. Documentation (READM
 
 Do not modify files in this step. Recommend follow-up skills to complete the workflow:
 
-- **For post-refactoring status & diff inspection**: Recommend [`project-status`](../project-status/SKILL.md).
-- **For drafting commit messages and PR/MR descriptions**: Recommend [`change-message`](../change-message/SKILL.md).
-- **For thorough code review against security and design standards**: Recommend [`code-review`](../code-review/SKILL.md).
+- **For post-refactoring status & diff inspection**: Recommend [project-status](../project-status/SKILL.md) (../project-status/SKILL.md).
+- **For drafting commit messages and PR/MR descriptions**: Recommend [change-message](../change-message/SKILL.md) (../change-message/SKILL.md).
+- **For thorough code review against security and design standards**: Recommend [code-review](../code-review/SKILL.md) (../code-review/SKILL.md).
 
 Verify: Clear next steps and recommended follow-up skills are presented to the user without unprompted changes.
 
@@ -97,10 +97,9 @@ Verify: Clear next steps and recommended follow-up skills are presented to the u
 
 ## Guidelines
 
-- **Behavior preservation first.** Never change external behavior, contracts, or public APIs during a refactoring task.
-- **Pragmatic DRY.** Maximize code reuse and eliminate duplicate logic within reasonable bounds; avoid over-complicating abstractions solely for DRY's sake.
-- **Mandatory green checks.** The project's configured lint and test tasks must pass with zero failures before completing the refactoring.
-- **Continuous diff review.** Leverage the `code-review` skill or its methodology on diffs to drive refactoring quality forward.
-- **Keep documentation in sync.** Always verify and update `README.md` and agent-facing docs (`AGENTS.md`, skill descriptions) whenever code changes affect them.
-- **Safety baselines & atomic steps.** Never refactor without passing baseline checks, and make one logical transformation at a time.
+- **Preserve external behavior strictly**: Keep public APIs, contracts, and observable outputs unchanged throughout the refactoring so callers experience zero regressions.
+- **Apply pragmatic DRY**: Consolidate duplicated domain logic where it improves clarity while avoiding premature abstractions that obscure control flow.
+- **Verify green checks at every step**: Establish a passing test/lint baseline in Step 2 and re-run checks after each atomic transformation in Step 3 so any breakage is caught and reverted immediately.
+- **Review intermediate diffs**: Apply [code-review](../code-review/SKILL.md) (../code-review/SKILL.md) criteria to `git diff HEAD` to catch residual duplication or style drift.
+- **Synchronize affected documentation**: Update `README.md` and agent-facing docs (`AGENTS.md`, skill references) whenever structural changes affect file paths or module boundaries.
 

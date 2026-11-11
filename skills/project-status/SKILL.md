@@ -148,14 +148,8 @@ Verify: Every scope item from Step 1 has a corresponding entry in the report.
 
 ## Guidelines
 
-- **State expectations before checking.** For drift-triggered runs, always
-  write out the expected diff in Step 1 before running any commands. Comparing
-  to an unstated expectation leads to missed discrepancies.
-- **Cover all changed files.** Do not focus only on the files you edited;
-  check `git status` output completely for surprises.
-- **Never assume "good enough".** If something looks unexpected, flag it with
-  ⚠️ or ❌ rather than silently accepting it.
-- **Skip gracefully.** If tests or lint are not applicable, say so explicitly
-  rather than omitting the section.
-- **Report before acting.** This skill produces a report only. If fixes are
-  needed, propose them separately and get user approval first.
+- **State expected diffs before running commands**: Write out the expected file changes in Step 1 during drift-triggered checks so comparisons in Step 3 are anchored against an explicit baseline.
+- **Inspect all working-tree paths**: Check the full `git status` output (staged, unstaged, and untracked files) rather than only the files intentionally edited to catch unintended side-effects.
+- **Flag anomalies explicitly**: Mark unexpected changes or test failures with `⚠️` or `❌` so nothing is silently overlooked.
+- **Document skipped checks transparently**: State the reason whenever tests or linters are not applicable rather than omitting the report section.
+- **Remain strictly read-only**: Produce the status report and recommend follow-up skills for user approval before making any corrective edits.

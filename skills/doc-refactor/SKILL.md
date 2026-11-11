@@ -12,7 +12,7 @@ description: >-
 Use this skill to refine documentation files, markdown guides, API docstrings, or inline code comments.
 Enhances clarity, logical organization, and precision while strictly guaranteeing that executable project code remains completely untouched and no existing context or intent is lost.
 
-For checklists, information extraction templates, and zero-code-diff verification patterns, refer to [references/doc-refactor-guide.md](references/doc-refactor-guide.md).
+For checklists, information extraction templates, and zero-code-diff verification patterns, refer to [doc-refactor-guide.md](references/doc-refactor-guide.md) (references/doc-refactor-guide.md).
 
 ---
 
@@ -88,7 +88,7 @@ Verify: Linters and tests pass without regression, and diff inspection confirms 
 Perform a final audit against the information conservation checklist before concluding.
 
 1. **Information Conservation Audit**:
-   - Compare the final text side-by-side with the Step 1 inventory using [references/doc-refactor-guide.md](references/doc-refactor-guide.md):
+   - Compare the final text side-by-side with the Step 1 inventory using [doc-refactor-guide.md](references/doc-refactor-guide.md) (references/doc-refactor-guide.md):
      - Are all constraints, prerequisites, and warnings still clearly explained?
      - Are non-obvious design reasons and trade-offs preserved?
      - If detail was added, is it accurate and helpful?
@@ -99,8 +99,8 @@ Perform a final audit against the information conservation checklist before conc
      - Confirmation of zero code mutation and complete information preservation.
 3. **Sequential Hand-off**:
    - Recommend follow-up skills to finalize the task:
-     - **For post-edit working tree inspection**: Recommend [`project-status`](../project-status/SKILL.md).
-     - **For commit message and PR description preparation**: Recommend [`change-message`](../change-message/SKILL.md).
+     - **For post-edit working tree inspection**: Recommend [project-status](../project-status/SKILL.md) (../project-status/SKILL.md).
+     - **For commit message and PR description preparation**: Recommend [change-message](../change-message/SKILL.md) (../change-message/SKILL.md).
 
 Verify: All items in the information conservation checklist pass, and the report is presented to the user.
 
@@ -108,7 +108,7 @@ Verify: All items in the information conservation checklist pass, and the report
 
 ## Guidelines
 
-- **Zero code mutation is absolute.** Never alter code logic, variable names, public signatures, or execution flow under this skill. If code refactoring is needed, recommend [`refactor`](../refactor/SKILL.md).
-- **Never lose context or rationale.** Existing comments often document hard-won lessons, edge cases, and non-obvious workarounds. Preserve all such rationale without omission.
-- **Quality is not text compression.** A longer explanation with clear context and examples is far superior to a terse summary that loses subtle caveats.
-- **Focus on the "Why".** Comments that describe what the code obviously does are low-value; focus improvements on why the code does it that way.
+- **Guarantee zero executable code mutation**: Restrict edits strictly to Markdown files, docstrings, and comment blocks so runtime logic, signatures, and AST tokens remain untouched (hand off to [refactor](../refactor/SKILL.md) (../refactor/SKILL.md) if code changes are needed).
+- **Conserve 100% of existing context and rationale**: Preserve every constraint, edge case, and historical workaround cataloged in Step 1 so hard-won institutional knowledge is never lost during rewriting.
+- **Prioritize clarity and depth over arbitrary compression**: Include concrete examples, invariants, and caveats whenever they improve reader comprehension.
+- **Lead with the "Why"**: Explain why a design, algorithm, or constraint exists rather than restating what the syntax already makes obvious.

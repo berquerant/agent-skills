@@ -83,7 +83,7 @@ Verify: Hygiene status, build/test execution results, and metadata presence are 
 *(Execute if mode is `full` or `release`)*
 
 Inspect current files and the commit window established in Step 1 against
-[`../code-review/references/security-checklist.md`](../code-review/references/security-checklist.md):
+[security-checklist.md](../code-review/references/security-checklist.md) (../code-review/references/security-checklist.md):
 
 1. **Credentials & Secrets**:
    - Search working tree and recent commits for API keys, bearer tokens, private keys (`BEGIN PRIVATE KEY`), and passwords.
@@ -111,7 +111,7 @@ Verify: Both working tree and the selected commit window are scanned for secrets
 
 *(Execute if mode is `full` or `maintainability`)*
 
-Analyze the codebase according to [`references/maintainability-metrics.md`](references/maintainability-metrics.md):
+Analyze the codebase according to [maintainability-metrics.md](references/maintainability-metrics.md) (references/maintainability-metrics.md):
 
 1. **Code Size & Complexity**:
    - Identify unusually large files (> 600 lines) and deeply nested functions (> 4 levels).
@@ -175,9 +175,9 @@ Verify: The report assigns clear ratings, cites specific files and line numbers 
 
 Do not edit files within this skill. Present the report to the user and recommend the appropriate follow-up:
 
-- **For structural refactoring & debt remediation**: Recommend delegating to the [`refactor`](../refactor/SKILL.md) skill.
-- **For multi-step fixes or critical blocker resolution**: Recommend structuring changes with the [`step-gate`](../step-gate/SKILL.md) skill.
-- **For post-remediation verification**: Use [`project-status`](../project-status/SKILL.md) to confirm clean working-tree diffs.
+- **For structural refactoring & debt remediation**: Recommend delegating to the [refactor](../refactor/SKILL.md) (../refactor/SKILL.md) skill.
+- **For multi-step fixes or critical blocker resolution**: Recommend structuring changes with the [step-gate](../step-gate/SKILL.md) (../step-gate/SKILL.md) skill.
+- **For post-remediation verification**: Use [project-status](../project-status/SKILL.md) (../project-status/SKILL.md) to confirm clean working-tree diffs.
 
 Verify: The user is presented with clear options to proceed with remediation without unprompted file mutations.
 
@@ -185,8 +185,8 @@ Verify: The user is presented with clear options to proceed with remediation wit
 
 ## Guidelines
 
-- **Strict read-only discipline.** Never modify or delete files during an audit. Only inspect, run tests, and report.
-- **Zero tolerance on public exposure.** If any credential, private key, or internal infrastructure identifier is detected, mark the verdict as ❌ Blocked and highlight it prominently.
-- **Dynamic commit window.** Always calculate whether the last 20 commits or the last 1 hour represents the larger commit span, and audit the larger range.
-- **Leverage shared references.** Use [`../code-review/references/security-checklist.md`](../code-review/references/security-checklist.md) as the canonical security standard to prevent rule drift.
-- **Actionable reporting.** Avoid vague feedback like "refactor large files." Provide concrete file paths, line ranges, and specific recommendations.
+- **Maintain strict read-only discipline**: Inspect, run tests, and report without modifying or deleting files so baseline audits never alter repository state.
+- **Enforce zero tolerance on public exposure**: Mark the overall verdict as `❌ Blocked` and highlight findings prominently whenever any credential, private key, or internal infrastructure identifier is detected.
+- **Evaluate the larger dynamic commit window**: Compare the last 20 commits against the last 1 hour of commits and scan the larger span so burst commit activity does not hide leaked secrets.
+- **Share canonical security references**: Use [security-checklist.md](../code-review/references/security-checklist.md) (../code-review/references/security-checklist.md) as the shared security standard to prevent rule drift across audit skills.
+- **Provide actionable file-and-line citations**: Cite concrete file paths, line ranges, and specific remediation steps rather than generic advice.

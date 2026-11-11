@@ -12,7 +12,7 @@ description: >-
 Use this skill to maintain tight user feedback loops and prevent runaway exploration or silent stalls during implementation work.
 The agent paces execution by monitoring the interval between file edits, pausing proactively when work exceeds proposed thresholds or hits unexpected delays, and requesting user direction.
 
-For reporting templates and threshold heuristics, refer to [references/pace-monitoring-guide.md](references/pace-monitoring-guide.md).
+For reporting templates and threshold heuristics, refer to [pace-monitoring-guide.md](references/pace-monitoring-guide.md) (references/pace-monitoring-guide.md).
 
 ---
 
@@ -30,7 +30,7 @@ Before beginning task execution, analyze the task requirements and propose pacin
      - **`critical`**: Sensitive tasks affected by uncontrollable conditions (network, API limits) or hard to retry (e.g. deployments, remote API batches, migrations). Default check interval: **1 minute**.
      - **`unmonitored`**: Tasks known in advance to take very long where frequent checks are disruptive (e.g. model training, giant clones). Check interval: **60 minutes or none**.
 3. **Context-Aware Adjustment**:
-   - Tailor thresholds based on work scope (see [references/pace-monitoring-guide.md](references/pace-monitoring-guide.md)):
+   - Tailor thresholds based on work scope (see [pace-monitoring-guide.md](references/pace-monitoring-guide.md) (references/pace-monitoring-guide.md)):
      - Small/localized edits: 1–2 minutes or 5–10 non-edit tool calls.
      - Standard tasks: 3 minutes or 20 non-edit tool calls.
      - Broad cross-cutting exploration: 4–5 minutes or 25–30 non-edit tool calls.
@@ -74,7 +74,7 @@ Pause immediately and report to the user if ANY of the following occur before th
 
 ### Checkpoint Report Procedure:
 1. Stop all further background or exploratory commands.
-2. Structure the report using the templates from [references/pace-monitoring-guide.md](references/pace-monitoring-guide.md):
+2. Structure the report using the templates from [pace-monitoring-guide.md](references/pace-monitoring-guide.md) (references/pace-monitoring-guide.md):
    - For edit pacing delays, use the **Paced Execution Checkpoint** template (Current Status, Reason for Delay, Options, Question).
    - For stalled or frozen commands, use the **Command Execution Stall Report** template (Observed Liveness Signals, Diagnostic Assessment, Action Options: Abort vs. Keep Waiting, User Judgment).
 
@@ -101,9 +101,9 @@ Verify: The agent acts strictly on the approved option, tracking counters are re
 
 ## Guidelines
 
-- **Never spin silently.** If an investigation does not yield concrete progress towards an edit within the agreed threshold, pause and ask.
-- **Propose, don't mandate.** Always suggest thresholds adapted to the task at hand rather than rigidly applying static numbers without justification.
-- **Respect file edits as genuine milestones.** Intermediate reading and logging are not completions; progress is marked by concrete, verifiable changes.
-- **Transparent blockers.** When halting, clearly state what was tried and why it failed or slowed down—never hide investigation friction.
-- **Liveness over blind waiting.** Do not wait indefinitely for background commands without checking progress. Observe resource consumption, logs, and artifacts at the mode's interval; report stalled commands proactively and seek user judgment on aborting vs. waiting.
-- **Sequential hand-off.** When large plan restructuring is required upon halting, recommend planning skills (`step-gate` or `explore-plan-execute`) for user approval.
+- **Pause proactively when thresholds are reached**: Halt and consult the user (alerting via [user-notification](../user-notification/SKILL.md) (../user-notification/SKILL.md)) when an investigation does not yield progress toward a file edit within the agreed time or turn threshold, preventing silent runaway loops.
+- **Propose task-adapted thresholds**: Suggest time and non-edit turn limits tailored to the task's complexity rather than applying rigid static numbers without rationale.
+- **Treat file edits as concrete milestones**: Reset pacing counters only when project code or documentation files are modified so intermediate reads and logs do not mask stalls.
+- **Surface blockers transparently**: State what was tried and why progress slowed when halting so the user has full context to choose the next path.
+- **Monitor command liveness actively**: Inspect CPU/memory usage, log activity, and artifact changes at the mode's interval rather than waiting indefinitely, and seek user judgment on aborting vs. waiting when a command stalls.
+- **Hand off plan restructuring sequentially**: Recommend [step-gate](../step-gate/SKILL.md) (../step-gate/SKILL.md) or [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md) (and log checkpoints via [checkpoint-log](../checkpoint-log/SKILL.md) (../checkpoint-log/SKILL.md)) when a stall reveals the need for a revised plan.

@@ -94,7 +94,7 @@ Verify: Notification delivery or fallback is confirmed, and the subsequent workf
 
 ## Guidelines
 
-- **Preceding step rule for elevated actions.** Always issue the notification in an independent preceding step before invoking tools or commands requiring user approval or elevated permissions. Never combine them into a single step.
-- **Prevent notification fatigue.** Do not send notifications for minor intermediate sub-steps, iterative internal command loops, or routine scratch operations. Notify only upon task completion, blocking user requests, or elevated permission gates.
-- **Platform and tool agnostic.** Never assume a specific operating system or proprietary tool name. Adapt dynamically to the capabilities provided by the host environment.
-- **Concise and actionable.** Keep notification titles and bodies brief, unambiguous, and focused on the immediate user decision.
+- **Dispatch elevated-action alerts in a standalone preceding step**: Issue the notification in an independent step before invoking any tool or command that requires user approval or elevated permissions, ensuring the user sees the alert before the environment blocks on the permission prompt.
+- **Reserve notifications for high-signal events**: Notify only upon task completion, blocking user decisions, or elevated permission gates rather than minor intermediate steps, preventing notification fatigue.
+- **Adapt dynamically to host channels**: Select the highest-fidelity channel available in the current environment (dedicated notification tool/MCP, desktop utility, or terminal bell/banner) without hardcoding platform-specific assumptions; see [channel-patterns.md](references/channel-patterns.md) (references/channel-patterns.md) for environment fallback examples.
+- **Keep messages concise and action-oriented**: State the immediate user decision or completion outcome clearly without raw stack traces or excessive markup.

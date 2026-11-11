@@ -11,9 +11,9 @@ Decomposes complex goals into a Directed Acyclic Graph (DAG) of interdependent t
 
 ## Prerequisites
 
-- Clearly understood goal, requirements, or multi-step plan (e.g., from `explore-plan-execute` or `scrutinize-plan-execute`).
+- Clearly understood goal, requirements, or multi-step plan (e.g., from [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md) or [scrutinize-plan-execute](../scrutinize-plan-execute/SKILL.md) (../scrutinize-plan-execute/SKILL.md)).
 - Execution scope spans multiple tasks, repositories, branches, or steps where some operations involve waiting (remote CI, long builds, cooldowns, approval checkpoints).
-- For conceptual background, state machine definitions, and scheduler loop details, refer to [references/dag-scheduling-guide.md](references/dag-scheduling-guide.md).
+- For conceptual background, state machine definitions, and scheduler loop details, refer to [dag-scheduling-guide.md](references/dag-scheduling-guide.md) (references/dag-scheduling-guide.md).
 
 ---
 
@@ -112,7 +112,7 @@ Execute tasks following the cooperative scheduling algorithm:
    - If another `READY` task exists, switch context and execute it.
    - If all active tasks are `WAITING`, perform a single targeted check on the oldest waiting task after the appropriate delay interval. Never enter a tight polling loop.
 4. **Log Progress**:
-   Record task state transitions, context switches, and milestones (e.g., using `checkpoint-log`).
+   Record task state transitions, context switches, and milestones (e.g., using [checkpoint-log](../checkpoint-log/SKILL.md) (../checkpoint-log/SKILL.md) and alerting via [user-notification](../user-notification/SKILL.md) (../user-notification/SKILL.md) at gate transitions).
 
 Verify:
 - All tasks in the DAG reach `COMPLETED` or explicitly `HALTED` with user consultation.
@@ -123,8 +123,8 @@ Verify:
 
 ## Guidelines
 
-- **No Premature Execution**: Always obtain explicit user approval on the DAG and interleaving plan before beginning task execution.
-- **Strict Isolation**: When tasks involve file changes or branch checkouts, enforce physical isolation via separate worktrees or independent paths.
-- **Anti-Polling Principle**: Never query remote APIs or external processes repeatedly in rapid succession. Use single-shot checks with reasonable backoff intervals.
-- **Subtree Halting**: A failure in one branch only halts its downstream dependents; allow independent branches to proceed unless the failure impacts shared global state.
-- **Cooperative Hand-off**: Cooperate cleanly with specialized execution skills—hand off step-by-step single-task execution to `step-gate`, worktree creation to worktree isolation tools, and commit messages to `change-message`.
+- **Secure approval on the DAG before execution**: Present the dependency graph and interleaving strategy for user sign-off in Step 3 so task boundaries and wait transitions are agreed up front.
+- **Enforce physical workspace isolation**: Run concurrent or interleaved tasks that modify files in separate worktrees or directories to prevent working-tree collisions.
+- **Use single-shot status checks over polling**: Switch immediately to another `READY` task when an active task enters `WAITING`, and re-check external processes only at scheduled intervals to avoid API rate-limit exhaustion.
+- **Halt only dependent subtrees on failure**: Pause downstream dependents when an upstream task fails while allowing independent branches to continue unless shared global state is affected.
+- **Coordinate with companion execution skills**: Hand off step-by-step execution to [step-gate](../step-gate/SKILL.md) (../step-gate/SKILL.md), worktree setup to [git-worktree](../git-worktree/SKILL.md) (../git-worktree/SKILL.md), and commit messages to [change-message](../change-message/SKILL.md) (../change-message/SKILL.md).

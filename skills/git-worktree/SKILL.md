@@ -152,8 +152,8 @@ Verify: The removed worktree no longer appears in `git worktree list`.
 
 ## Guidelines
 
-- **Always confirm WORKTREE_ROOT.** Never infer or hardcode the root path; ask the user explicitly if it is not provided.
-- **Never overwrite an existing branch silently.** Ask before using `-B` or `--force`.
-- **Completion is user-confirmed.** Do not remove a worktree unless the user explicitly states the work is done.
-- **Request access permissions explicitly.** If the WORKTREE_ROOT is outside the sandbox, tell the user and ask for permission before proceeding.
-- **Parallel worktrees require subagent support.** Only propose parallel work when subagent functionality is confirmed to be available.
+- **Confirm `WORKTREE_ROOT` explicitly with the user**: Ask for the base directory whenever it is not specified so worktrees are created in a predictable, user-approved location.
+- **Verify before resetting or force-removing**: Request explicit user confirmation before passing `-B` or `--force` so existing branches and uncommitted changes are protected.
+- **Retain worktrees until user-confirmed completion**: Remove a worktree only after the user confirms that branch work is complete.
+- **Follow the preceding notification protocol for outside-sandbox paths**: When `WORKTREE_ROOT` lies outside the sandbox, notify the user per [user-notification](../user-notification/SKILL.md) (../user-notification/SKILL.md) and request permission before accessing it.
+- **Use parallel worktrees only when subagents are supported**: Propose multi-worktree parallel execution only in environments with confirmed subagent capabilities.

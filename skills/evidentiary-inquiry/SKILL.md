@@ -12,7 +12,7 @@ description: >-
 Use this skill when conducting investigations, root cause analyses, technical evaluations, or fact-finding tasks where precision, traceability, version accuracy, and verifiable evidence are required.
 Before exploring, the agent analyzes ambiguous requests to clarify core premises with the user and agrees upon information sources. During investigation, it pins every fact to an exact version, examines feature deltas and unresolved or recently resolved issues across surrounding versions, verifies all findings before presenting them, clearly separates observed facts from inferences, and explains the logical deduction behind every judgment.
 
-For premise clarification checklists, source scoping formats, version delta matrices, and reporting templates, refer to [references/source-scoping-and-verification.md](references/source-scoping-and-verification.md).
+For premise clarification checklists, source scoping formats, version delta matrices, and reporting templates, refer to [source-scoping-and-verification.md](references/source-scoping-and-verification.md) (references/source-scoping-and-verification.md).
 
 ---
 
@@ -57,7 +57,7 @@ Execute the investigation focusing on the agreed sources, contextualize findings
 1. **Targeted Exploration**:
    - Probe the prioritized sources first while respecting confirmed constraints and out-of-scope boundaries.
    - Record exact tool commands, file paths, line ranges, and raw tool outputs.
-   - For high-cost or external commands (e.g., CI logs, release metadata, issue queries, platform APIs), evaluate idempotency and prioritize using a dedicated caching or memoization skill, tool, or MCP server if available; otherwise, follow the caching and TTL protocol in [`command-cache-protocol.md`](../explore-plan-execute/references/command-cache-protocol.md) to preserve evidence locally while minimizing repetitive queries.
+   - For high-cost or external commands (e.g., CI logs, release metadata, issue queries, platform APIs), evaluate idempotency and prioritize using a dedicated caching or memoization skill, tool, or MCP server if available; otherwise, follow the caching and TTL protocol in [command-cache-protocol.md](../explore-plan-execute/references/command-cache-protocol.md) (../explore-plan-execute/references/command-cache-protocol.md) to preserve evidence locally while minimizing repetitive queries.
    - If investigation threatens to become prolonged or stalls, respect interval pacing or consult pacing guidelines.
 2. **Version Contextualization and Neighborhood Analysis**:
    - When investigating software, libraries, frameworks, or tooling as implementation means, rigorously track temporal and version boundaries:
@@ -103,7 +103,7 @@ Verify: Every judgment is supported by a documented logical bridge from version-
 Present the structured investigation report to the user with full traceability.
 
 1. **Structure the Evidentiary Report**:
-   - Format the findings using the template from [references/source-scoping-and-verification.md](references/source-scoping-and-verification.md), co-presenting all file paths, line ranges, and URLs with clickable Markdown links and unadorned raw strings per [`output-presentation`](../output-presentation/SKILL.md) (e.g., `[file.ext#L10-L20](<accessible-target>) (path/to/file.ext:10-20)`):
+   - Format the findings using the template from [source-scoping-and-verification.md](references/source-scoping-and-verification.md) (references/source-scoping-and-verification.md), co-presenting all file paths, line ranges, and URLs with clickable Markdown links and unadorned raw strings per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md) (e.g., `[file.ext#L10-L20](<accessible-target>) (path/to/file.ext:10-20)`):
      - **Confirmed Premises & Constraints**: Architecture, functional/non-functional requirements, out-of-scope items, inviolable constraints, and target versions.
      - **Agreed Sources & Scope**: Sources consulted and any sources excluded.
      - **Verified Facts (Version-Pinned)**: Concrete findings with exact citations:
@@ -115,10 +115,10 @@ Present the structured investigation report to the user with full traceability.
      - **Interpretation & Reasoning**: Step-by-step logic bridging facts and version behavior to conclusions under the confirmed constraints.
      - **Conclusions / Judgments**: Explicit verdict, root cause, or architectural/tooling recommendation.
 2. **Recommend Sequential Handoff**:
-   - For remediation or code modification, recommend [`step-gate`](../step-gate/SKILL.md) or [`refactor`](../refactor/SKILL.md).
-   - For documentation or comment refinement based on findings, recommend [`doc-refactor`](../doc-refactor/SKILL.md).
-   - For planning large feature additions based on findings, recommend [`explore-plan-execute`](../explore-plan-execute/SKILL.md).
-   - For further adversarial scrutiny of complex trade-offs, recommend [`scrutinize-plan-execute`](../scrutinize-plan-execute/SKILL.md).
+   - For remediation or code modification, recommend [step-gate](../step-gate/SKILL.md) (../step-gate/SKILL.md) or [refactor](../refactor/SKILL.md) (../refactor/SKILL.md).
+   - For documentation or comment refinement based on findings, recommend [doc-refactor](../doc-refactor/SKILL.md) (../doc-refactor/SKILL.md).
+   - For planning large feature additions based on findings, recommend [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md).
+   - For further adversarial scrutiny of complex trade-offs, recommend [scrutinize-plan-execute](../scrutinize-plan-execute/SKILL.md) (../scrutinize-plan-execute/SKILL.md).
 
 Verify: The report provides complete evidentiary and version traceability for every finding, formats all paths and URLs with dual presentation, and proposes appropriate next-step skills for user approval.
 
@@ -126,11 +126,10 @@ Verify: The report provides complete evidentiary and version traceability for ev
 
 ## Guidelines
 
-- **Clarify ambiguous premises before exploring.** When a request leaves architecture, functional/non-functional requirements, out-of-scope boundaries, inviolable constraints, or target versions ambiguous, derive focused questions (with default hypotheses) and confirm with the user before running deep investigations.
-- **Anchor facts to exact versions and inspect surrounding deltas and issues.** When investigating software or tools, always distinguish which version a fact applies to, compare feature additions/removals/changes in adjacent versions, and check both unresolved issues and recently resolved issues around that version.
-- **Pre-report verification is mandatory.** Never communicate an unconfirmed fact to the user as truth; always verify against tool outputs or file contents first.
-- **Rigorously specify evidence targets.** Always cite exact versions, commit hashes, workspace-relative paths, line numbers, and corresponding remote URLs (where applicable) using dual link and raw-string presentation per [`output-presentation`](../output-presentation/SKILL.md).
-- **Strictly honor source exclusions and inviolable constraints.** While exploration may expand to unpredicted sources if necessary, never consult sources that the user flagged as excessive or off-limits, and never propose solutions that violate confirmed guardrails.
-- **Unambiguous demarcation.** Keep "what was observed" (facts) clearly distinct from "what it means" (interpretations and hypotheses) in both internal reasoning and user-facing reports.
-- **Transparent rationale before and after decisions.** Always explain the logical chain of thought leading to a judgment, both when proposing it and after executing it.
-- **Read-only investigation.** This skill investigates and diagnoses; it does not modify repository files. Suggest remediation skills (`refactor`, `step-gate`, `doc-refactor`) when changes are required.
+- **Resolve objective premises from local manifests first, then clarify ambiguities**: Inspect local manifests (`go.mod`, `package.json`, `Cargo.toml`, etc.) for objective version and toolchain facts, and prompt the user with focused questions and default hypotheses when genuine ambiguity remains.
+- **Pin facts to exact versions and inspect surrounding deltas**: Record the exact version or commit hash for every observed fact and compare feature additions, removals, and known issues across adjacent releases.
+- **Verify all claims against primary outputs before reporting**: Check exit codes, file contents, and line numbers directly so only confirmed facts are presented as truth.
+- **Co-present evidence targets per `output-presentation`**: Cite exact versions, commit hashes, workspace-relative paths, line numbers, and permalinks using dual link and raw-string presentation per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md).
+- **Honor source exclusions and inviolable constraints**: Restrict exploration and recommendations to user-approved sources and guardrails.
+- **Separate observed facts from logical deductions**: Keep direct observations (`Facts`) distinct from hypotheses and conclusions (`Interpretations`) so reasoning remains transparent and auditable.
+- **Maintain a strictly read-only scope**: Investigate and report without modifying repository files, handing off to [refactor](../refactor/SKILL.md) (../refactor/SKILL.md), [step-gate](../step-gate/SKILL.md) (../step-gate/SKILL.md), or [doc-refactor](../doc-refactor/SKILL.md) (../doc-refactor/SKILL.md) when changes are needed.

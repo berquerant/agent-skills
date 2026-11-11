@@ -39,7 +39,7 @@ Verify: The user request intent, workspace git state, and target scope are recor
 
 ## Step 2: Match Intent & Select Candidate Skills
 
-Match the analyzed request and context against [references/intent-matrix.md](references/intent-matrix.md):
+Match the analyzed request and context against [intent-matrix.md](references/intent-matrix.md) (references/intent-matrix.md):
 
 1. **Category Mapping**:
    - Classify the request into one of the primary intent categories (e.g. Feature Work, Holistic Health Check, Code Review, Refactoring, Dependency PRs).
@@ -54,10 +54,10 @@ Verify: The mapped intent category, selected candidate skill(s), and selection r
 
 ## Step 3: Compose Skill Sequence & Execution Plan
 
-Formulate a clear execution sequence based on the selected candidates and pipeline patterns in [references/intent-matrix.md](references/intent-matrix.md):
+Formulate a clear execution sequence based on the selected candidates and pipeline patterns in [intent-matrix.md](references/intent-matrix.md) (references/intent-matrix.md):
 
 1. **Define Pipeline Sequence**:
-   - **Entry Skill**: The first skill to activate (e.g. [`doctor`](../doctor/SKILL.md), [`explore-plan-execute`](../explore-plan-execute/SKILL.md), or [`git-worktree`](../git-worktree/SKILL.md)).
+   - **Entry Skill**: The first skill to activate (e.g. [doctor](../doctor/SKILL.md) (../doctor/SKILL.md), [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md), or [git-worktree](../git-worktree/SKILL.md) (../git-worktree/SKILL.md)).
    - **Follow-up Skills (Sequential Hand-offs)**: The subsequent skills that will handle execution, review, or finalization upon user approval.
 2. **Draft Proposed Plan**:
    - State the target scope and baseline.
@@ -109,7 +109,7 @@ Verify: The approved entry skill is initiated with the established context.
 
 ## Guidelines
 
-- **Strictly read-only.** Never modify code, configuration, or documentation within this skill.
-- **Always seek approval before dispatching.** Never unilaterally start a multi-skill pipeline without the user confirming the proposed flow.
-- **Loosely coupled hand-offs.** Skills do not execute each other in hidden chains; each hand-off must produce visible outputs and respect user checkpoints.
-- **Prefer minimal pipelines.** Do not chain unnecessary skills for straightforward tasks. If a task is a pure commit message request, route directly to [`change-message`](../change-message/SKILL.md).
+- **Maintain a strictly read-only routing role**: Keep `skill-router` focused on context inspection and pipeline design without modifying code, configuration, or documentation so routing decisions remain side-effect-free.
+- **Seek explicit user approval before dispatching**: Confirm the proposed skill sequence with the user before starting a multi-skill pipeline to prevent misaligned workflows.
+- **Use loosely coupled sequential hand-offs**: Ensure each skill in the sequence produces visible outputs and manages its own user checkpoints rather than chaining skills in hidden nested loops.
+- **Prefer minimal pipelines**: Select the shortest sequence that satisfies the user's goal so context tokens are not wasted (for example, route a pure commit message request directly to [change-message](../change-message/SKILL.md) (../change-message/SKILL.md)).
