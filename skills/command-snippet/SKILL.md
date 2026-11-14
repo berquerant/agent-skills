@@ -111,8 +111,9 @@ Design the snippet's interface:
      - **Curry target files for persistent read approval**: When repeatedly searching or inspecting a specific target file (e.g., `grep` over a log file or codebase target), curry the target file path inside the snippet as a constant and expose search patterns and optional flags as arguments. This allows prefix-based approval systems to grant persistent read approval for that file without granting blanket read access to the rest of the filesystem.
      - **Logical atomic task scope over command wrapping**: A snippet should represent a single logical task stage or atomic transaction rather than wrapping a single isolated command. Deterministic sequences that do not require interactive user decisions between steps (e.g. resolve dependencies -> commit -> verify test/lint) should be encapsulated in one atomic snippet, avoiding excessive script proliferation and approval fatigue. However, never pass arbitrary action verbs or subcommands dynamically into a generalized wrapper (e.g. avoid `git -C "$1" "$2"`).
      - **Self-descriptive snippet naming**: Name snippet files so that reviewers can immediately deduce the exact action, target, and scope from the filename alone (e.g. `rebase_and_test_worktree.sh` or `update_deps_and_verify.sh`). Never use generic, ambiguous, or misleading names (e.g. `resolve_and_verify.sh`, `run.sh`, `helper.sh`) that fail to convey concrete functionality or might be mistaken for existing local project utilities.
+     - **Zero-argument batch monitor pattern**: When repeatedly inspecting or polling status across multiple specific targets during an investigation or parallel workflow (e.g. checking CI status for active PRs #380, #398, #395), curry the entire target list inside the snippet as a constant array rather than taking arguments. Zero-argument snippets produce exact, invariant command lines (e.g. `./check_active_prs_status.sh`), allowing permanent, friction-free re-execution under approval whitelists while eliminating argument mistyping risks.
      - **Universal directory context encapsulation**: Avoid relying on tool-specific directory flags (such as `git -C` vs tools like `gh` that lack `-C`). Standardize on validating and changing into the target directory inside the script (`cd "${target_dir:?}"`) before executing commands.
-     - **Constrain operational scope granularity**: Apply the 4-tier scope granularity model. Select parameter-constrained snippets (Level 2) for recurring read-only queries across multiple items, and fully fixed resource snippets (Level 3) for state-mutating operations, workflows strictly focused on a single target, or persistent read access to a specific file, minimizing human review friction without introducing approval fatigue.
+     - **Constrain operational scope granularity**: Apply the 4-tier scope granularity model. Select parameter-constrained snippets (Level 2) for recurring read-only queries across dynamic items, and fully fixed resource snippets (Level 3) for state-mutating operations, workflows strictly focused on single/batch fixed targets, or persistent read access to a specific file, minimizing human review friction without introducing approval fatigue.
      - **Shell hardening**: Include `set -euo pipefail`, explicit argument checks (`"${1:?error message}"`), input existence validation, and clean execution.
 
 Verify: All variable inputs are mapped to explicit positional arguments or
@@ -197,20 +198,18 @@ Verify: The snippet's intelligibility is audited, any high complexity is simplif
 1. **Save Snippet File as Immutable**:
    - Write the script to the determined path.
    - Once saved, treat the file as **strictly immutable**. Never apply in-place edits. If a fix is needed during verification, create a new file (e.g., `_v2`).
-2. **Execute with Pinpointed Script-Path Prefix**:
-   - **Pinpointed Script Authorization over Generic Interpreter Permission**:
-     Execute the snippet directly as the command binary (e.g., `<script-path> [args...]` or `./<script-name> [args...]`). Invoking generic interpreters directly (`bash <script-path>` or `python3 <script-path>`) risks triggering blanket permission prompts for `bash` or `python3` itself, granting overly broad execution rights across arbitrary shell commands. Executing the script path directly confines approval specifically to that immutable snippet file.
-   - **Atomic Single-Step Execution (No Standalone `chmod` Turn)**:
-     If execute permissions must be ensured before execution, do **not** run a standalone `chmod +x` tool call in a separate turn. Standalone `chmod` turns waste an entire interaction cycle and create redundant approval friction. Instead, chain permission setup and execution into a single atomic command line:
-     ```sh
-     chmod +x "<script-path>" && exec "<script-path>" [args...]
-     ```
-     This confines approval and execution to a single atomic step without separate permission turns.
+2. **Execute via Direct Script Binary (No Interpreter Prefix or Chmod Compound)**:
+   - **Direct Script-Binary Invocation**:
+     Execute the snippet directly using its script path (e.g., `<script-path> [args...]` or `./<script-name> [args...]`).
+   - **Prohibit Generic Interpreter Prefixes**:
+     Do **not** prepend generic runtime interpreters (`bash` or `python3`) to the command line. Doing so places the interpreter as `argv[0]`, prompting users to grant execution permissions to `bash` or `python3` itself (a dangerous blanket permission hazard) rather than authorizing the specific immutable script file.
+   - **Prohibit Compound Chmod Lines**:
+     Do **not** use compound commands such as `chmod +x ... && exec ...`. Ensure execute permissions are set upon saving the file so the execution turn remains a single, unchained command line that whitelists the script path directly without repetitive approval friction.
 3. **Verify Outcome**:
    - Check the command exit code and output against expectations.
    - Stop and inspect if the script fails. If failure remediation requires code changes, create a new versioned snippet file (`_v2`) and restart Step 5.
 
-Verify: The snippet executed cleanly and satisfied the intended operation without in-place file modifications or separate standalone `chmod` turns.
+Verify: The snippet executed cleanly and satisfied the intended operation without `chmod` compound commands or in-place file modifications.
 
 ---
 
@@ -231,7 +230,8 @@ Verify: Unneeded temporary files and superseded snippet versions are disposed of
 ## Guidelines
 
 - **Extract complex commands into documented snippet files**: Convert commands meeting the avoidance thresholds (≥4 operators, ≥120 characters, ≥3 lines, or non-trivial `-c`/`-e` payloads) into snippet files so users can inspect and approve them cleanly.
-- **Execute via script path to confine approval scope**: Execute the script directly as the command binary (or atomic `chmod +x <path> && exec <path> [args...]`) so that approval systems bind permissions to the specific snippet file rather than granting dangerous blanket approval to generic interpreters (`bash` or `python3`). Never run standalone `chmod` commands in a separate turn.
+- **Execute snippets directly as standalone binaries**: Execute snippets directly via `<path> [args...]` or `./<name> [args...]`; strictly prohibit generic interpreter prefixes (`bash`, `python3`) and `chmod +x ... && exec ...` compound patterns to keep the script path as `argv[0]` for pinpointed authorization without repetitive approval friction.
+- **Rely on script path for approval whitelisting**: Keep the command line clean and unchained so approval engines bind permissions specifically to the immutable script binary rather than broad interpreters.
 - **Require self-descriptive snippet names**: Give snippets explicit, self-evident names reflecting exact scope and action (e.g. `rebase_and_test_worktree.sh`), avoiding ambiguous or generic names that fail to convey functionality or could be mistaken for pre-existing local repository tools.
 - **Pass inputs via explicit CLI arguments**: Expose inputs as positional arguments or flags rather than ambient environment variables so every invocation is self-contained in terminal history.
 - **Use array parameterization instead of `eval`**: Construct dynamic command lists with positional arrays (`"${cmd[@]}"`) rather than `eval` to prevent quoting bugs and injection hazards.
@@ -240,6 +240,7 @@ Verify: Unneeded temporary files and superseded snippet versions are disposed of
 - **Audit intelligibility before execution**: Evaluate every snippet with [snippet-review](../snippet-review/SKILL.md) (../snippet-review/SKILL.md) prior to execution.
 - **Output the structured Pre-Execution Notice**: Present the `### 📋 Snippet Pre-Execution Notice` block before invoking the execution tool, co-presenting all script and target paths per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md).
 - **Encapsulate atomic task stages rather than single command wrapping**: Group deterministic sequences of commands forming a single logical milestone (e.g., resolve -> commit -> verify) into an atomic snippet per [approvable-patterns.md](references/approvable-patterns.md) (references/approvable-patterns.md) to prevent script proliferation and approval fatigue, while keeping dynamic subcommands strictly forbidden.
+- **Curry multi-target batches into zero-argument monitor snippets**: For repetitive polling across a fixed batch of items (e.g. active PR CI checks), curry the target list into a zero-argument snippet (e.g. `./check_active_prs_status.sh`) to enable invariant, friction-free re-execution under approval rules without argument drift.
 - **Universal directory context encapsulation**: Validate target paths and enter the target directory via `cd "${target_dir:?}"` inside the script per [approvable-patterns.md](references/approvable-patterns.md) (references/approvable-patterns.md) instead of relying on tool-specific options (`git -C` vs `gh`).
 - **Curry target files for persistent read approval**: When repeatedly searching or inspecting a specific target file (e.g., `grep [options] <pattern> <file>`), curry the target file path inside a dedicated snippet per [approvable-patterns.md](references/approvable-patterns.md) (references/approvable-patterns.md) so users can grant persistent read approval for that file via prefix matching without granting blanket read access to the rest of the filesystem.
 - **Constrain operational scope**: Restrict broad CLI tools (`gh`, `aws`, `kubectl`) to specific subcommands or exact targets per [approvable-patterns.md](references/approvable-patterns.md) (references/approvable-patterns.md) to reduce review friction.

@@ -2,7 +2,7 @@
 
 This reference details design patterns for creating shell and interpreter execution snippets optimized for **approval ease, whitelist predictability, high execution efficiency, and minimal cognitive friction**.
 
-Direct execution of long commands with variable parameters embedded in the middle of command lines (e.g. `git -C <dir> status`), multi-step pipelines split into dozens of micro-scripts, or inefficient execution workflows (such as separate `chmod` turns or indiscriminate interpreter invocations) breaks approval rules, multiplies execution latency, and causes severe approval fatigue. Approvable snippet patterns eliminate this friction by currying fixed actions, scoping logical atomic transactions, right-aligning variable parameters, using self-descriptive filenames, and utilizing pinpointed execution idioms.
+Direct execution of long commands with variable parameters embedded in the middle of command lines (e.g. `git -C <dir> status`), multi-step pipelines split into dozens of micro-scripts, or inefficient execution workflows (such as compound `chmod +x ... && exec ...` lines or generic interpreter prefixes like `bash <script>`) breaks approval rules, multiplies execution latency, and causes severe approval fatigue. Approvable snippet patterns eliminate this friction by currying fixed actions, scoping logical atomic transactions, currying target collections into zero-argument batch monitors, using self-descriptive filenames, and executing snippets directly as standalone command binaries (`./script.sh` or `/path/to/script.sh`).
 
 ---
 
@@ -40,18 +40,20 @@ However, standard CLI syntax places the target `<file>` at the very end of the c
 2. **Persistent Approval Impossibility**: Because the target file is buried at the tail of the command, prefix matching cannot recognize that all these queries target the same pre-approved file. Every variation of flags (`-C 5`, `-E`) and patterns triggers a new approval gate, causing severe **approval fatigue** and interrupting the agent's investigation loop.
 3. **The Solution (Currying the Target File)**: By currying the target file path inside a dedicated snippet (e.g. `./search_app_log.sh "pattern" [options...]`), the snippet invocation prefix (`./search_app_log.sh`) becomes stable. A single user approval enables persistent, safe inspection of that specific file without exposing the rest of the filesystem.
 
-### The Execution Authorization Dilemma: Generic Interpreters vs. Standalone `chmod`
-Two opposing failure modes frequently disrupt snippet execution:
-1. **The Generic Interpreter Approval Trap**:
-   Invoking snippets via generic interpreters (e.g., `bash path/to/script.sh` or `python3 path/to/script.py`) places `bash` or `python3` as the command binary (`argv[0]`). In environments evaluating execution authorization by command prefix or binary, granting execution permission to `bash` or `python3` creates a dangerous **blanket authorization hazard**—it permits executing arbitrary shell one-liners (`bash -c "rm -rf ..."`) or arbitrary code scripts across the system.
-2. **The Standalone `chmod` Round-Trip Waste**:
-   To make scripts executable, agents often execute a standalone `chmod +x <file>` in a separate turn, followed by `<file>` in the next turn. This wastes an entire agent turn, doubles execution latency, and produces redundant approval prompts.
-3. **The Solution (Pinpointed Script-Path Prefix & Atomic Chaining)**:
-   Keep the script path itself as the command prefix (`/path/to/script.sh [args...]` or `./script.sh [args...]`) so authorization remains strictly confined to that specific, immutable snippet file. If execute permissions must be set, chain them into a single atomic command line:
+### The Execution Authorization Dilemma: Why Interpreter Prefixes and Compound Chmod Fail
+Two prevalent execution anti-patterns disrupt snippet whitelisting and trigger repetitive approval friction:
+
+1. **The Generic Interpreter Prefix Trap (`bash script.sh`)**:
+   Invoking snippets through an interpreter prefix (e.g. `bash path/to/script.sh` or `python3 path/to/script.py`) places `bash` or `python3` as the command binary (`argv[0]`). In whitelist and approval engines, this prompts the user to grant execution permission to `bash` or `python3` itself. Granting blanket permission to an interpreter is a dangerous security hole (allowing arbitrary one-liners like `bash -c "rm -rf ..."`), while denying blanket permission forces the user to re-approve every single invocation.
+2. **The Compound Chmod Trap (`chmod +x ... && exec ...`)**:
+   Chaining `chmod` and execution into a compound line makes `chmod` the leading command verb and creates compound syntax (`&&`) that whitelist engines cannot match to stable script prefixes. Furthermore, because script paths vary, this triggers a fresh approval prompt on every execution.
+3. **The Solution (Direct Script-Binary Invocation)**:
+   Invoke the snippet directly using its own script path:
    ```sh
-   chmod +x "/path/to/script.sh" && exec "/path/to/script.sh" [args...]
+   ./script.sh [args...]
+   /path/to/script.sh [args...]
    ```
-   This executes in a single step without extra interaction turns while preserving strict script-level authorization confinement.
+   Ensure execute permissions (`+x`) are set upon saving the file. In the execution turn, run **only** the script path itself without `bash` or `chmod` compound lines. This places the specific, immutable snippet file as `argv[0]`, enabling exact, pinpointed script authorization without blanket interpreter permissions or repetitive approval prompts.
 
 ### The Granularity Dilemma: Single Command Wrapping vs. Atomic Task Workflows
 When applying single responsibility, a frequent mistake is extreme micro-fragmentation: creating a separate snippet for every single command (e.g., separate snippets for `fetch_prs.sh`, `setup_worktree.sh`, `rebase.sh`, `test.sh`, `lint.sh`, `commit.sh`, `push.sh`, `merge.sh`, `cleanup.sh`).
@@ -108,15 +110,13 @@ cd "${target_dir}"
 
 This guarantees that subsequent commands (`gh`, `go`, `make`, `npm`, `cargo`) execute within the intended workspace context cleanly.
 
-### Principle 4: Pinpointed Script Authorization & Atomic Execution
-To prevent granting blanket execution rights to generic shells or interpreters (`bash` or `python3`), invoke the snippet directly via its script path:
-- Direct script invocation: `./script.sh "$@"` or `/path/to/script.sh "$@"`
-- Atomic single-step invocation when setting execute bits:
-  ```sh
-  chmod +x "/path/to/script.sh" && exec "/path/to/script.sh" "$@"
-  ```
-
-This locks the authorization boundary to the exact script file path without leaking blanket execution privileges to `bash` or wasting turns on standalone `chmod` steps.
+### Principle 4: Direct Script-Binary Invocation (Zero Interpreter / Chmod Compound)
+To ensure the command line cleanly represents the snippet itself and eliminates repetitive approval prompts:
+- Execute snippets directly as standalone command binaries:
+  - `./script.sh "$@"` or `/path/to/script.sh "$@"`
+  - `./script.py "$@"` or `/path/to/script.py "$@"` (relying on shebang `#!/usr/bin/env python3`)
+- **Prohibit Generic Interpreter Prefixes**: Do not prepend `bash` or `python3` to the execution command, which would request permission for the interpreter rather than the script.
+- **Prohibit Compound `chmod +x ... && exec ...` Lines**: Set file execute permissions upon saving. Keep the execution turn clean and unchained so whitelist engines can match the script path prefix cleanly.
 
 ### Principle 5: Context-Dependent Variability Analysis
 What constitutes a "variable argument" is determined by the **task context**:
@@ -133,16 +133,30 @@ What constitutes a "variable argument" is determined by the **task context**:
 | **Level 0** | **Raw Broad CLI** | `gh pr view 123`<br/>`grep -i "err" /path/to/app.log` | **High Review Burden**: Approving raw commands grants blanket permissions (destructive actions or arbitrary filesystem read). Every single invocation must be audited end-to-end. |
 | **Level 1** | **Subcommand-Constrained** | `./run_gh_pr_view.sh "$@"`<br/>`./run_grep.sh "$@"` | **Moderate Review Ease**: Locks the action/binary, blocking destructive subcommands, but permits arbitrary flags and target files. Suitable for ad-hoc exploration. |
 | **Level 2** | **Parameter-Constrained** | `./view_pr_details.sh "$1"`<br/>`./search_logs_dir.sh "$1"` | **Low Review Friction (Continuous Approval)**: Subcommand and search scope are hardcoded. Reviewer only audits the trailing target `$1`. Optimal for repetitive inspection across items. |
-| **Level 3** | **Fully Fixed Resource** | `./view_target_pr.sh`<br/>`./search_app_log.sh "pattern" [opts]` | **Zero Cognitive Friction & Persistent Approval**: Both action and target resource (PR #123 or `app.log`) are curried inside the snippet. Zero blast radius, trivial approval. Ideal for single-resource tasks, mutating operations, or persistent read access to a specific file. |
+| **Level 3** | **Fully Fixed Resource or Batch** | `./view_target_pr.sh`<br/>`./search_app_log.sh "pattern" [opts]`<br/>`./check_active_prs_status.sh` | **Zero Cognitive Friction & Invariant Approval**: Actions and targets (single resource or multi-target batch) are completely curried inside the snippet. Zero dynamic parameter drift, trivial approval. Ideal for single-resource tasks, mutating operations, persistent read access, or repetitive polling of active batches. |
+
+### Principle 7: Zero-Argument Batch Monitor Pattern (Currying Multi-Target Batches)
+When monitoring or polling status across multiple specific targets in parallel workflows (e.g., tracking remote CI progress across 3 concurrently rebased PRs, checking health of 4 local services, or verifying multiple worktree builds):
+- **The Problem with Parameterized Polling**:
+  Passing target IDs as arguments (e.g., `./check_prs.sh 380 398 395`) exposes dynamic parameters on every call. Reviewers must check for argument drift, and any variation in target list order breaks exact-match approval rules. Furthermore, running separate single-target queries (`gh pr checks 380`, `gh pr checks 398`, `gh pr checks 395`) multiplies command turns and causes severe approval fatigue.
+- **The Solution (Currying the Target Collection)**:
+  Hardcode the active target collection (e.g., `TARGET_PRS=(380 398 395)`) inside the snippet as a constant array and expose **zero arguments**:
+  ```sh
+  ./check_active_prs_status.sh
+  ```
+- **Key Advantages**:
+  1. **Invariant Command Line**: Because there are zero dynamic arguments, the command line is completely static. Whitelist engines and human reviewers can approve it once, allowing frictionless re-polling throughout the entire wait phase.
+  2. **Zero Target-Drift / Typo Risk**: Confinement guarantees the script cannot inadvertently query or mutate unintended targets.
+  3. **Batch Output Aggregation**: One single command turn collects and summarizes status for all targets simultaneously, drastically reducing latency and token churn.
 
 ---
 
 ## 3. Robust Shell Implementation Guidelines
 
 1. **Safety Flags**: Begin with `set -euo pipefail`.
-2. **Strict Parameter Validation**: Guard required arguments using parameter expansion error syntax: `"${1:?Error message}"`.
+2. **Strict Parameter Validation**: Guard required arguments using parameter expansion error syntax: `"${1:?Error message}"` (when parameters are accepted).
 3. **Precondition Checks**: Verify target paths or dependencies exist before invoking core commands.
-4. **Clean Execution**: Use `exec` for single terminal commands to replace the subshell process, or sequential execution under `set -e` for atomic pipelines.
+4. **Clean Execution**: Use `exec` for single terminal commands to replace the subshell process, or sequential execution under `set -e` for atomic pipelines and batch loops.
 5. **Exact Quoting**: Quote all variable references (`"${var}"`) to avoid word splitting and glob expansion.
 
 ---
@@ -438,20 +452,56 @@ exec gh pr view "${TARGET_PR}" --json number,title,state,body,url
 
 ---
 
+### Example H: Zero-Argument Batch PR Status Monitor (Level 3 Multi-Target Batch)
+Curries a specific batch of active pull requests into a zero-argument monitoring snippet. Enables invariant, frictionless repetitive status polling across multiple concurrent PRs under approval rules without parameter drift.
+
+```bash
+#!/usr/bin/env bash
+#
+# Description:
+#   Monitors and summarizes CI status for active concurrent pull requests (#380, #398, #395).
+#   Currying target PRs into a zero-argument snippet guarantees invariant command-line
+#   invocations for frictionless polling under approval whitelists.
+#
+# Arguments:
+#   None
+#
+# Usage:
+#   ./check_active_prs_status.sh
+#
+# Prerequisites:
+#   gh (GitHub CLI, authenticated)
+#
+set -euo pipefail
+
+# Fixed active batch under verification
+readonly TARGET_PRS=(380 398 395)
+
+echo "=== Active Batch CI Status ($(date '+%Y-%m-%d %H:%M:%S')) ==="
+for pr in "${TARGET_PRS[@]}"; do
+  echo "--- PR #${pr} ---"
+  gh pr checks "${pr}" || true
+done
+echo "=== Check complete ==="
+```
+
+---
+
 ## 5. Verification Checklist
 
 Before presenting an approvable snippet for user execution:
 
 - [ ] Does the snippet represent a **single logical atomic task stage** (no interactive branching or dynamic subcommand wrappers)?
-- [ ] Is the snippet named **self-descriptively** (e.g., `rebase_and_test_worktree.sh`), avoiding vague or generic names?
-- [ ] Is the invocation executed with the **script path as the command binary** (or atomic `chmod +x <path> && exec <path> [args...]`) to bind authorization specifically to the snippet rather than granting blanket permission to generic interpreters?
-- [ ] Has any standalone `chmod +x` tool call in a separate turn been eliminated?
+- [ ] Is the snippet named **self-descriptively** (e.g., `rebase_and_test_worktree.sh` or `check_active_prs_status.sh`), avoiding vague or generic names?
+- [ ] For repetitive polling over multi-target batches, are targets curried internally into a **zero-argument snippet** (Principle 7)?
+- [ ] Is the invocation executed **directly as a standalone binary** (`./script.sh` or `/path/to/script.sh`) without generic interpreter prefixes (`bash`, `python3`) or compound `chmod` lines?
+- [ ] Has any `chmod +x ... && exec ...` or interpreter prefix been eliminated from the command line?
 - [ ] Is the scope granularity tier (Level 1–3) chosen appropriately to minimize review friction without causing approval fatigue?
 - [ ] Are omnipotent tools (e.g., `gh`, `aws`, `kubectl`) constrained to explicit, minimal subcommands?
 - [ ] For directory-dependent tools, is directory navigation safely encapsulated (`cd "${target_dir:?}"`) inside the script?
 - [ ] For repetitive file inspections (e.g., `grep`), is the target file curried internally (Level 3) to enable persistent read approval without broad filesystem read permissions?
-- [ ] Are dynamic variables exposed exclusively as trailing CLI arguments (`$1`, `$2`), or curried internally (Level 3) when targeting a fixed resource?
-- [ ] Are required parameters guarded with `${1:?message}` and format-validated (e.g., regex pattern check)?
+- [ ] Are dynamic variables exposed exclusively as trailing CLI arguments (`$1`, `$2`), or curried internally (Level 3) when targeting a fixed resource/batch?
+- [ ] Are required parameters guarded with `${1:?message}` and format-validated (when parameters are used)?
 - [ ] Is input validation in place for paths or required entities?
-- [ ] Is the final command executed cleanly via `exec` (for single commands) or protected by `set -euo pipefail` (for multi-step pipelines)?
+- [ ] Is the final command executed cleanly via `exec` (for single commands) or protected by `set -euo pipefail` (for multi-step pipelines and batch loops)?
 - [ ] Has the snippet been audited via `snippet-review` and preceded by the mandatory Pre-Execution Notice?

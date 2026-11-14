@@ -21,19 +21,28 @@ Do not guess the CI commands. Inspect the actual configuration declared in the r
 
 ---
 
-## 2. Project Task Runner Inspection
+## 2. Project Task Runner Inspection & Task Discovery Protocol
 
-If the remote CI triggers standard project task runners, locate the corresponding local entrypoint:
+Do NOT guess task or target names (e.g. guessing `ui-lint` when the defined task is `ui:lint`). If the remote CI or repository utilizes a standard task runner, inspect and verify available task definitions locally before execution:
 
-| Configuration File | Entrypoint | Candidate Checks |
-|---|---|---|
-| `Makefile` | `make` | `make test`, `make lint`, `make check` |
-| `Taskfile.yml` / `Taskfile.yaml` | `task` | `task test`, `task lint` |
-| `mise.toml` | `mise run` | `mise run test`, `mise run lint`, `mise run check` |
-| `justfile` | `just` | `just test`, `just check` |
-| `package.json` | `npm` / `pnpm` / `yarn` / `bun` | `npm test`, `npm run lint`, `npm run typecheck` |
-| `Cargo.toml` | `cargo` | `cargo test`, `cargo clippy` |
-| `go.mod` | `go` | `go test ./...`, `golangci-lint run` |
+### 2.1 Task Discovery Checklist
+- **`Taskfile.yml` / `Taskfile.yaml`**: Run `./task --list` or `task --list` (or inspect `Taskfile.yml` directly) to confirm the exact task name syntax (e.g. colon-separated vs hyphen-separated namespaces).
+- **`package.json`**: Inspect `scripts` object via `npm run` (shows available scripts) or `jq '.scripts' package.json` before running `npm run <script>` or `pnpm run <script>`.
+- **`Makefile`**: Inspect target rules via `make -qp | awk -F':' '/^[a-zA-Z0-9][^$#\/\t=]*:([^=]|$)/ {split($1,A,/ /);print A[1]}' | sort -u` or search targets directly in `Makefile`.
+- **`mise.toml`**: Run `mise tasks` to list configured task names.
+- **`justfile`**: Run `just --list` to inspect defined recipes.
+
+### 2.2 Standard Task Runners Reference
+
+| Configuration File | Entrypoint | Discovery Command | Common Targets |
+|---|---|---|---|
+| `Makefile` | `make` | Search `Makefile` targets | `make test`, `make lint`, `make check` |
+| `Taskfile.yml` / `Taskfile.yaml` | `task` | `./task --list` or `task --list` | `task test`, `task lint`, `task <ns>:<task>` |
+| `mise.toml` | `mise run` | `mise tasks` | `mise run test`, `mise run lint` |
+| `justfile` | `just` | `just --list` | `just test`, `just check` |
+| `package.json` | `npm` / `pnpm` / `yarn` / `bun` | `npm run` or read `scripts` | `npm test`, `npm run lint`, `npm run typecheck` |
+| `Cargo.toml` | `cargo` | Built-in subcommands | `cargo test`, `cargo clippy` |
+| `go.mod` | `go` | Built-in subcommands | `go test ./...`, `golangci-lint run` |
 
 ---
 

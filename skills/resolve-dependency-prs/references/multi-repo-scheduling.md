@@ -76,40 +76,48 @@ An idle wait state occurs when:
   - Check remote CI status only when:
     - Transitioning between repository tasks.
     - Or after a meaningful pacing interval (e.g., at least 2–3 minutes between remote status queries, respecting the 10s API rate limit).
+- **Zero-Argument Batch Monitor Snippets**:
+  - When monitoring multiple in-flight PRs concurrently (e.g. PR #380, #398, #395), encapsulate status checks into a zero-argument monitoring snippet (e.g. `./check_active_prs_status.sh`) per [approvable-patterns.md](../../command-snippet/references/approvable-patterns.md) (../../command-snippet/references/approvable-patterns.md) Example H. Currying the active PR batch into the snippet guarantees invariant command-line invocations that can be safely re-run under approval whitelists without repetitive approval prompts or argument drift.
 - **Single-Shot Check Commands**:
-  - **GitHub PR CI**: `gh pr checks <id>`
+  - **GitHub PR CI**: `gh pr checks <id>` or batch monitor `./check_active_prs_status.sh`
   - **GitHub Default Branch CI**: `gh run list --branch <default-branch> --commit <merge-sha> --limit 1`
   - **GitLab PR/MR CI**: `glab mr view <id>`
   - **GitLab Default Branch CI**: `glab ci status --branch <default-branch>`
 
 ---
 
-## 4. Single-Repository Sequential Pipeline with Default Branch CI Gate
+## 4. Single-Repository Pipelines: Sequential vs. Independent Sub-Component Pipelines
 
-When multiple candidate PRs exist for a single repository:
+When multiple candidate PRs exist for a single repository, determine the execution topology based on file disjointness:
 
-1. **Strictly Sequential Execution**:
-   ```mermaid
-   flowchart TD
-       P1_LOCAL["PR #1: Rebase & Local Verify"] --> P1_PR_CI["PR #1: Remote PR CI"]
-       P1_PR_CI --> P1_MERGE["PR #1: Merge to Default Branch"]
-       P1_MERGE --> P1_DEF_CI["PR #1: Wait Default Branch CI Pass"]
-       P1_DEF_CI -->|Pass| P2_REBASE["PR #2: Rebase on Updated Default Branch"]
-       P1_DEF_CI -->|Fail| HALT["Safety Halt: Default Branch Broken!"]
-       P2_REBASE --> P2_LOCAL["PR #2: Local Verify"]
-       P2_LOCAL --> P2_PR_CI["PR #2: Remote PR CI"]
-       P2_PR_CI --> P2_MERGE["PR #2: Merge to Default Branch"]
-       P2_MERGE --> P2_DEF_CI["PR #2: Wait Default Branch CI Pass"]
-       P2_DEF_CI -->|Pass| DONE["Repository Completed"]
-       P2_DEF_CI -->|Fail| HALT
-   ```
-2. **Idle Wait Utilization**:
-   - During `P1_DEF_CI` (which may take 3–10 minutes), the agent MUST switch to another repository.
-   - Never start `P2_REBASE` until `P1_DEF_CI` succeeds.
-3. **Incident Response on Default Branch Failure**:
-   - If default branch CI fails after merge, immediately freeze processing for this repository.
-   - Trigger a Safety Halt report with failure details.
-   - Offer the user immediate remediation options (e.g., revert merge commit via `git revert`, or create a fix branch).
+### 4.1 Dependency Overlap vs. Independent Sub-Components
+1. **Dependent / Overlapping PRs (Strictly Sequential)**:
+   - When candidate PRs modify the same dependency manifests or overlapping components (e.g. two Go module updates in root `go.mod`, or two npm updates in root `package.json`), they **must** be processed strictly sequentially to prevent rebase conflicts and semantic dependencies.
+2. **Independent Sub-Components / Monorepo (Parallel Verification & Interleaved Pipeline)**:
+   - When candidate PRs target completely disjoint, isolated sub-directories or independent package ecosystems within the same repository (e.g., UI `ui/package.json` vs Go backend `go.mod` vs infrastructure `ansible/`), they are classified as **Independent Sub-components**.
+   - For independent sub-components:
+     - **Parallel Worktree Isolation**: Create separate worktrees under `.git-worktree/<branch>` to checkout, rebase, and run local test/lint checks concurrently.
+     - **Intra-Repo Idle-Wait Interleaving**: When a PR in component A is waiting on remote CI (`WAITING_PR_CI`) or default branch CI (`WAITING_DEFAULT_CI`), immediately switch active focus to prepare, rebase, or locally verify the PR in component B, eliminating idle timer waits.
+     - **Sequential Merge Gate**: Merge commits to the default branch must still be executed sequentially to maintain linear history and clear commit attribution.
+
+### 4.2 Pipeline Topologies
+
+```mermaid
+flowchart TD
+    subgraph Independent ["Independent Sub-Components (Disjoint Files)"]
+        UI_REBASE["UI PR #1: Rebase & Local Verify"] --> UI_PR_CI["UI PR #1: Remote PR CI"]
+        GO_REBASE["Go PR #2: Rebase & Local Verify"] --> GO_PR_CI["Go PR #2: Remote PR CI"]
+        UI_PR_CI -->|Idle Wait Interleave| GO_REBASE
+        UI_PR_CI --> UI_MERGE["UI PR #1: Merge to Default Branch"]
+        UI_MERGE --> UI_DEF_CI["UI PR #1: Wait Default Branch CI Pass"]
+        UI_DEF_CI -->|Pass & Interleave| GO_MERGE["Go PR #2: Merge to Default Branch"]
+        GO_PR_CI --> GO_MERGE
+        GO_MERGE --> GO_DEF_CI["Go PR #2: Wait Default Branch CI Pass"]
+    end
+```
+
+### 4.3 Incident Response on Default Branch Failure
+If default branch CI fails after merge, immediately freeze processing across all components for this repository. Trigger a Safety Halt report with failure details, and offer the user immediate remediation options (e.g., revert merge commit via `git revert`, or create a fix branch).
 
 ---
 
