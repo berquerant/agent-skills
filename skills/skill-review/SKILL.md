@@ -23,7 +23,7 @@ This skill is strictly read-only and directly references three reference documen
 ## Prerequisites
 
 - Read access to the target skill directories (each containing `SKILL.md`) and their sibling skills.
-- Access to the companion MCP server (`agent-skills-mcp`) providing the `lint_skill` and `lint_all` tools. If the MCP server is unavailable, refer to [automated-checks.md](references/automated-checks.md) (references/automated-checks.md) and execute [run-checks.sh](scripts/run-checks.sh) (scripts/run-checks.sh) as the shell fallback.
+- Access to the companion CLI or MCP server (`agent-skills-mcp`) providing the `skill-lint` subcommand or `lint_skill` and `lint_all` tools. If neither is available, refer to [automated-checks.md](references/automated-checks.md) (references/automated-checks.md) and execute the deprecated [run-checks.sh](scripts/run-checks.sh) (scripts/run-checks.sh) as the legacy shell fallback.
 
 ---
 
@@ -44,10 +44,11 @@ Verify: Target skill directories (each containing `SKILL.md`) and their file inv
 
 ## Step 2: Run Automated Checks
 
-Execute automated checks A through K against each target skill using the `lint_skill` tool (for a single target directory) or `lint_all` (for batch evaluation). If the MCP server is unavailable in the environment, refer to [automated-checks.md](references/automated-checks.md) (references/automated-checks.md) and execute the fallback script [run-checks.sh](scripts/run-checks.sh) (scripts/run-checks.sh):
+Execute automated checks A through K against each target skill using the CLI `agent-skills-mcp skill-lint` (or MCP tools `lint_skill` / `lint_all`). If `agent-skills-mcp` is unavailable in the environment, refer to [automated-checks.md](references/automated-checks.md) (references/automated-checks.md) and execute the deprecated fallback script [run-checks.sh](scripts/run-checks.sh) (scripts/run-checks.sh):
 
 ```sh
-skills/skill-review/scripts/run-checks.sh skills/<target-skill>
+agent-skills-mcp skill-lint skills/<target-skill>
+# Legacy fallback: skills/skill-review/scripts/run-checks.sh skills/<target-skill>
 ```
 
 - **A–D**: File inventory, `SKILL.md` line count (80–250 `[W]`, < 500 `[F]`), direct reference coverage (zero orphan files `[W]`), `name` rules (3–30 chars `[W]`), `description` Layer 1 budget (100–350 chars `[W]`, ≤ 1024 `[F]`) and trigger opener, top-loaded `## Step 1` (≤ line 100 `[W]`), section order ending with `## Guidelines`, and `Verify:` checkpoints.

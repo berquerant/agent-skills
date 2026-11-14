@@ -7,6 +7,9 @@ Every feature module can be independently enabled or disabled via CLI flags or e
 # Run MCP server over stdio (default subcommand)
 agent-skills-mcp [serve] [flags]
 
+# Run automated skill checks directly without running the MCP server
+agent-skills-mcp skill-lint [--strict] [--format=markdown|json] [path...]
+
 # Disable specific features
 agent-skills-mcp serve --pace-guard=false --pr-triage=false
 

@@ -3,28 +3,17 @@ set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/.." && pwd)"
-checker="${repo_root}/skills/skill-review/scripts/run-checks.sh"
+readonly script_dir repo_root
+readonly mcp_bin="${repo_root}/mcp/bin/agent-skills-mcp"
 
 cd "${repo_root}"
 
-failed=0
-
-for skill_dir in skills/* .agent/skills/*; do
-  [ -d "${skill_dir}" ] || continue
-  [ -f "${skill_dir}/SKILL.md" ] || continue
-
-  if ! output="$("${checker}" --strict "${skill_dir}" 2>&1)"; then
-    echo "========================================" >&2
-    echo "Check failed for ${skill_dir}:" >&2
-    echo "${output}" >&2
-    echo "========================================" >&2
-    failed=1
-  fi
-done
-
-if [ "${failed}" -ne 0 ]; then
-  echo "Skill consistency checks failed." >&2
-  exit 1
+if command -v agent-skills-mcp >/dev/null 2>&1; then
+  exec agent-skills-mcp skill-lint --strict "$@"
 fi
 
-echo "All skill consistency checks passed."
+if [ -x "${mcp_bin}" ]; then
+  exec "${mcp_bin}" skill-lint --strict "$@"
+fi
+
+exec go run ./mcp/cmd/agent-skills-mcp skill-lint --strict "$@"

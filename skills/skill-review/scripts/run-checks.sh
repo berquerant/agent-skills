@@ -1,8 +1,12 @@
 #!/bin/sh
 # run-checks.sh: Runs automated quality checks for a target agent skill.
+# DEPRECATED: This script is deprecated and will not receive further updates.
+# Use 'agent-skills-mcp skill-lint' instead.
 # Usage: scripts/run-checks.sh [--strict] <path-to-skill-dir>
 
 set -eu
+
+echo "WARNING: run-checks.sh is DEPRECATED and will not receive further updates. Use 'agent-skills-mcp skill-lint' instead." >&2
 
 strict=0
 if [ "${1:-}" = "--strict" ]; then

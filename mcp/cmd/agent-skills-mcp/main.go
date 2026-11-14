@@ -67,6 +67,9 @@ func run(
 		_, err := fmt.Fprintf(out, "%s\n", feature.Usage())
 		return err
 
+	case "skill-lint":
+		return runSkillLint(rest, out, errOut)
+
 	case "serve":
 		cfg, err := feature.ParseConfig(rest, homeDir)
 		if errors.Is(err, pflag.ErrHelp) {
@@ -90,6 +93,6 @@ func run(
 		return inst.MCPServer.Run(ctx, t)
 
 	default:
-		return fmt.Errorf("unknown subcommand %q (supported: serve, version, help)", sub)
+		return fmt.Errorf("unknown subcommand %q (supported: serve, skill-lint, version, help)", sub)
 	}
 }

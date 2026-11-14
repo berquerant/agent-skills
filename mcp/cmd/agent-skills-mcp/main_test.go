@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"context"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -51,6 +53,12 @@ func TestCLISubcommands(t *testing.T) {
 			name:    "unknown subcommand fails",
 			args:    []string{"nonexistent"},
 			wantErr: "unknown subcommand",
+		},
+		{
+			name:           "skill-lint subcommand help",
+			args:           []string{"skill-lint", "--help"},
+			wantOutContain: []string{"Usage of skill-lint:", "--strict", "--format"},
+			wantErrEmpty:   true,
 		},
 		{
 			name:           "serve default subcommand runs over transport without polluting stdout",
@@ -124,3 +132,51 @@ func runServeOverInMemoryTransport(
 	cancel()
 	<-done
 }
+
+func TestSkillLintSubcommandExecution(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("markdown output for repository skills", func(t *testing.T) {
+		var out, errOut bytes.Buffer
+		err := run(ctx, []string{"skill-lint", "--strict", "../../../skills/skill-review"}, t.TempDir(), &out, &errOut, nil)
+		require.NoError(t, err)
+		assert.Contains(t, out.String(), "# Skill Lint Report")
+		assert.Contains(t, out.String(), "skill-review")
+		assert.Contains(t, out.String(), "PASS")
+	})
+
+	t.Run("json output format", func(t *testing.T) {
+		var out, errOut bytes.Buffer
+		err := run(ctx, []string{"skill-lint", "--format=json", "../../../skills/skill-review"}, t.TempDir(), &out, &errOut, nil)
+		require.NoError(t, err)
+		assert.Contains(t, out.String(), `"ok": true`)
+		assert.Contains(t, out.String(), `"passed": true`)
+		assert.Contains(t, out.String(), `"skill_name": "skill-review"`)
+	})
+
+	t.Run("invalid format option returns error", func(t *testing.T) {
+		var out, errOut bytes.Buffer
+		err := run(ctx, []string{"skill-lint", "--format=yaml"}, t.TempDir(), &out, &errOut, nil)
+		require.ErrorContains(t, err, "invalid format")
+	})
+
+	t.Run("nonexistent target returns error", func(t *testing.T) {
+		var out, errOut bytes.Buffer
+		err := run(ctx, []string{"skill-lint", "/nonexistent/target/dir"}, t.TempDir(), &out, &errOut, nil)
+		require.Error(t, err)
+	})
+
+	t.Run("invalid skill fails and reports findings", func(t *testing.T) {
+		tempDir := t.TempDir()
+		invalidSkillDir := filepath.Join(tempDir, "bad-skill")
+		require.NoError(t, os.MkdirAll(invalidSkillDir, 0o750))
+		require.NoError(t, os.WriteFile(filepath.Join(invalidSkillDir, "SKILL.md"), []byte("invalid content\n"), 0o600))
+
+		var out, errOut bytes.Buffer
+		err := run(ctx, []string{"skill-lint", "--strict", invalidSkillDir}, t.TempDir(), &out, &errOut, nil)
+		require.Error(t, err)
+		assert.Contains(t, out.String(), "FAIL")
+		assert.Contains(t, out.String(), "## Findings")
+	})
+}
+

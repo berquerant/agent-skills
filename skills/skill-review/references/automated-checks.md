@@ -2,13 +2,24 @@
 
 Reference documentation for the reproducible, mechanical checks used during skill review.
 
-All checks are implemented in the self-contained script [run-checks.sh](../scripts/run-checks.sh) (../scripts/run-checks.sh).
+All checks are implemented in Go within the `agent-skills-mcp` companion module (`skill-lint` subcommand and `lint_skill`/`lint_all` tools).
+The standalone script [run-checks.sh](../scripts/run-checks.sh) (../scripts/run-checks.sh) is **DEPRECATED**, maintained only as a frozen legacy shell fallback, and will not receive further updates.
 
 ---
 
 ## Running the Automated Checks
 
-Run the automated check script against the target skill directory:
+Prefer using `agent-skills-mcp skill-lint` (or the MCP tools `lint_skill` / `lint_all`):
+
+```sh
+# Run checks on a skill directory
+agent-skills-mcp skill-lint skills/<target-skill>
+
+# Run checks in strict mode
+agent-skills-mcp skill-lint --strict skills/<target-skill>
+```
+
+Legacy fallback (deprecated):
 
 ```sh
 skills/skill-review/scripts/run-checks.sh skills/<target-skill>
