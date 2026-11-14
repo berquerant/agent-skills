@@ -47,10 +47,10 @@ func (f *Feature) registerClassificationTools(s *mcp.Server, env feature.Env) {
 		env,
 		&mcp.Tool{
 			Name:        "pr_classify_files",
-			Description: "Inspect a list of modified file paths in a PR diff and verify strict dependency manifest exclusivity against supported ecosystems.",
+			Description: "Inspect a list of modified file paths in a PR diff and verify strict dependency manifest exclusivity against supported ecosystems, with support for agent overrides and custom manifest patterns.",
 		},
 		func(_ context.Context, _ *mcp.CallToolRequest, in ClassifyFilesInput) (ClassifyFilesOutput, error) {
-			return ClassifyFiles(in.Files)
+			return ClassifyFiles(in)
 		},
 	)
 
@@ -59,10 +59,10 @@ func (f *Feature) registerClassificationTools(s *mcp.Server, env feature.Env) {
 		env,
 		&mcp.Tool{
 			Name:        "pr_filter_candidates",
-			Description: "Filter a batch list of candidate PRs (from gh pr list or glab api) by bot author, dependency labels, title conventions, and manifest exclusivity.",
+			Description: "Filter a batch list of candidate PRs (from gh pr list or glab api) by bot author, dependency labels, title conventions, and manifest exclusivity, supporting agent overrides and custom allowed PRs.",
 		},
 		func(_ context.Context, _ *mcp.CallToolRequest, in FilterCandidatesInput) (FilterCandidatesOutput, error) {
-			return FilterCandidates(in.PRs)
+			return FilterCandidates(in)
 		},
 	)
 }

@@ -10,78 +10,167 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestClassifyFiles(t *testing.T) {
+func TestClassifyFiles_Ecosystems(t *testing.T) {
 	tests := []struct {
 		name          string
-		files         []string
+		input         prtriage.ClassifyFilesInput
 		wantEligible  bool
 		wantEcosystem prtriage.Ecosystem
-		wantReasonSub string
 	}{
 		{
-			name:          "pure Go update",
-			files:         []string{"go.mod", "go.sum"},
+			name: "pure Go update",
+			input: prtriage.ClassifyFilesInput{
+				Files: []string{"go.mod", "go.sum"},
+			},
 			wantEligible:  true,
 			wantEcosystem: prtriage.EcosystemGo,
 		},
 		{
-			name:          "pure npm update",
-			files:         []string{"package.json", "package-lock.json"},
+			name: "pure npm update",
+			input: prtriage.ClassifyFilesInput{
+				Files: []string{"package.json", "package-lock.json"},
+			},
 			wantEligible:  true,
 			wantEcosystem: prtriage.EcosystemNode,
 		},
 		{
-			name:          "pure Python update",
-			files:         []string{"pyproject.toml", "poetry.lock"},
+			name: "pure Python update",
+			input: prtriage.ClassifyFilesInput{
+				Files: []string{"pyproject.toml", "poetry.lock"},
+			},
 			wantEligible:  true,
 			wantEcosystem: prtriage.EcosystemPython,
 		},
 		{
-			name:          "actions lock update",
-			files:         []string{".github/workflows/actions.lock"},
+			name: "actions lock update",
+			input: prtriage.ClassifyFilesInput{
+				Files: []string{".github/workflows/actions.lock"},
+			},
 			wantEligible:  true,
 			wantEcosystem: prtriage.EcosystemAction,
 		},
 		{
-			name:          "disqualified by application source code",
-			files:         []string{"go.mod", "cmd/app/main.go"},
-			wantEligible:  false,
+			name: "Swift package update",
+			input: prtriage.ClassifyFilesInput{
+				Files: []string{"Package.swift", "Package.resolved"},
+			},
+			wantEligible:  true,
+			wantEcosystem: prtriage.EcosystemSwift,
+		},
+		{
+			name: "Elixir mix update",
+			input: prtriage.ClassifyFilesInput{
+				Files: []string{"mix.exs", "mix.lock"},
+			},
+			wantEligible:  true,
+			wantEcosystem: prtriage.EcosystemElixir,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			out, err := prtriage.ClassifyFiles(tt.input)
+			require.NoError(t, err)
+			assert.Equal(t, tt.wantEligible, out.Eligible)
+			assert.Equal(t, tt.wantEcosystem, out.Ecosystem)
+		})
+	}
+}
+
+func TestClassifyFiles_Disqualifications(t *testing.T) {
+	tests := []struct {
+		name          string
+		input         prtriage.ClassifyFilesInput
+		wantReasonSub string
+	}{
+		{
+			name: "disqualified by application source code",
+			input: prtriage.ClassifyFilesInput{
+				Files: []string{"go.mod", "cmd/app/main.go"},
+			},
 			wantReasonSub: "touches application source code",
 		},
 		{
-			name:          "disqualified by test file",
-			files:         []string{"package.json", "src/util.test.ts"},
-			wantEligible:  false,
+			name: "disqualified by test file",
+			input: prtriage.ClassifyFilesInput{
+				Files: []string{"package.json", "src/util.test.ts"},
+			},
 			wantReasonSub: "touches test files",
 		},
 		{
-			name:          "disqualified by documentation",
-			files:         []string{"Cargo.toml", "README.md"},
-			wantEligible:  false,
+			name: "disqualified by documentation",
+			input: prtriage.ClassifyFilesInput{
+				Files: []string{"Cargo.toml", "README.md"},
+			},
 			wantReasonSub: "touches repository documentation",
 		},
 		{
-			name:          "empty files list",
-			files:         []string{},
-			wantEligible:  false,
+			name: "disqualified by build configuration",
+			input: prtriage.ClassifyFilesInput{
+				Files: []string{"go.mod", "Dockerfile"},
+			},
+			wantReasonSub: "build config",
+		},
+		{
+			name: "empty files list",
+			input: prtriage.ClassifyFilesInput{
+				Files: []string{},
+			},
 			wantReasonSub: "no files changed",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			out, err := prtriage.ClassifyFiles(tt.files)
+			out, err := prtriage.ClassifyFiles(tt.input)
 			require.NoError(t, err)
-			assert.Equal(t, tt.wantEligible, out.Eligible)
-			if tt.wantEcosystem != "" {
-				assert.Equal(t, tt.wantEcosystem, out.Ecosystem)
-			}
-			if tt.wantReasonSub != "" {
-				require.NotEmpty(t, out.Reasons)
-				assert.Contains(t, out.Reasons[0], tt.wantReasonSub)
-			}
+			assert.False(t, out.Eligible)
+			require.NotEmpty(t, out.Reasons)
+			assert.Contains(t, out.Reasons[0], tt.wantReasonSub)
 		})
 	}
+}
+
+func TestClassifyFiles_AgentOverrides(t *testing.T) {
+	// Unknown without override
+	outUnknown, err := prtriage.ClassifyFiles(prtriage.ClassifyFilesInput{
+		Files: []string{"go.mod", "custom_dependency.xyz"},
+	})
+	require.NoError(t, err)
+	assert.False(t, outUnknown.Eligible)
+	assert.Len(t, outUnknown.UnknownFiles, 1)
+	assert.Contains(t, outUnknown.Reasons[0], "is unclassified (category unknown)")
+
+	// Resolved via agent manifest override
+	outManifest, err := prtriage.ClassifyFiles(prtriage.ClassifyFilesInput{
+		Files: []string{"go.mod", "custom_dependency.xyz"},
+		Overrides: map[string]string{
+			"custom_dependency.xyz": "manifest",
+		},
+	})
+	require.NoError(t, err)
+	assert.True(t, outManifest.Eligible)
+	assert.Equal(t, prtriage.EcosystemMixed, outManifest.Ecosystem)
+
+	// Resolved via agent ignored override
+	outIgnored, err := prtriage.ClassifyFiles(prtriage.ClassifyFilesInput{
+		Files: []string{"go.mod", "custom_dependency.xyz"},
+		Overrides: map[string]string{
+			"custom_dependency.xyz": "ignored",
+		},
+	})
+	require.NoError(t, err)
+	assert.True(t, outIgnored.Eligible)
+	assert.Equal(t, prtriage.EcosystemGo, outIgnored.Ecosystem)
+
+	// Resolved via extra manifest pattern
+	outPattern, err := prtriage.ClassifyFiles(prtriage.ClassifyFilesInput{
+		Files:                 []string{"go.mod", "dependencies.mycustomlock"},
+		ExtraManifestPatterns: []string{"*.mycustomlock"},
+	})
+	require.NoError(t, err)
+	assert.True(t, outPattern.Eligible)
+	assert.Equal(t, prtriage.EcosystemMixed, outPattern.Ecosystem)
 }
 
 func TestFilterCandidates(t *testing.T) {
@@ -110,18 +199,36 @@ func TestFilterCandidates(t *testing.T) {
 			Labels:      []string{"enhancement"},
 			Files:       []string{"go.mod", "auth.go"},
 		},
+		{
+			Number:      104,
+			Title:       "manual bump for internal dependency",
+			Author:      "security-officer",
+			HeadRefName: "patch/security",
+			Labels:      []string{"internal"},
+			Files:       []string{"go.mod", "go.sum"},
+		},
 	}
 
-	out, err := prtriage.FilterCandidates(prs)
+	// Default evaluation: PR 104 is disqualified by non-automated author/title signature
+	out, err := prtriage.FilterCandidates(prtriage.FilterCandidatesInput{
+		PRs: prs,
+	})
 	require.NoError(t, err)
-	assert.Equal(t, 3, out.TotalEvaluated)
+	assert.Equal(t, 4, out.TotalEvaluated)
 	assert.Equal(t, 2, out.EligibleCount)
-	assert.Equal(t, 1, out.ExcludedCount)
+	assert.Equal(t, 2, out.ExcludedCount)
 	require.Len(t, out.EligiblePRs, 2)
 	assert.Equal(t, 101, out.EligiblePRs[0].Candidate.Number)
 	assert.Equal(t, 102, out.EligiblePRs[1].Candidate.Number)
-	require.Len(t, out.DisqualifiedPRs, 1)
-	assert.Equal(t, 103, out.DisqualifiedPRs[0].Candidate.Number)
+
+	// Agent-specified AllowedPRNumbers: approves PR 104
+	outWithAllowed, err := prtriage.FilterCandidates(prtriage.FilterCandidatesInput{
+		PRs:              prs,
+		AllowedPRNumbers: []int{104},
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 3, outWithAllowed.EligibleCount)
+	assert.Equal(t, 1, outWithAllowed.ExcludedCount)
 }
 
 func TestDetectTasks(t *testing.T) {

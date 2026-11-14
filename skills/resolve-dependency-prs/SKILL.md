@@ -43,6 +43,8 @@ Retrieve open PRs/MRs along with files and body in a single query to avoid repet
 ### 1.2 File-Level Exclusivity Check
 Evaluate candidate PRs using the `pr_classify_files` tool (or filter batch candidates directly via `pr_filter_candidates`). The tool verifies that modifications are strictly confined to package manager manifests and lockfiles, immediately flagging disqualifying source, test, or workflow changes.
 
+If modified files or PR signatures are reported as `unknown`, inspect the diff contents directly and specify explicit agent categorization via `overrides`, `extra_manifest_patterns`, or `allowed_pr_numbers`.
+
 If the MCP server is unavailable in the environment, refer to [filter-criteria.md](references/filter-criteria.md) (references/filter-criteria.md) and check files manually:
 - Ensure changes are strictly confined to package manager manifests and lockfiles.
 - **Immediately exclude** any PR modifying application code, test logic, CI configurations, or general project files.

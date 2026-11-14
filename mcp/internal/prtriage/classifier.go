@@ -1,6 +1,7 @@
 package prtriage
 
 import (
+	"fmt"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -8,95 +9,9 @@ import (
 	"github.com/berquerant/agent-skills/mcp/internal/guard"
 )
 
-var knownBotAuthors = map[string]struct{}{
-	"app/dependabot":        {},
-	"dependabot[bot]":       {},
-	"dependabot":            {},
-	"renovate[bot]":         {},
-	"renovate":              {},
-	"snyk-bot":              {},
-	"security-bot":          {},
-	"gitlab-dependency-bot": {},
-}
-
-var knownDepLabels = map[string]struct{}{
-	"dependencies":        {},
-	"dependencies-update": {},
-	"security":            {},
-	"cve":                 {},
-	"deps":                {},
-	"dependency":          {},
-}
-
-type manifestRule struct {
-	ecosystem Ecosystem
-	match     func(relPath, base string) bool
-}
-
-var manifestRules = []manifestRule{
-	{
-		ecosystem: EcosystemNode,
-		match: func(_, base string) bool {
-			return base == "package.json" || base == "package-lock.json" ||
-				base == "pnpm-lock.yaml" || base == "yarn.lock" || base == "bun.lockb"
-		},
-	},
-	{
-		ecosystem: EcosystemGo,
-		match: func(_, base string) bool {
-			return base == "go.mod" || base == "go.sum"
-		},
-	},
-	{
-		ecosystem: EcosystemRust,
-		match: func(_, base string) bool {
-			return base == "Cargo.toml" || base == "Cargo.lock"
-		},
-	},
-	{
-		ecosystem: EcosystemPython,
-		match: func(_, base string) bool {
-			return base == "pyproject.toml" || base == "poetry.lock" ||
-				base == "Pipfile" || base == "Pipfile.lock" ||
-				base == "requirements.txt" || (strings.HasPrefix(base, "requirements") && strings.HasSuffix(base, ".txt"))
-		},
-	},
-	{
-		ecosystem: EcosystemRuby,
-		match: func(_, base string) bool {
-			return base == "Gemfile" || base == "Gemfile.lock"
-		},
-	},
-	{
-		ecosystem: EcosystemPHP,
-		match: func(_, base string) bool {
-			return base == "composer.json" || base == "composer.lock"
-		},
-	},
-	{
-		ecosystem: EcosystemJava,
-		match: func(_, base string) bool {
-			return base == "pom.xml" || base == "build.gradle" ||
-				base == "build.gradle.kts" || base == "gradle.properties"
-		},
-	},
-	{
-		ecosystem: EcosystemDotNet,
-		match: func(_, base string) bool {
-			return strings.HasSuffix(base, ".csproj") || base == "packages.lock.json" || base == "Directory.Packages.props"
-		},
-	},
-	{
-		ecosystem: EcosystemAction,
-		match: func(relPath, base string) bool {
-			return base == "actions.lock" || strings.HasSuffix(relPath, ".github/workflows/actions.lock")
-		},
-	},
-}
-
 // ClassifyFiles inspects a list of modified file paths and verifies dependency manifest exclusivity.
-func ClassifyFiles(files []string) (ClassifyFilesOutput, error) {
-	for _, f := range files {
+func ClassifyFiles(in ClassifyFilesInput) (ClassifyFilesOutput, error) {
+	for _, f := range in.Files {
 		if err := guard.CheckPathAllowed(f); err != nil {
 			return ClassifyFilesOutput{}, err
 		}
@@ -104,10 +19,12 @@ func ClassifyFiles(files []string) (ClassifyFilesOutput, error) {
 
 	manifests := []string{}
 	excluded := []string{}
+	unknowns := []string{}
 	reasons := []string{}
+	classified := make([]ClassifiedFile, 0, len(in.Files))
 	ecosystems := make(map[Ecosystem]bool)
 
-	if len(files) == 0 {
+	if len(in.Files) == 0 {
 		return ClassifyFilesOutput{
 			OK:       true,
 			Eligible: false,
@@ -115,19 +32,29 @@ func ClassifyFiles(files []string) (ClassifyFilesOutput, error) {
 		}, nil
 	}
 
-	for _, path := range files {
+	for _, path := range in.Files {
 		clean := strings.ReplaceAll(filepath.Clean(strings.TrimSpace(path)), `\`, "/")
 		base := filepath.Base(clean)
 
-		matchedEco := matchManifestEcosystem(clean, base)
-		if matchedEco != "" {
-			manifests = append(manifests, clean)
-			ecosystems[matchedEco] = true
-			continue
-		}
+		cf := classifySingleFile(clean, base, in)
+		classified = append(classified, cf)
 
-		excluded = append(excluded, clean)
-		reasons = append(reasons, formatDisqualificationReason(clean, base))
+		switch cf.Category {
+		case CategoryManifest:
+			manifests = append(manifests, clean)
+			if cf.Ecosystem != "" {
+				ecosystems[cf.Ecosystem] = true
+			}
+		case CategoryIgnored:
+			// Ignored files (e.g. harmless metadata explicitly designated by agent) don't disqualify
+		case CategoryUnknown:
+			unknowns = append(unknowns, clean)
+			excluded = append(excluded, clean)
+			reasons = append(reasons, cf.Reason)
+		default:
+			excluded = append(excluded, clean)
+			reasons = append(reasons, cf.Reason)
+		}
 	}
 
 	resolvedEco := resolveEcosystem(ecosystems)
@@ -139,8 +66,111 @@ func ClassifyFiles(files []string) (ClassifyFilesOutput, error) {
 		Ecosystem:     resolvedEco,
 		ManifestFiles: manifests,
 		ExcludedFiles: excluded,
+		UnknownFiles:  unknowns,
+		Files:         classified,
 		Reasons:       reasons,
 	}, nil
+}
+
+func classifySingleFile(clean, base string, in ClassifyFilesInput) ClassifiedFile {
+	if catStr, ok := in.Overrides[clean]; ok {
+		cat := normalizeCategory(catStr)
+		eco := matchManifestEcosystem(clean, base)
+		if cat == CategoryManifest && eco == "" {
+			eco = EcosystemOther
+		}
+		return ClassifiedFile{
+			Path:      clean,
+			Category:  cat,
+			Ecosystem: eco,
+			Reason:    clean + " classified as " + string(cat) + " via agent override",
+		}
+	}
+
+	if matchesCustomManifestPattern(clean, base, in.ExtraManifestPatterns) {
+		return ClassifiedFile{
+			Path:      clean,
+			Category:  CategoryManifest,
+			Ecosystem: EcosystemOther,
+			Reason:    clean + " matches custom manifest pattern",
+		}
+	}
+
+	matchedEco := matchManifestEcosystem(clean, base)
+	if matchedEco != "" {
+		return ClassifiedFile{
+			Path:      clean,
+			Category:  CategoryManifest,
+			Ecosystem: matchedEco,
+		}
+	}
+
+	return categorizeNonManifestFile(clean, base)
+}
+
+func categorizeNonManifestFile(clean, base string) ClassifiedFile {
+	ext := strings.ToLower(filepath.Ext(base))
+
+	if isTestFile(clean, base) {
+		return ClassifiedFile{
+			Path:     clean,
+			Category: CategoryTest,
+			Reason:   clean + " touches test files or suites (requires manual review)",
+		}
+	}
+	if isCIWorkflowFile(clean) {
+		return ClassifiedFile{
+			Path:     clean,
+			Category: CategoryCI,
+			Reason:   clean + " touches CI workflows directly (requires manual review)",
+		}
+	}
+	if sourceCodeExtensions[ext] {
+		return ClassifiedFile{
+			Path:     clean,
+			Category: CategorySource,
+			Reason:   clean + " touches application source code (disqualified per strict exclusivity rule)",
+		}
+	}
+	if buildConfigBasenames[base] {
+		cat := CategoryBuildConfig
+		if ext == ".md" || base == "LICENSE" || base == "NOTICE" {
+			cat = CategoryDoc
+		}
+		return ClassifiedFile{
+			Path:     clean,
+			Category: cat,
+			Reason:   clean + " touches repository documentation or build config",
+		}
+	}
+
+	return ClassifiedFile{
+		Path:     clean,
+		Category: CategoryUnknown,
+		Reason: clean + " is unclassified (category unknown). " +
+			"Agent can inspect file content and specify category via overrides or extra_manifest_patterns.",
+	}
+}
+
+func normalizeCategory(c string) FileCategory {
+	switch strings.ToLower(strings.TrimSpace(c)) {
+	case "manifest":
+		return CategoryManifest
+	case "source":
+		return CategorySource
+	case "test":
+		return CategoryTest
+	case "ci":
+		return CategoryCI
+	case "build_config":
+		return CategoryBuildConfig
+	case "doc":
+		return CategoryDoc
+	case "ignored":
+		return CategoryIgnored
+	default:
+		return CategoryUnknown
+	}
 }
 
 func matchManifestEcosystem(relPath, base string) Ecosystem {
@@ -164,55 +194,12 @@ func resolveEcosystem(ecosystems map[Ecosystem]bool) Ecosystem {
 	return EcosystemMixed
 }
 
-var sourceCodeExtensions = map[string]bool{
-	".go":   true,
-	".ts":   true,
-	".js":   true,
-	".py":   true,
-	".rs":   true,
-	".java": true,
-	".c":    true,
-	".cpp":  true,
-}
-
-var buildConfigBasenames = map[string]bool{
-	"README.md":    true,
-	"Dockerfile":   true,
-	"Makefile":     true,
-	"Taskfile.yml": true,
-	"mise.toml":    true,
-}
-
-func isTestFile(clean, base string) bool {
-	return strings.Contains(clean, "/tests/") || strings.HasPrefix(clean, "tests/") ||
-		strings.Contains(clean, "/test/") || strings.HasPrefix(clean, "test/") ||
-		strings.HasSuffix(base, "_test.go") || strings.HasSuffix(base, ".test.ts") || strings.HasSuffix(base, ".spec.ts") ||
-		strings.HasPrefix(base, "test_") || strings.HasSuffix(base, "_test.py")
-}
-
-func formatDisqualificationReason(clean, base string) string {
-	ext := strings.ToLower(filepath.Ext(base))
-	if isTestFile(clean, base) {
-		return clean + " touches test files or suites (requires manual review)"
-	}
-	if sourceCodeExtensions[ext] {
-		return clean + " touches application source code (disqualified per strict exclusivity rule)"
-	}
-	if strings.HasPrefix(clean, ".github/workflows/") || clean == ".gitlab-ci.yml" {
-		return clean + " touches CI workflows directly (requires manual review)"
-	}
-	if buildConfigBasenames[base] {
-		return clean + " touches repository documentation or build config"
-	}
-	return clean + " is not a recognized dependency manifest or lockfile"
-}
-
 // FilterCandidates evaluates a batch list of candidate PRs against bot, label, title, and file rules.
-func FilterCandidates(prs []CandidatePR) (FilterCandidatesOutput, error) {
+func FilterCandidates(in FilterCandidatesInput) (FilterCandidatesOutput, error) {
 	eligible := []EvaluatedPR{}
 	disqualified := []EvaluatedPR{}
 
-	for _, pr := range prs {
+	for _, pr := range in.PRs {
 		if err := guard.CheckNoSecrets(pr.Title, pr.Author, pr.HeadRefName, pr.Body); err != nil {
 			return FilterCandidatesOutput{}, err
 		}
@@ -222,7 +209,7 @@ func FilterCandidates(prs []CandidatePR) (FilterCandidatesOutput, error) {
 			}
 		}
 
-		eval, err := evaluateSingleCandidate(pr)
+		eval, err := evaluateSingleCandidate(pr, in)
 		if err != nil {
 			return FilterCandidatesOutput{}, err
 		}
@@ -235,7 +222,7 @@ func FilterCandidates(prs []CandidatePR) (FilterCandidatesOutput, error) {
 
 	return FilterCandidatesOutput{
 		OK:              true,
-		TotalEvaluated:  len(prs),
+		TotalEvaluated:  len(in.PRs),
 		EligibleCount:   len(eligible),
 		ExcludedCount:   len(disqualified),
 		EligiblePRs:     eligible,
@@ -243,52 +230,41 @@ func FilterCandidates(prs []CandidatePR) (FilterCandidatesOutput, error) {
 	}, nil
 }
 
-func evaluateSingleCandidate(pr CandidatePR) (EvaluatedPR, error) {
-	fileCheck, err := ClassifyFiles(pr.Files)
+func evaluateSingleCandidate(pr CandidatePR, in FilterCandidatesInput) (EvaluatedPR, error) {
+	fileCheck, err := ClassifyFiles(ClassifyFilesInput{
+		Files:                 pr.Files,
+		Overrides:             in.FileOverrides,
+		ExtraManifestPatterns: in.ExtraManifestPatterns,
+	})
 	if err != nil {
 		return EvaluatedPR{}, err
 	}
 
 	reasons := []string{}
-	isBot := isRecognizedBot(pr.Author)
-	hasDepLabel := hasDependencyLabel(pr.Labels)
-	hasDepTitle := matchesDependencyTitle(pr.Title)
+	isAllowed := slices.Contains(in.AllowedPRNumbers, pr.Number)
+	isBot := isRecognizedBot(pr.Author, in.ExtraBotAuthors)
+	hasDepLabel := hasDependencyLabel(pr.Labels, in.ExtraDepLabels)
+	hasDepTitle := matchesDependencyTitle(pr.Title, in.ExtraTitlePatterns)
 
-	if !isBot && !hasDepLabel && !hasDepTitle {
-		reasons = append(reasons, "author/title/labels do not match automated dependency update signatures")
+	unknownSignature := false
+	if !isAllowed && !isBot && !hasDepLabel && !hasDepTitle {
+		unknownSignature = true
+		reasons = append(reasons, fmt.Sprintf(
+			"author/title/labels do not match automated dependency update signatures "+
+				"(agent can review and add PR #%d to allowed_pr_numbers)", pr.Number))
 	}
 	if !fileCheck.Eligible {
 		reasons = append(reasons, fileCheck.Reasons...)
 	}
 
+	hasUnknownFiles := len(fileCheck.UnknownFiles) > 0
+	isUnknown := unknownSignature || hasUnknownFiles
+
 	return EvaluatedPR{
 		Candidate: pr,
 		Eligible:  len(reasons) == 0,
 		FileCheck: fileCheck,
+		Unknown:   isUnknown,
 		Reasons:   reasons,
 	}, nil
-}
-
-func isRecognizedBot(author string) bool {
-	a := strings.ToLower(strings.TrimSpace(author))
-	if _, ok := knownBotAuthors[a]; ok {
-		return true
-	}
-	return strings.HasSuffix(a, "[bot]") || strings.HasSuffix(a, "-bot")
-}
-
-func hasDependencyLabel(labels []string) bool {
-	return slices.ContainsFunc(labels, func(l string) bool {
-		_, ok := knownDepLabels[strings.ToLower(strings.TrimSpace(l))]
-		return ok
-	})
-}
-
-func matchesDependencyTitle(title string) bool {
-	t := strings.ToLower(strings.TrimSpace(title))
-	return strings.HasPrefix(t, "bump ") ||
-		strings.HasPrefix(t, "chore(deps):") ||
-		strings.HasPrefix(t, "fix(deps):") ||
-		strings.HasPrefix(t, "security update") ||
-		strings.HasPrefix(t, "update dependency")
 }
