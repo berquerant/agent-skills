@@ -112,27 +112,27 @@ func TestPrioritySelectionAndCooperativeInterleaving(t *testing.T) {
 	assert.Equal(t, 2, next1.UnblocksCount)
 
 	// Step 2: Run and complete branch-a-root -> promotes branch-a-ci to READY
-	_, _, _, _, err = taskdag.ApplyTransition(dag, taskdag.TransitionInput{
+	_, err = taskdag.ApplyTransition(dag, taskdag.TransitionInput{
 		TaskID: "branch-a-root",
 		To:     taskdag.StateRunning,
 	}, baseTime)
 	require.NoError(t, err)
 
-	_, promoted, _, _, err := taskdag.ApplyTransition(dag, taskdag.TransitionInput{
+	res, err := taskdag.ApplyTransition(dag, taskdag.TransitionInput{
 		TaskID: "branch-a-root",
 		To:     taskdag.StateCompleted,
 	}, baseTime)
 	require.NoError(t, err)
-	assert.Equal(t, []string{"branch-a-ci"}, promoted)
+	assert.Equal(t, []string{"branch-a-ci"}, res.PromotedTasks)
 
 	// Step 3: Start branch-a-ci and transition to WAITING (poll_after_sec=45)
-	_, _, _, _, err = taskdag.ApplyTransition(dag, taskdag.TransitionInput{
+	_, err = taskdag.ApplyTransition(dag, taskdag.TransitionInput{
 		TaskID: "branch-a-ci",
 		To:     taskdag.StateRunning,
 	}, baseTime)
 	require.NoError(t, err)
 
-	_, _, _, _, err = taskdag.ApplyTransition(dag, taskdag.TransitionInput{
+	_, err = taskdag.ApplyTransition(dag, taskdag.TransitionInput{
 		TaskID:       "branch-a-ci",
 		To:           taskdag.StateWaiting,
 		PollAfterSec: 45,
@@ -146,7 +146,7 @@ func TestPrioritySelectionAndCooperativeInterleaving(t *testing.T) {
 	assert.Equal(t, "branch-b-solo", next2.Task.ID)
 
 	// Step 5: Anti-polling guard rejects premature WAITING -> READY before 45s
-	_, _, _, _, err = taskdag.ApplyTransition(dag, taskdag.TransitionInput{
+	_, err = taskdag.ApplyTransition(dag, taskdag.TransitionInput{
 		TaskID: "branch-a-ci",
 		To:     taskdag.StateReady,
 	}, baseTime.Add(10*time.Second))
@@ -155,7 +155,7 @@ func TestPrioritySelectionAndCooperativeInterleaving(t *testing.T) {
 
 	// Step 6: Start branch-b-solo (both branch-b-solo and branch-a-ci have empty Resource "")
 	// After 50s (>= 45s), SelectNext auto-awakens branch-a-ci even while branch-b-solo is RUNNING
-	_, _, _, _, err = taskdag.ApplyTransition(dag, taskdag.TransitionInput{
+	_, err = taskdag.ApplyTransition(dag, taskdag.TransitionInput{
 		TaskID: "branch-b-solo",
 		To:     taskdag.StateRunning,
 	}, baseTime.Add(15*time.Second))
@@ -181,14 +181,14 @@ func TestResourceCollisionAndSubtreeHalting(t *testing.T) {
 	dag := &taskdag.DAG{DAGID: "dag-res", Tasks: tasks}
 
 	// Start t1 on worktree-main
-	_, _, _, _, err = taskdag.ApplyTransition(dag, taskdag.TransitionInput{
+	_, err = taskdag.ApplyTransition(dag, taskdag.TransitionInput{
 		TaskID: "t1",
 		To:     taskdag.StateRunning,
 	}, baseTime)
 	require.NoError(t, err)
 
 	// Starting t2 on same resource worktree-main must fail
-	_, _, _, _, err = taskdag.ApplyTransition(dag, taskdag.TransitionInput{
+	_, err = taskdag.ApplyTransition(dag, taskdag.TransitionInput{
 		TaskID: "t2",
 		To:     taskdag.StateRunning,
 	}, baseTime)
@@ -196,13 +196,13 @@ func TestResourceCollisionAndSubtreeHalting(t *testing.T) {
 	assert.Contains(t, err.Error(), "resource collision")
 
 	// Halting t1 reports t1-child in haltedDescendants, while t2 and t3-independent remain runnable
-	_, _, haltedDesc, _, err := taskdag.ApplyTransition(dag, taskdag.TransitionInput{
+	haltRes, err := taskdag.ApplyTransition(dag, taskdag.TransitionInput{
 		TaskID: "t1",
 		To:     taskdag.StateHalted,
 		Note:   "compile error",
 	}, baseTime)
 	require.NoError(t, err)
-	assert.Equal(t, []string{"t1-child"}, haltedDesc)
+	assert.Equal(t, []string{"t1-child"}, haltRes.HaltedDescendants)
 
 	// Next task picks t2 (since worktree-main lock was released when t1 halted)
 	next, _ := taskdag.SelectNext(dag, baseTime)
@@ -238,11 +238,11 @@ func TestStoragePersistenceAndJournal(t *testing.T) {
 	require.ErrorContains(t, st.Create(dag), "already exists")
 
 	_, err = st.Update("dag-persist", func(d *taskdag.DAG) (*taskdag.JournalEntry, error) {
-		_, _, _, entry, tErr := taskdag.ApplyTransition(d, taskdag.TransitionInput{
+		res, tErr := taskdag.ApplyTransition(d, taskdag.TransitionInput{
 			TaskID: "step-1",
 			To:     taskdag.StateRunning,
 		}, now)
-		return &entry, tErr
+		return &res.Journal, tErr
 	})
 	require.NoError(t, err)
 

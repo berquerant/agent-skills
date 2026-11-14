@@ -9,21 +9,16 @@ import (
 
 const defaultPollCooldownSec = 30
 
-// ApplyTransition validates and applies a state transition to taskID in dag, returning the updated task,
-// any downstream tasks promoted to READY, any downstream tasks blocked by HALTED, and a journal entry.
-func ApplyTransition(
-	dag *DAG,
-	in TransitionInput,
-	now time.Time,
-) (Task, []string, []string, JournalEntry, error) {
+// ApplyTransition validates and applies a state transition to in.TaskID in dag.
+func ApplyTransition(dag *DAG, in TransitionInput, now time.Time) (TransitionResult, error) {
 	idx := findTaskIndex(dag.Tasks, in.TaskID)
 	if idx < 0 {
-		return Task{}, nil, nil, JournalEntry{}, fmt.Errorf("task %q not found in dag %q", in.TaskID, dag.DAGID)
+		return TransitionResult{}, fmt.Errorf("task %q not found in dag %q", in.TaskID, dag.DAGID)
 	}
 
 	curr := dag.Tasks[idx]
 	if err := validateTransition(dag.Tasks, curr, in, now); err != nil {
-		return Task{}, nil, nil, JournalEntry{}, err
+		return TransitionResult{}, err
 	}
 
 	nowStr := now.UTC().Format(time.RFC3339)
@@ -32,7 +27,7 @@ func ApplyTransition(
 		var err error
 		nextPoll, err = resolveNextPollAt(in.PollAfterSec, in.NextPollAt, now)
 		if err != nil {
-			return Task{}, nil, nil, JournalEntry{}, err
+			return TransitionResult{}, err
 		}
 	}
 
@@ -46,24 +41,32 @@ func ApplyTransition(
 	dag.Tasks[idx] = curr
 	dag.UpdatedAt = nowStr
 
-	var promoted []string
+	promoted := []string{}
 	if in.To == StateCompleted {
-		promoted = promoteReadyDependents(dag, nowStr)
+		if p := promoteReadyDependents(dag, nowStr); len(p) > 0 {
+			promoted = p
+		}
 	}
-	var haltedDesc []string
+	haltedDesc := []string{}
 	if in.To == StateHalted {
-		haltedDesc = CollectTransitiveDescendants(dag.Tasks, curr.ID)
+		if h := CollectTransitiveDescendants(dag.Tasks, curr.ID); len(h) > 0 {
+			haltedDesc = h
+		}
 	}
 
-	entry := JournalEntry{
-		Timestamp:  nowStr,
-		TaskID:     curr.ID,
-		From:       fromState,
-		To:         in.To,
-		Note:       in.Note,
-		NextPollAt: nextPoll,
-	}
-	return curr, promoted, haltedDesc, entry, nil
+	return TransitionResult{
+		Task:              curr,
+		PromotedTasks:     promoted,
+		HaltedDescendants: haltedDesc,
+		Journal: JournalEntry{
+			Timestamp:  nowStr,
+			TaskID:     curr.ID,
+			From:       fromState,
+			To:         in.To,
+			Note:       in.Note,
+			NextPollAt: nextPoll,
+		},
+	}, nil
 }
 
 func validateTransition(tasks []Task, curr Task, in TransitionInput, now time.Time) error {

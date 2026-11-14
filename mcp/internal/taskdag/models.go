@@ -109,6 +109,14 @@ type TransitionOutput struct {
 	PipelineStatus    string   `json:"pipeline_status"`
 }
 
+// TransitionResult holds the internal outcome of applying a task state transition.
+type TransitionResult struct {
+	Task              Task
+	PromotedTasks     []string
+	HaltedDescendants []string
+	Journal           JournalEntry
+}
+
 // StatusInput defines parameters for dag_status.
 type StatusInput struct {
 	DAGID string `json:"dag_id" jsonschema:"Target DAG identifier"`

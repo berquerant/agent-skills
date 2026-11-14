@@ -233,25 +233,19 @@ func (f *Feature) handleNext(in NextInput) (NextOutput, error) {
 func (f *Feature) handleTransition(in TransitionInput) (TransitionOutput, error) {
 	var out TransitionOutput
 	_, err := f.storage.Update(in.DAGID, func(dag *DAG) (*JournalEntry, error) {
-		task, promoted, haltedDesc, entry, err := ApplyTransition(dag, in, f.clock.Now())
+		res, err := ApplyTransition(dag, in, f.clock.Now())
 		if err != nil {
 			return nil, err
-		}
-		if promoted == nil {
-			promoted = []string{}
-		}
-		if haltedDesc == nil {
-			haltedDesc = []string{}
 		}
 		out = TransitionOutput{
 			OK:                true,
 			DAGID:             dag.DAGID,
-			Task:              task,
-			PromotedTasks:     promoted,
-			HaltedDescendants: haltedDesc,
+			Task:              res.Task,
+			PromotedTasks:     res.PromotedTasks,
+			HaltedDescendants: res.HaltedDescendants,
 			PipelineStatus:    SummarizePipelineStatus(dag.Tasks),
 		}
-		return &entry, nil
+		return &res.Journal, nil
 	})
 	return out, err
 }
