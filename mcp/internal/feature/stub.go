@@ -65,10 +65,5 @@ func (f *StubFeature) Close() error {
 
 // RemainingStubFeatures returns the stub implementations for features not yet replaced by real packages.
 func RemainingStubFeatures() []Feature {
-	return []Feature{
-		&StubFeature{
-			FeatureName: "pr-triage",
-			ToolVerbs:   []string{"pr_triage_ping"},
-		},
-	}
+	return []Feature{}
 }

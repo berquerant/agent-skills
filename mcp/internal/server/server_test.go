@@ -56,7 +56,7 @@ func TestServerFeatureToggles(t *testing.T) {
 		{
 			name:            "all features enabled by default",
 			wantSummarySub:  "features=[cache,task-dag,skill-lint,snippet-analyzer,checkpoint,pace-guard,pr-triage]",
-			wantTools:       []string{"cache_get", "dag_create", "dag_next", "lint_skill", "lint_all", "snippet_audit", "checkpoint_init", "checkpoint_append", "pace_start", "pace_tick", "pr_triage_ping"},
+			wantTools:       []string{"cache_get", "dag_create", "dag_next", "lint_skill", "lint_all", "snippet_audit", "checkpoint_init", "checkpoint_append", "pace_start", "pace_tick", "pr_classify_files", "pr_filter_candidates"},
 			wantAbsentTools: nil,
 		},
 		{
@@ -64,13 +64,13 @@ func TestServerFeatureToggles(t *testing.T) {
 			extraArgs:       []string{"--pace-guard=false", "--pr-triage=false"},
 			wantSummarySub:  "features=[cache,task-dag,skill-lint,snippet-analyzer,checkpoint]",
 			wantTools:       []string{"cache_get", "cache_set", "dag_create", "lint_skill", "snippet_audit", "checkpoint_init"},
-			wantAbsentTools: []string{"pace_start", "pace_tick", "pr_triage_ping"},
+			wantAbsentTools: []string{"pace_start", "pace_tick", "pr_classify_files", "pr_filter_candidates"},
 		},
 		{
 			name:            "disabling cache omits cache_* tools",
 			extraArgs:       []string{"--cache=false"},
 			wantSummarySub:  "features=[task-dag,skill-lint,snippet-analyzer,checkpoint,pace-guard,pr-triage]",
-			wantTools:       []string{"dag_create", "lint_skill", "snippet_audit", "checkpoint_init", "pace_start", "pr_triage_ping"},
+			wantTools:       []string{"dag_create", "lint_skill", "snippet_audit", "checkpoint_init", "pace_start", "pr_classify_files"},
 			wantAbsentTools: []string{"cache_get", "cache_set", "cache_exist", "cache_delete", "cache_version", "cache_purge"},
 		},
 	}
