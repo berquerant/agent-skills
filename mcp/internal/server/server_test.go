@@ -67,11 +67,11 @@ func TestServerFeatureToggles(t *testing.T) {
 			wantAbsentTools: []string{"pace_ping", "pr_triage_ping"},
 		},
 		{
-			name:            "unprefixed cache tools when --cache-tool-prefix is empty",
-			extraArgs:       []string{"--cache-tool-prefix="},
-			wantSummarySub:  "tools=[get,set,exist,delete,version,purge",
-			wantTools:       []string{"get", "set", "exist", "delete", "version", "purge"},
-			wantAbsentTools: []string{"cache_get"},
+			name:            "disabling cache omits cache_* tools",
+			extraArgs:       []string{"--cache=false"},
+			wantSummarySub:  "features=[task-dag,skill-lint,snippet-analyzer,checkpoint,pace-guard,pr-triage]",
+			wantTools:       []string{"dag_ping", "skill_lint_ping", "snippet_ping", "checkpoint_ping", "pace_ping", "pr_triage_ping"},
+			wantAbsentTools: []string{"cache_get", "cache_set", "cache_exist", "cache_delete", "cache_version", "cache_purge"},
 		},
 	}
 
@@ -206,4 +206,67 @@ func TestSafeToolFaults(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestServerCacheEndToEnd(t *testing.T) {
+	ctx := context.Background()
+	tmp := t.TempDir()
+	fixedNow := time.Date(2026, 11, 15, 2, 30, 0, 0, time.UTC)
+
+	cfg, err := feature.ParseConfig([]string{
+		"--state-dir=" + tmp + "/state",
+		"--cache-dir=" + tmp + "/cache",
+		"--checkpoint-root=" + tmp + "/checkpoints",
+		"--max-output-size=4096",
+	}, tmp)
+	require.NoError(t, err)
+
+	var stderrBuf bytes.Buffer
+	inst, err := server.New(cfg, nil, stubClock{t: fixedNow}, &stderrBuf)
+	require.NoError(t, err)
+	defer func() { _ = inst.Close() }()
+
+	serverTransport, clientTransport := mcp.NewInMemoryTransports()
+	go func() {
+		_ = inst.MCPServer.Run(ctx, serverTransport)
+	}()
+
+	client := mcp.NewClient(&mcp.Implementation{Name: "test-client", Version: "1.0.0"}, nil)
+	session, err := client.Connect(ctx, clientTransport, nil)
+	require.NoError(t, err)
+	defer func() { _ = session.Close() }()
+
+	// Store a 10 KiB payload (> max-output-size=4096) and verify cache_get succeeds via CacheMaxEntrySize
+	largeStdout := strings.Repeat("Z", 10*1024)
+	setRes, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name: "cache_set",
+		Arguments: map[string]any{
+			"type":    "command",
+			"name":    "gh",
+			"dir":     tmp,
+			"args":    []string{"pr", "list"},
+			"ttl":     300,
+			"stdout":  largeStdout,
+			"stderr":  "",
+			"success": true,
+		},
+	})
+	require.NoError(t, err)
+	assert.False(t, setRes.IsError)
+
+	getRes, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name: "cache_get",
+		Arguments: map[string]any{
+			"type": "command",
+			"name": "gh",
+			"dir":  tmp,
+			"args": []string{"pr", "list"},
+		},
+	})
+	require.NoError(t, err)
+	assert.False(t, getRes.IsError)
+	tc, ok := getRes.Content[0].(*mcp.TextContent)
+	require.True(t, ok)
+	assert.Contains(t, tc.Text, `"hit":true`)
+	assert.Contains(t, tc.Text, largeStdout)
 }

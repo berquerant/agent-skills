@@ -43,7 +43,7 @@ func TestCLISubcommands(t *testing.T) {
 			args: []string{"--help"},
 			wantOutContain: []string{
 				"## Usage",
-				"--cache-tool-prefix",
+				"--cache-max-ttl",
 			},
 			wantErrEmpty: true,
 		},

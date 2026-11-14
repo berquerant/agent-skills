@@ -8,6 +8,7 @@ import (
 	"runtime/debug"
 	"strings"
 
+	"github.com/berquerant/agent-skills/mcp/internal/cache"
 	"github.com/berquerant/agent-skills/mcp/internal/feature"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -73,7 +74,7 @@ func New(cfg *feature.Config, reg *feature.Registry, clock feature.Clock, errOut
 		return nil, err
 	}
 
-	reg, err = ensureRegistry(reg, cfg.CacheToolPrefix)
+	reg, err = ensureRegistry(reg)
 	if err != nil {
 		closeLogFile(openedFile)
 		return nil, err
@@ -137,12 +138,15 @@ func setupLogger(cfg *feature.Config, errOut io.Writer) (*slog.Logger, io.Writer
 	return logger, logWriter, openedFile, nil
 }
 
-func ensureRegistry(reg *feature.Registry, cachePrefix string) (*feature.Registry, error) {
+func ensureRegistry(reg *feature.Registry) (*feature.Registry, error) {
 	if reg != nil {
 		return reg, nil
 	}
 	reg = feature.NewRegistry()
-	for _, f := range feature.DefaultFeatures(cachePrefix) {
+	if err := reg.Add(cache.NewFeature()); err != nil {
+		return nil, err
+	}
+	for _, f := range feature.RemainingStubFeatures() {
 		if err := reg.Add(f); err != nil {
 			return nil, err
 		}

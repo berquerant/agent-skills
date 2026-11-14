@@ -21,7 +21,7 @@ agent-skills-mcp version
 Configuration values are resolved in the following order of precedence (highest to lowest):
 1. Command-line flags (e.g. `--task-dag=false`)
 2. Environment variables prefixed with `AGENT_SKILLS_MCP_` (e.g. `AGENT_SKILLS_MCP_TASK_DAG=false`)
-3. Default values defined for each flag (`--cache-dir` also falls back to `CACHE_MCP_DIR` when unset)
+3. Default values defined for each flag
 
 Environment variables are derived from flag names in uppercase with hyphens replaced by underscores.
 e.g. `--snippet-analyzer` -> `AGENT_SKILLS_MCP_SNIPPET_ANALYZER`
@@ -30,12 +30,10 @@ e.g. `--snippet-analyzer` -> `AGENT_SKILLS_MCP_SNIPPET_ANALYZER`
 
 ```
       --cache[=true|false]              enable cache feature (default true)
-      --cache-dir string                cache directory (default: $CACHE_MCP_DIR or $XDG_CACHE_HOME/agent-skills-mcp)
+      --cache-dir string                cache directory (default: $XDG_CACHE_HOME/agent-skills-mcp/cache)
       --cache-max-entry-size int        maximum uncompressed cache entry size in bytes (default 10485760)
       --cache-max-total-size int        maximum total compressed cache size in bytes (default 524288000)
       --cache-max-ttl int               maximum allowed cache TTL in seconds (default 1800)
-      --cache-no-log[=true|false]       disable cache execution audit log
-      --cache-tool-prefix string        tool name prefix for cache tools (empty string for unprefixed) (default "cache_")
       --checkpoint[=true|false]         enable checkpoint feature (default true)
       --checkpoint-root string          checkpoint root directory (default: $XDG_CACHE_HOME/agent-skills-mcp/checkpoints)
       --log-file string                 optional log file path (default: stderr)

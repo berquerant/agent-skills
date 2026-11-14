@@ -63,21 +63,9 @@ func (f *StubFeature) Close() error {
 	return nil
 }
 
-// DefaultFeatures returns the standard 7 features in deterministic order.
-// CacheToolPrefix controls the tool prefix for the cache feature.
-func DefaultFeatures(cachePrefix string) []Feature {
+// RemainingStubFeatures returns the stub implementations for features not yet replaced by real packages.
+func RemainingStubFeatures() []Feature {
 	return []Feature{
-		&StubFeature{
-			FeatureName: "cache",
-			ToolVerbs: []string{
-				cachePrefix + "get",
-				cachePrefix + "set",
-				cachePrefix + "exist",
-				cachePrefix + "delete",
-				cachePrefix + "version",
-				cachePrefix + "purge",
-			},
-		},
 		&StubFeature{
 			FeatureName: "task-dag",
 			ToolVerbs:   []string{"dag_ping"},

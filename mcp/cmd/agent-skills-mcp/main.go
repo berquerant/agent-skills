@@ -78,6 +78,6 @@ func run(
 		return inst.MCPServer.Run(ctx, t)
 
 	default:
-		return fmt.Errorf("unknown subcommand %q (supported in Phase 0: serve, version, help)", sub)
+		return fmt.Errorf("unknown subcommand %q (supported: serve, version, help)", sub)
 	}
 }

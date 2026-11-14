@@ -5,16 +5,12 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/.." && pwd)"
 readonly script_dir repo_root
 readonly mcp_dir="${repo_root}/mcp"
+readonly mcp_bin="${mcp_dir}/bin/agent-skills-mcp"
 
 generate() {
-  cd "${mcp_dir}"
-  local tmp_dir
-  tmp_dir="$(mktemp -d)"
-  trap 'rm -rf "${tmp_dir}"' RETURN
-  local tmp_bin="${tmp_dir}/agent-skills-mcp"
-  go build -o "${tmp_bin}" ./cmd/agent-skills-mcp
+  (cd "${mcp_dir}" && go build -o "${mcp_bin}" ./cmd/agent-skills-mcp)
   local help_out
-  help_out="$("${tmp_bin}" --help 2>&1)"
+  help_out="$("${mcp_bin}" --help 2>&1)"
 
   cat <<README_EOF
 # agent-skills-mcp

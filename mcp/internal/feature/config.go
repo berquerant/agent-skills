@@ -38,14 +38,12 @@ type Config struct {
 	PRTriage        bool `name:"pr-triage" default:"true" usage:"enable pr-triage feature"`
 
 	StateDir       string `name:"state-dir" default:"" usage:"state directory (default: $XDG_STATE_HOME/agent-skills-mcp)"`
-	CacheDir       string `name:"cache-dir" default:"" usage:"cache directory (default: $CACHE_MCP_DIR or $XDG_CACHE_HOME/agent-skills-mcp)"`
+	CacheDir       string `name:"cache-dir" default:"" usage:"cache directory (default: $XDG_CACHE_HOME/agent-skills-mcp/cache)"`
 	CheckpointRoot string `name:"checkpoint-root" default:"" usage:"checkpoint root directory (default: $XDG_CACHE_HOME/agent-skills-mcp/checkpoints)"`
 
-	CacheMaxTTL       int    `name:"cache-max-ttl" default:"1800" usage:"maximum allowed cache TTL in seconds"`
-	CacheMaxEntrySize int64  `name:"cache-max-entry-size" default:"10485760" usage:"maximum uncompressed cache entry size in bytes"`
-	CacheMaxTotalSize int64  `name:"cache-max-total-size" default:"524288000" usage:"maximum total compressed cache size in bytes"`
-	CacheNoLog        bool   `name:"cache-no-log" default:"false" usage:"disable cache execution audit log"`
-	CacheToolPrefix   string `name:"cache-tool-prefix" default:"cache_" usage:"tool name prefix for cache tools (empty string for unprefixed)"`
+	CacheMaxTTL       int   `name:"cache-max-ttl" default:"1800" usage:"maximum allowed cache TTL in seconds"`
+	CacheMaxEntrySize int64 `name:"cache-max-entry-size" default:"10485760" usage:"maximum uncompressed cache entry size in bytes"`
+	CacheMaxTotalSize int64 `name:"cache-max-total-size" default:"524288000" usage:"maximum total compressed cache size in bytes"`
 
 	MaxOutputSize int    `name:"max-output-size" default:"32768" usage:"maximum serialized tool output size in bytes"`
 	LogLevel      string `name:"log-level" default:"warn" usage:"log level (debug, info, warn, error)"`
@@ -156,12 +154,6 @@ func applyChangedRuntimeFlags(dst, fromFlags *Config, fs *pflag.FlagSet) {
 	if fs.Changed("cache-max-total-size") {
 		dst.CacheMaxTotalSize = fromFlags.CacheMaxTotalSize
 	}
-	if fs.Changed("cache-no-log") {
-		dst.CacheNoLog = fromFlags.CacheNoLog
-	}
-	if fs.Changed("cache-tool-prefix") {
-		dst.CacheToolPrefix = fromFlags.CacheToolPrefix
-	}
 	if fs.Changed("max-output-size") {
 		dst.MaxOutputSize = fromFlags.MaxOutputSize
 	}
@@ -190,11 +182,7 @@ func (c *Config) finalize(homeDir string) error {
 	}
 
 	if c.CacheDir == "" {
-		if v, ok := os.LookupEnv("CACHE_MCP_DIR"); ok && v != "" {
-			c.CacheDir = v
-		} else {
-			c.CacheDir = filepath.Join(xdgCache, "agent-skills-mcp")
-		}
+		c.CacheDir = filepath.Join(xdgCache, "agent-skills-mcp", "cache")
 	}
 
 	if c.CheckpointRoot == "" {
@@ -278,8 +266,6 @@ func (c *Config) ToEnv(logger *slog.Logger, clock Clock) Env {
 		CacheMaxTTL:       c.CacheMaxTTL,
 		CacheMaxEntrySize: c.CacheMaxEntrySize,
 		CacheMaxTotalSize: c.CacheMaxTotalSize,
-		CacheNoLog:        c.CacheNoLog,
-		CacheToolPrefix:   c.CacheToolPrefix,
 	}
 }
 

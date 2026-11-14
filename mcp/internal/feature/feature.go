@@ -31,8 +31,6 @@ type Env struct {
 	CacheMaxTTL       int
 	CacheMaxEntrySize int64
 	CacheMaxTotalSize int64
-	CacheNoLog        bool
-	CacheToolPrefix   string
 }
 
 // DefaultMaxOutputSize is the default cap on serialized tool response size (32 KiB).

@@ -40,6 +40,7 @@ run = "golangci-lint run --no-config"
 
 [tasks."mcp:readme-gen"]
 description = "Generate mcp/README.md from CLI help output"
+depends = ["mcp:build"]
 run = "./bin/mcp-readme.sh > mcp/README.md"
 
 [tasks."mcp:readme-diff"]
@@ -57,9 +58,9 @@ dir = "mcp"
 run = "go test -cover -race ./..."
 
 [tasks."mcp:build"]
-description = "Build agent-skills-mcp binary"
+description = "Build agent-skills-mcp binary to mcp/bin/agent-skills-mcp"
 dir = "mcp"
-run = "go build ./..."
+run = "go build -o bin/agent-skills-mcp ./cmd/agent-skills-mcp"
 
 [tasks.check]
 description = "Run all checks"

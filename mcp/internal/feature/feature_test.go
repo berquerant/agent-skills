@@ -186,11 +186,10 @@ func TestParseConfig(t *testing.T) {
 					assert.True(t, cfg.Enabled[name], "feature %s should default to true", name)
 				}
 				assert.Equal(t, filepath.Join(home, ".local", "state", "agent-skills-mcp"), cfg.StateDir)
-				assert.Equal(t, filepath.Join(home, ".cache", "agent-skills-mcp"), cfg.CacheDir)
+				assert.Equal(t, filepath.Join(home, ".cache", "agent-skills-mcp", "cache"), cfg.CacheDir)
 				assert.Equal(t, filepath.Join(home, ".cache", "agent-skills-mcp", "checkpoints"), cfg.CheckpointRoot)
 				assert.True(t, cfg.CheckpointDefault)
 				assert.Equal(t, 1800, cfg.CacheMaxTTL)
-				assert.Equal(t, "cache_", cfg.CacheToolPrefix)
 			},
 		},
 		{
@@ -201,7 +200,7 @@ func TestParseConfig(t *testing.T) {
 			},
 			check: func(t *testing.T, cfg *feature.Config) {
 				assert.Equal(t, "/custom/xdg/state/agent-skills-mcp", cfg.StateDir)
-				assert.Equal(t, "/custom/xdg/cache/agent-skills-mcp", cfg.CacheDir)
+				assert.Equal(t, "/custom/xdg/cache/agent-skills-mcp/cache", cfg.CacheDir)
 				assert.Equal(t, "/custom/xdg/cache/agent-skills-mcp/checkpoints", cfg.CheckpointRoot)
 				assert.True(t, cfg.CheckpointDefault)
 			},
@@ -226,24 +225,22 @@ func TestParseConfig(t *testing.T) {
 				"AGENT_SKILLS_MCP_TASK_DAG":   "false",
 				"AGENT_SKILLS_MCP_PACE_GUARD": "false",
 				"AGENT_SKILLS_MCP_LOG_LEVEL":  "debug",
-				"CACHE_MCP_DIR":               "/from/cache_mcp_dir",
+				"AGENT_SKILLS_MCP_CACHE_DIR":  "/from/env_cache_dir",
 			},
 			args: []string{
 				"--task-dag=true",
 				"--skill-lint=false",
 				"--log-level=warn",
 				"--checkpoint-root=/explicit/checkpoints",
-				"--cache-tool-prefix=",
 			},
 			check: func(t *testing.T, cfg *feature.Config) {
 				assert.True(t, cfg.Enabled["task-dag"], "CLI flag should override env")
 				assert.False(t, cfg.Enabled["pace-guard"], "env should override default")
 				assert.False(t, cfg.Enabled["skill-lint"], "CLI flag should disable skill-lint")
 				assert.Equal(t, "warn", cfg.LogLevel, "CLI flag matching default should override env")
-				assert.Equal(t, "/from/cache_mcp_dir", cfg.CacheDir)
+				assert.Equal(t, "/from/env_cache_dir", cfg.CacheDir)
 				assert.Equal(t, "/explicit/checkpoints", cfg.CheckpointRoot)
 				assert.False(t, cfg.CheckpointDefault)
-				assert.Equal(t, "", cfg.CacheToolPrefix)
 
 				cfg.TaskDAG = false
 				cfg.SyncEnabledMap()
@@ -326,5 +323,5 @@ func TestUsageAndHelpMarkdown(t *testing.T) {
 	assert.Contains(t, u, "## Usage")
 	assert.Contains(t, u, "## Configuration & Precedence")
 	assert.Contains(t, u, "## Flags")
-	assert.Contains(t, u, "--cache-tool-prefix")
+	assert.Contains(t, u, "--cache-max-ttl")
 }
