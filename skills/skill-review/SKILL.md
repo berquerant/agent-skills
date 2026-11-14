@@ -23,7 +23,7 @@ This skill is strictly read-only and directly references three reference documen
 ## Prerequisites
 
 - Read access to the target skill directories (each containing `SKILL.md`) and their sibling skills.
-- A POSIX-compatible shell with `grep`, `sed`, `awk`, and `find` to run [run-checks.sh](scripts/run-checks.sh) (scripts/run-checks.sh). If a shell is unavailable, perform the equivalent checks in [automated-checks.md](references/automated-checks.md) (references/automated-checks.md) manually.
+- Access to the companion MCP server (`agent-skills-mcp`) providing the `lint_skill` and `lint_all` tools. If the MCP server is unavailable, refer to [automated-checks.md](references/automated-checks.md) (references/automated-checks.md) and execute [run-checks.sh](scripts/run-checks.sh) (scripts/run-checks.sh) as the shell fallback.
 
 ---
 
@@ -44,7 +44,7 @@ Verify: Target skill directories (each containing `SKILL.md`) and their file inv
 
 ## Step 2: Run Automated Checks
 
-Execute [run-checks.sh](scripts/run-checks.sh) (scripts/run-checks.sh) (as documented in [automated-checks.md](references/automated-checks.md) (references/automated-checks.md)) against each target skill and record the raw output for checks A through K:
+Execute automated checks A through K against each target skill using the `lint_skill` tool (for a single target directory) or `lint_all` (for batch evaluation). If the MCP server is unavailable in the environment, refer to [automated-checks.md](references/automated-checks.md) (references/automated-checks.md) and execute the fallback script [run-checks.sh](scripts/run-checks.sh) (scripts/run-checks.sh):
 
 ```sh
 skills/skill-review/scripts/run-checks.sh skills/<target-skill>

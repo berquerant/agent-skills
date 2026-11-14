@@ -13,7 +13,7 @@ Decomposes complex goals into a Directed Acyclic Graph (DAG) of interdependent t
 
 - Clearly understood goal, requirements, or multi-step plan (e.g., from [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md) or [scrutinize-plan-execute](../scrutinize-plan-execute/SKILL.md) (../scrutinize-plan-execute/SKILL.md)).
 - Execution scope spans multiple tasks, repositories, branches, or steps where some operations involve waiting (remote CI, long builds, cooldowns, approval checkpoints).
-- For conceptual background, state machine definitions, and scheduler loop details, refer to [dag-scheduling-guide.md](references/dag-scheduling-guide.md) (references/dag-scheduling-guide.md).
+- Access to the companion MCP server (`agent-skills-mcp`) providing the `task-dag` toolset (`dag_create`, `dag_next`, `dag_transition`, `dag_status`, `dag_render`). If the MCP server is unavailable, refer to [dag-scheduling-guide.md](references/dag-scheduling-guide.md) (references/dag-scheduling-guide.md) for manual state machine tracking, topological ordering, and scheduler loop details.
 
 ---
 
@@ -97,22 +97,18 @@ Verify:
 
 ## Step 4: Execute via Cooperative Scheduler Loop
 
-Execute tasks following the cooperative scheduling algorithm:
+Execute tasks using the cooperative scheduler loop:
 
-1. **Evaluate Tasks**:
-   - Promote `BLOCKED` tasks to `READY` as their dependencies reach `COMPLETED`.
-   - Pick the next `READY` task (prioritizing critical-path unblockers and local work).
-2. **Execute Active Task**:
-   - Transition task to `RUNNING` and perform operations.
-   - If execution completes successfully, mark `COMPLETED` and evaluate downstream tasks.
-   - If a long-running external process or wait state begins, record checkpoint condition, mark `WAITING`, and yield context.
-   - If execution fails or an unrecoverable error occurs, mark `HALTED` and pause downstream dependents.
-3. **Handle Idle Wait Context Switches**:
-   - When active task enters `WAITING`, immediately inspect queue for other `READY` tasks.
-   - If another `READY` task exists, switch context and execute it.
-   - If all active tasks are `WAITING`, perform a single targeted check on the oldest waiting task after the appropriate delay interval. Never enter a tight polling loop.
-4. **Log Progress**:
-   Record task state transitions, context switches, and milestones (e.g., using [checkpoint-log](../checkpoint-log/SKILL.md) (../checkpoint-log/SKILL.md) and alerting via [user-notification](../user-notification/SKILL.md) (../user-notification/SKILL.md) at gate transitions).
+1. **Initialize and Query**: Create the graph via `dag_create` with the approved tasks and dependencies, then call `dag_next` to pick the highest-priority unblocked task.
+2. **Execute and Transition**: Transition the active task to `RUNNING` via `dag_transition`, execute operations, and transition to `COMPLETED` on success or `HALTED` on failure.
+3. **Handle Idle Waits**: When an external delay starts, transition the task to `WAITING` with `poll_after_sec`. Immediately invoke `dag_next` to switch context to an independent `READY` task. The server enforces anti-polling cooldowns deterministically.
+4. **Inspect and Render**: Call `dag_status` or `dag_render` to verify progress, critical paths, and unblocked tasks.
+
+If the MCP server is unavailable, follow the manual scheduler loop in [dag-scheduling-guide.md](references/dag-scheduling-guide.md) (references/dag-scheduling-guide.md):
+- **Evaluate Tasks**: Promote `BLOCKED` tasks to `READY` as dependencies reach `COMPLETED`; pick the next unblocker.
+- **Execute Active Task**: Mark `RUNNING`, perform work, and mark `COMPLETED`, `WAITING`, or `HALTED`.
+- **Handle Context Switches**: When waiting, switch immediately to another `READY` task without tight polling loops.
+- **Log Progress**: Record task transitions and milestones (e.g. via [checkpoint-log](../checkpoint-log/SKILL.md) (../checkpoint-log/SKILL.md)).
 
 Verify:
 - All tasks in the DAG reach `COMPLETED` or explicitly `HALTED` with user consultation.

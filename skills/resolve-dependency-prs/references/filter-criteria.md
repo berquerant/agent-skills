@@ -9,16 +9,16 @@ Rules for filtering PRs/MRs to target only pure dependency updates or security p
 Inspect PR/MR attributes (author, label, title) to quickly identify candidate dependency or security changes:
 
 - **Authors / Bots**:
-  - `app/dependabot`, `dependabot[bot]`
+  - `app/dependabot`, `dependabot[bot]`, `dependabot`
   - `renovate[bot]`, `renovate`
-  - `snyk-bot`, `security-bot`
-  - GitLab Dependency Bot / Security Bot
+  - `snyk-bot`, `security-bot`, `depfu[bot]`, `pyup-bot`
+  - GitLab Dependency Bot / Security Bot, `github-actions[bot]`
 - **Labels**:
-  - `dependencies`, `security`, `dependencies-update`, `cve`
+  - `dependencies`, `security`, `dependencies-update`, `cve`, `deps`, `deps-dev`, `dependency`
 - **Title Conventions**:
   - `Bump <pkg> from <v1> to <v2>`
-  - `chore(deps): update ...`, `fix(deps): ...`
-  - `Security update ...`, `Update dependency ...`
+  - `chore(deps): update ...`, `chore(deps-dev): ...`, `build(deps): ...`, `fix(deps): ...`
+  - `Security update ...`, `Update dependency ...`, `Lock file maintenance`
 
 ---
 
@@ -30,22 +30,36 @@ A candidate PR/MR **MUST ONLY** touch recognized dependency manifest or lock fil
 
 | Ecosystem | Manifest / Lockfile Patterns |
 |---|---|
-| **JavaScript / TypeScript** | `package.json`, `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `bun.lockb` |
-| **Go** | `go.mod`, `go.sum` |
+| **JavaScript / TypeScript** | `package.json`, `package-lock.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `yarn.lock`, `bun.lockb`, `bun.lock`, `.npmrc`, `.yarnrc.yml` |
+| **Go** | `go.mod`, `go.sum`, `go.work`, `go.work.sum` |
 | **Rust** | `Cargo.toml`, `Cargo.lock` |
-| **Python** | `requirements*.txt`, `pyproject.toml`, `poetry.lock`, `Pipfile`, `Pipfile.lock` |
-| **Ruby** | `Gemfile`, `Gemfile.lock` |
+| **Python** | `requirements*.txt`, `pyproject.toml`, `poetry.lock`, `Pipfile`, `Pipfile.lock`, `pdm.lock`, `uv.lock`, `setup.cfg`, `setup.py` |
+| **Ruby** | `Gemfile`, `Gemfile.lock`, `*.gemspec` |
 | **PHP** | `composer.json`, `composer.lock` |
-| **Java / Kotlin** | `pom.xml`, `build.gradle`, `build.gradle.kts`, `gradle.properties` |
-| **.NET** | `*.csproj`, `packages.lock.json`, `Directory.Packages.props` |
+| **Java / Kotlin** | `pom.xml`, `build.gradle`, `build.gradle.kts`, `gradle.properties`, `settings.gradle` |
+| **.NET** | `*.csproj`, `*.fsproj`, `*.vbproj`, `packages.lock.json`, `Directory.Packages.props`, `Directory.Build.props`, `nuget.config` |
+| **Actions Lock** | `actions.lock`, `.github/workflows/actions.lock` |
+| **Swift** | `Package.swift`, `Package.resolved` |
+| **Elixir** | `mix.exs`, `mix.lock` |
+| **Dart / Flutter** | `pubspec.yaml`, `pubspec.lock` |
 
 ### Disqualification Criteria (Exclude Immediately)
 
 If the PR/MR diff touches **any** of the following, disqualify it and leave it for manual / standard code review:
-- Application source files (e.g. `*.go`, `*.ts`, `*.js`, `*.py`, `*.rs`, `*.java`, `*.c`, `*.cpp`)
-- Test suites or test mocks (e.g. `*_test.go`, `*.test.ts`, `tests/`)
-- CI / workflow files (e.g. `.github/workflows/*`, `.gitlab-ci.yml`) unless the update bot exclusively bumped an action version (still recommend manual review)
-- Documentation or general configs (`README.md`, `Dockerfile`, Makefile)
+- Application source files across languages (e.g. `*.go`, `*.ts`, `*.tsx`, `*.js`, `*.py`, `*.rs`, `*.java`, `*.kt`, `*.c`, `*.cpp`, `*.cs`, `*.rb`, `*.swift`, `*.dart`, `*.sh`)
+- Test suites or test mocks (e.g. `*_test.go`, `*.test.*`, `*.spec.*`, `test_*.py`, `*_test.py`, `tests/`, `test/`, `spec/`)
+- CI / workflow files (e.g. `.github/workflows/*`, `.gitlab-ci.yml`, `.circleci/*`) unless the update bot exclusively bumped an action lockfile
+- Documentation or general configs (`README.md`, `Dockerfile`, `Makefile`, `compose.yaml`, `mise.toml`)
+
+### Handling Unknown Files and Agent Overrides
+
+When files in a PR diff are not recognized by the default pattern catalog:
+1. The tool reports them under `unknown_files` with category `unknown`.
+2. The agent inspects the file contents and context directly:
+   - If verified as a legitimate custom manifest or lockfile, specify it via `overrides` (`{"<path>": "manifest"}`) or `extra_manifest_patterns`.
+   - If verified as harmless metadata, specify `overrides: {"<path>": "ignored"}`.
+   - If it contains logic or source modifications, uphold the disqualification (`"source"`).
+3. If a non-automated or human PR author made a legitimate dependency bump, the agent can add its number to `allowed_pr_numbers`.
 
 ---
 

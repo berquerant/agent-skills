@@ -55,6 +55,11 @@ Skills and agent operations in this repository are strictly self-contained and o
 - **Local References as Single Source of Truth**: All specifications, checklists, and conventions originally derived from external sources are maintained locally under `skills/<skill>/references/`. Agents must strictly rely on these local files.
 - **Human-Only Citation Links**: Any external URLs retained in references are strictly for human reference and citation purposes only.
 
+### 7. Companion Go MCP Server (`mcp/`)
+- The companion single-binary MCP server (`agent-skills-mcp`) resides in the standalone Go module under `mcp/` (`github.com/berquerant/agent-skills/mcp`, Go `1.27.4`).
+- **Optional Dependency Principle**: Skills under `skills/` must remain portable and usable without the MCP server; when MCP tools are available in the host environment, skills prioritize calling them and retain concise fallback procedures otherwise.
+- **Domain & Adapter Separation**: Keep feature logic under `mcp/internal/<feature>` decoupled from MCP transport concerns, manage flags and environment variables via `github.com/berquerant/structconfig`, regenerate `mcp/README.md` via `mise run mcp:readme-gen`, and verify changes with `mise run mcp:test` (`go test -cover -race ./...`) and `mise run mcp:lint` (`mcp:fix`, `mcp:vet`, `mcp:golangci-lint`, `mcp:readme-diff`).
+
 ## Skill Interoperability & Architecture
 
 Skills in this repository follow a **loosely coupled, sequential hand-off architecture**. Skills operate independently and do not hard-depend on or invoke each other as mandatory subroutines. Instead, they produce clear outputs and recommend the next appropriate skill upon user approval.

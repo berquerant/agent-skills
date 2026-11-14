@@ -5,6 +5,8 @@ on:
     branches:
       - main
   pull_request:
+    branches:
+      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -14,20 +16,38 @@ permissions: {}
 
 jobs:
   lint:
-    name: Lint shell scripts
+    name: Lint
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7.0.1
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
-      - uses: jdx/mise-action@v5.2.6
+      - name: Setup mise
+        uses: jdx/mise-action@v5.2.6
 
-      - name: Run lint
+      - name: Run shell lint
         run: mise run lint
 
       - name: Check skills
         run: mise run check-skills
+
+      - name: Run MCP lint
+        run: mise run mcp:lint
+
+  govulncheck:
+    name: Govulncheck
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: berquerant/govulncheck-action@v1.0.3
+        with:
+          go-version-file: mcp/go.mod
+          cache-dependency-path: mcp/go.sum
+          work-dir: mcp

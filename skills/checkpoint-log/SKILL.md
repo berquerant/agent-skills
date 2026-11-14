@@ -19,6 +19,12 @@ For directory hierarchy, generation management, and path conventions, refer to [
 
 ---
 
+## Prerequisites
+
+- Access to the companion MCP server (`agent-skills-mcp`) providing the `checkpoint` toolset (`checkpoint_init`, `checkpoint_append`, `checkpoint_resume`, `checkpoint_set_status`, `checkpoint_list`). If the MCP server is unavailable, refer to [path-conventions.md](references/path-conventions.md) (references/path-conventions.md) and [log-format.md](references/log-format.md) (references/log-format.md) as the manual file management fallback.
+
+---
+
 ## Step 1: Resolve the File Path
 
 **Never create or write to a path without explicit user confirmation.**
@@ -33,7 +39,7 @@ Resolve the candidate path following [path-conventions.md](references/path-conve
    - Document Type: `checkpoint` (milestone log), `runbook` (procedure guide), or `report` (investigation/audit report).
 4. **Propose Candidate Path**:
    - If starting a new run, propose a new generation path with a timestamp: `<root>/<project>/<branch>/<context>/<doc_type>-<YYYYMMDD-HHMMSS>.md`.
-   - If resuming or appending to an ongoing run, locate the latest existing generation in `<root>/<project>/<branch>/<context>/` and ask whether to append or start a new generation.
+   - If resuming or appending to an ongoing run, locate the latest existing generation via `checkpoint_list` (or directory search) and ask whether to append or start a new generation.
 
 > "I propose recording the checkpoint log at:
 > `<resolved_file_path>`
@@ -49,7 +55,9 @@ Verify: The exact file path is confirmed by the user, and the parent directory i
 
 ## Step 2: Initialize the Checkpoint Log
 
-If starting a new task log, write the header block at the top of the file following [log-format.md](references/log-format.md) (references/log-format.md):
+Initialize the log file using the `checkpoint_init` MCP tool, specifying `path`, `project`, `branch`, `context`, `title`, and `objective`. The server verifies that the path and contents contain no sensitive keys or paths and atomically writes the header.
+
+If the MCP server is unavailable in the environment, refer to [log-format.md](references/log-format.md) (references/log-format.md) and write the header block manually:
 
 ```markdown
 # Task Checkpoint Log: <Short Task Title>
@@ -75,15 +83,9 @@ Verify: The header block exists at the start of the log file with correct task m
 
 At each milestone (e.g. at the completion of each step in `explore-plan-execute`, `step-gate`, or other workflows):
 
-1. **Prepare the entry**: Summarize:
-   - **Timestamp**: Current date and time.
-   - **Step Title & Status**: e.g. `Step N: <title>` (`COMPLETED`, `FAILED`, `BLOCKED`, or `ADJUSTED`).
-   - **Executed Actions**: Specific files edited, tools invoked, or commands run.
-   - **Verification & Findings**: Concrete evidence (exit codes, test results, observed facts).
-   - **Decisions & Rationale**: Why decisions were made, obstacles handled, or alternatives rejected.
-   - **Next Step**: Immediate next action or awaiting user decision.
-2. **Append to the file**: Append the entry to the end of the log file without modifying prior entries.
-3. **Notify the user**: In the chat update, briefly note that the checkpoint has been appended to `<log_path>` (formatted per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md)).
+1. **Append via MCP**: Call the `checkpoint_append` MCP tool with `path`, `step_title`, `status` (`COMPLETED`, `FAILED`, `BLOCKED`, or `ADJUSTED`), `actions`, `findings`, `decisions`, and `next_step`. The server verifies inputs and atomically appends the entry.
+2. **Fallback Manual Append**: If the MCP server is unavailable, format the entry per [log-format.md](references/log-format.md) (references/log-format.md) and append to `<log_path>`.
+3. **Notify the user**: In the chat update, briefly note that the checkpoint has been recorded to `<log_path>` (formatted per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md)).
 
 Verify: The new milestone entry is cleanly appended to the log file and reflects verified outcomes and rationale.
 
@@ -93,15 +95,10 @@ Verify: The new milestone entry is cleanly appended to the log file and reflects
 
 When recovering an interrupted task, starting a new session on an ongoing task, or recovering from lost context:
 
-1. **Identify the log file**:
-   - Follow [path-conventions.md](references/path-conventions.md) (references/path-conventions.md) Section 4 to locate `<root>/<project>/<branch>/<context>/`.
-   - Select the latest generation (`checkpoint-<YYYYMMDD-HHMMSS>.md`) and verify that header metadata (`Project`, `Branch`, `Context`) matches the active task environment.
-2. **Read the log file**: Read the entire checkpoint log file (or the latest N entries).
-3. **Identify current state**:
-   - Locate the last entry marked `COMPLETED` or `BLOCKED`.
-   - Read the recorded **Next Step** and **Decisions & Rationale**.
-4. **Verify ground truth**: Check the local git status or environment to confirm the recorded state matches disk reality.
-5. **Report resumption status**: Summarize to the user where the task left off and propose the next action according to the log.
+1. **Parse via MCP**: Call `checkpoint_resume` with the log `path` to obtain structured header metadata, current status, latest milestone details, and recorded next steps.
+2. **Fallback Manual Inspection**: If the MCP server is unavailable, refer to [path-conventions.md](references/path-conventions.md) (references/path-conventions.md) Section 4 and read the latest generation file to extract state.
+3. **Verify ground truth**: Check the local git status or environment to confirm the recorded state matches disk reality.
+4. **Report resumption status**: Summarize to the user where the task left off and propose the next action according to the log.
 
 Verify: The agent accurately identifies the latest completed milestone from the validated generation file and resumes without re-executing completed work.
 
@@ -111,8 +108,9 @@ Verify: The agent accurately identifies the latest completed milestone from the 
 
 When the overall task is finished:
 
-1. Append a final completion entry summarizing total achievements and final verification.
-2. Update the header status from `IN_PROGRESS` to `COMPLETED` (or `ABORTED` if cancelled).
+1. Call `checkpoint_set_status` with `path` and `status: "COMPLETED"` (or `"ABORTED"`).
+2. Append a final milestone entry via `checkpoint_append` summarizing total achievements and final verification.
+3. If the MCP server is unavailable, refer to [log-format.md](references/log-format.md) (references/log-format.md) to append the summary and update the header manually.
 
 Verify: The log reflects overall task completion and final verification results.
 

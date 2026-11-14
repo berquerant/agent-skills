@@ -1,6 +1,14 @@
 [tools]
+"aqua:boyter/scc" = "4.1.0"
+go = "1.27.4"
+golangci-lint = "2.15.0"
+"pipx:lizard" = "1.24.1"
+python = "3.14.9"
 shellcheck = "0.11.0"
 shfmt = "3.14.1"
+
+[tasks.default]
+depends = ["check"]
 
 [tasks.install]
 description = "Install skills into target directory"
@@ -18,6 +26,53 @@ run = "./bin/lint.sh fmt"
 description = "Run automated quality checks across all skills"
 run = "./bin/check-skills.sh"
 
+[tasks."mcp:fix"]
+description = "Run go fix -diff on mcp module"
+dir = "mcp"
+run = "go fix -diff ./..."
+
+[tasks."mcp:vet"]
+description = "Run go vet on mcp module"
+dir = "mcp"
+run = "go vet ./..."
+
+[tasks."mcp:golangci-lint"]
+description = "Run golangci-lint on mcp module"
+dir = "mcp"
+run = "golangci-lint run --no-config"
+
+[tasks."mcp:readme-gen"]
+description = "Generate mcp/README.md from CLI help output"
+depends = ["mcp:build"]
+run = "./bin/mcp-readme.sh > mcp/README.md"
+
+[tasks."mcp:readme-diff"]
+description = "Verify mcp/README.md is up to date"
+depends = ["mcp:readme-gen"]
+run = "git diff --exit-code mcp/README.md"
+
+[tasks.lizard]
+description = "Run lizard complexity check"
+run = "lizard -w -C 15 -L 100 -s cyclomatic_complexity"
+
+[tasks.scc]
+description = "Run scc code and complexity report"
+run = "scc --by-file -s complexity"
+
+[tasks."mcp:lint"]
+description = "Run all lint and doc checks on mcp module"
+depends = ["mcp:fix", "mcp:vet", "mcp:golangci-lint", "mcp:readme-diff", "lizard", "scc"]
+
+[tasks."mcp:test"]
+description = "Run agent-skills-mcp tests with coverage and race detector"
+dir = "mcp"
+run = "go test -cover -race ./..."
+
+[tasks."mcp:build"]
+description = "Build agent-skills-mcp binary to mcp/bin/agent-skills-mcp"
+dir = "mcp"
+run = "go build -o bin/agent-skills-mcp ./cmd/agent-skills-mcp"
+
 [tasks.check]
 description = "Run all checks"
-depends = ["lint", "check-skills"]
+depends = ["lint", "check-skills", "mcp:lint", "mcp:test", "mcp:build"]

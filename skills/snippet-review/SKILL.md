@@ -20,13 +20,15 @@ This skill is a specialized branch of code review, specifically tailored for cod
 
 - An execution snippet has been drafted or saved to a file (e.g. via [command-snippet](../command-snippet/SKILL.md) (../command-snippet/SKILL.md)).
 - The snippet code is accessible for read-only inspection.
-- The evaluation criteria in [intelligibility-rubric.md](references/intelligibility-rubric.md) (references/intelligibility-rubric.md) are available.
+- Access to the companion MCP server (`agent-skills-mcp`) providing the `snippet_audit` tool. If the MCP server is unavailable, refer to [intelligibility-rubric.md](references/intelligibility-rubric.md) (references/intelligibility-rubric.md) as the manual evaluation fallback.
 
 ---
 
 ## Step 1: Inventory Snippet Structure & Metrics
 
-Inspect the snippet against the five evaluation dimensions in [intelligibility-rubric.md](references/intelligibility-rubric.md) (references/intelligibility-rubric.md):
+Audit the candidate snippet by invoking the `snippet_audit` MCP tool, passing the raw `code` or file `path` (and optional `language`). The tool automatically analyzes the five structural dimensions (SLOC, interface, control flow, concurrency, and hazards) and evaluates the complexity tier.
+
+If the MCP server is unavailable in the environment, refer to [intelligibility-rubric.md](references/intelligibility-rubric.md) (references/intelligibility-rubric.md) and inventory the five evaluation dimensions manually:
 
 1. **Code Scale & Function Count**:
    - Count the non-empty, non-comment lines of code (SLOC).
@@ -48,7 +50,9 @@ Verify: All five structural metrics are measured and recorded for the candidate 
 
 ## Step 2: Rate Intelligibility & Complexity Tier
 
-Score the snippet using the Four-Tier Rubric in [intelligibility-rubric.md](references/intelligibility-rubric.md) (references/intelligibility-rubric.md):
+Record the complexity tier and driver reasons directly from `snippet_audit` (`level` and `drivers[]`).
+
+If the MCP server is unavailable, score the snippet manually using the Four-Tier Rubric in [intelligibility-rubric.md](references/intelligibility-rubric.md) (references/intelligibility-rubric.md):
 
 - **Level 1 (Transparent)**: Simple, linear command flow (≤ 10 SLOC, no custom functions, ≤ 1 pipe, trivial branching).
 - **Level 2 (Moderate)**: Clear logic with minor branching or a simple loop (11–20 SLOC, explicit comments, cleanly documented inputs).
