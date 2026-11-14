@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/berquerant/agent-skills/mcp/internal/guard"
 )
 
 const maxSnippetFileBytes = 1024 * 1024
@@ -189,6 +191,9 @@ func buildReport(lang string, conf Confidence, parseErrStr string, metrics Metri
 
 // AnalyzeFile reads a snippet file from disk safely and evaluates its intelligibility.
 func AnalyzeFile(path, language string) (AuditReport, error) {
+	if err := guard.CheckPathAllowed(path); err != nil {
+		return AuditReport{}, err
+	}
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return AuditReport{}, fmt.Errorf("resolve snippet path: %w", err)

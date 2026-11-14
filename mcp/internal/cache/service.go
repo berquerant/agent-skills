@@ -3,6 +3,7 @@ package cache
 import (
 	"errors"
 
+	"github.com/berquerant/agent-skills/mcp/internal/guard"
 	"github.com/berquerant/agent-skills/mcp/internal/store"
 )
 
@@ -81,6 +82,14 @@ type PurgeInput struct {
 
 // Get retrieves a cached entry.
 func (s *Service) Get(in QueryInput) map[string]any {
+	if err := validatePathArgs(in.Dir, in.Args); err != nil {
+		return map[string]any{
+			"hit":     false,
+			"reason":  "sensitive_path",
+			"error":   err.Error(),
+			"message": err.Error(),
+		}
+	}
 	targetKey, ok := ResolveKey(in.Key, in.Type, in.Name, in.Dir, in.Args, in.Stdin)
 	if !ok {
 		return map[string]any{
@@ -124,6 +133,14 @@ func (s *Service) Set(in SetInput) map[string]any {
 			"key":     resolvedKey,
 			"version": nil,
 			"message": "ttl must be > 0",
+		}
+	}
+	if err := validateSetSensitivity(in); err != nil {
+		return map[string]any{
+			"success": false,
+			"key":     resolvedKey,
+			"version": nil,
+			"message": err.Error(),
 		}
 	}
 
@@ -173,6 +190,14 @@ func (s *Service) Set(in SetInput) map[string]any {
 
 // Exist checks whether a non-expired cache entry exists.
 func (s *Service) Exist(in QueryInput) map[string]any {
+	if err := validatePathArgs(in.Dir, in.Args); err != nil {
+		return map[string]any{
+			"hit":     false,
+			"reason":  "sensitive_path",
+			"error":   err.Error(),
+			"message": err.Error(),
+		}
+	}
 	targetKey, ok := ResolveKey(in.Key, in.Type, in.Name, in.Dir, in.Args, in.Stdin)
 	if !ok {
 		return map[string]any{
@@ -198,6 +223,16 @@ func (s *Service) Exist(in QueryInput) map[string]any {
 
 // Delete removes cache entries for a key (all versions or a specific version).
 func (s *Service) Delete(in QueryInput) map[string]any {
+	if err := validatePathArgs(in.Dir, in.Args); err != nil {
+		return map[string]any{
+			"hit":           false,
+			"deleted":       false,
+			"deleted_count": 0,
+			"reason":        "sensitive_path",
+			"error":         err.Error(),
+			"message":       err.Error(),
+		}
+	}
 	targetKey, ok := ResolveKey(in.Key, in.Type, in.Name, in.Dir, in.Args, in.Stdin)
 	if !ok {
 		return map[string]any{
@@ -230,6 +265,16 @@ func (s *Service) Delete(in QueryInput) map[string]any {
 
 // Version lists all valid, non-expired versions for a key without reading payloads.
 func (s *Service) Version(in VersionInput) map[string]any {
+	if err := validatePathArgs(in.Dir, in.Args); err != nil {
+		return map[string]any{
+			"hit":      false,
+			"key":      nil,
+			"versions": []VersionInfo{},
+			"reason":   "sensitive_path",
+			"error":    err.Error(),
+			"message":  err.Error(),
+		}
+	}
 	targetKey, ok := ResolveKey(in.Key, in.Type, in.Name, in.Dir, in.Args, in.Stdin)
 	if !ok {
 		return map[string]any{
@@ -280,6 +325,33 @@ func (s *Service) Purge(in PurgeInput) map[string]any {
 		"all":           purgeRes.All,
 		"message":       purgeRes.Message,
 	}
+}
+
+func validatePathArgs(dir string, args []string) error {
+	if err := guard.CheckPathAllowed(dir); err != nil {
+		return err
+	}
+	for _, arg := range args {
+		if err := guard.CheckPathAllowed(arg); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func validateSetSensitivity(in SetInput) error {
+	if err := validatePathArgs(in.Dir, in.Args); err != nil {
+		return err
+	}
+	texts := []string{in.Name, in.Stdout, in.Stderr}
+	texts = append(texts, in.Args...)
+	if in.Stdin != nil {
+		texts = append(texts, *in.Stdin)
+	}
+	if in.Description != nil {
+		texts = append(texts, *in.Description)
+	}
+	return guard.CheckNoSecrets(texts...)
 }
 
 func classifyStorageErr(err error) string {

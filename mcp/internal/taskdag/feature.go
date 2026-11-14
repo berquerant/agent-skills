@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/berquerant/agent-skills/mcp/internal/feature"
+	"github.com/berquerant/agent-skills/mcp/internal/guard"
 	"github.com/berquerant/agent-skills/mcp/internal/store"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -165,6 +166,17 @@ func (f *Feature) registerRenderListDelete(s *mcp.Server, env feature.Env) {
 }
 
 func (f *Feature) handleCreate(in CreateInput) (CreateOutput, error) {
+	if err := guard.CheckNoSecrets(in.DAGID, in.Name); err != nil {
+		return CreateOutput{}, err
+	}
+	for _, t := range in.Tasks {
+		if err := guard.CheckPathAllowed(t.Resource); err != nil {
+			return CreateOutput{}, err
+		}
+		if err := guard.CheckNoSecrets(t.ID, t.Title, t.Resource, t.Note); err != nil {
+			return CreateOutput{}, err
+		}
+	}
 	dagID := in.DAGID
 	if dagID == "" {
 		id, err := store.GenerateID()

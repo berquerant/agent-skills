@@ -3,7 +3,6 @@ package server_test
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -57,21 +56,21 @@ func TestServerFeatureToggles(t *testing.T) {
 		{
 			name:            "all features enabled by default",
 			wantSummarySub:  "features=[cache,task-dag,skill-lint,snippet-analyzer,checkpoint,pace-guard,pr-triage]",
-			wantTools:       []string{"cache_get", "dag_create", "dag_next", "lint_skill", "lint_all", "snippet_audit", "checkpoint_ping", "pace_ping", "pr_triage_ping"},
+			wantTools:       []string{"cache_get", "dag_create", "dag_next", "lint_skill", "lint_all", "snippet_audit", "checkpoint_init", "checkpoint_append", "pace_ping", "pr_triage_ping"},
 			wantAbsentTools: nil,
 		},
 		{
 			name:            "disabling pace-guard and pr-triage omits their tools",
 			extraArgs:       []string{"--pace-guard=false", "--pr-triage=false"},
 			wantSummarySub:  "features=[cache,task-dag,skill-lint,snippet-analyzer,checkpoint]",
-			wantTools:       []string{"cache_get", "cache_set", "dag_create", "lint_skill", "snippet_audit", "checkpoint_ping"},
+			wantTools:       []string{"cache_get", "cache_set", "dag_create", "lint_skill", "snippet_audit", "checkpoint_init"},
 			wantAbsentTools: []string{"pace_ping", "pr_triage_ping"},
 		},
 		{
 			name:            "disabling cache omits cache_* tools",
 			extraArgs:       []string{"--cache=false"},
 			wantSummarySub:  "features=[task-dag,skill-lint,snippet-analyzer,checkpoint,pace-guard,pr-triage]",
-			wantTools:       []string{"dag_create", "lint_skill", "snippet_audit", "checkpoint_ping", "pace_ping", "pr_triage_ping"},
+			wantTools:       []string{"dag_create", "lint_skill", "snippet_audit", "checkpoint_init", "pace_ping", "pr_triage_ping"},
 			wantAbsentTools: []string{"cache_get", "cache_set", "cache_exist", "cache_delete", "cache_version", "cache_purge"},
 		},
 	}
@@ -125,24 +124,30 @@ func TestServerFeatureToggles(t *testing.T) {
 			}
 
 			// Verify calling an active tool uses the injected clock
-			callRes, err := session.CallTool(ctx, &mcp.CallToolParams{
-				Name:      "checkpoint_ping",
-				Arguments: map[string]any{"message": "hello-cp"},
-			})
-			require.NoError(t, err)
-			assert.False(t, callRes.IsError)
-			require.NotEmpty(t, callRes.Content)
-			tc, ok := callRes.Content[0].(*mcp.TextContent)
-			require.True(t, ok)
-
-			var pingOut feature.PingResult
-			require.NoError(t, json.Unmarshal([]byte(tc.Text), &pingOut))
-			assert.True(t, pingOut.OK)
-			assert.Equal(t, "checkpoint", pingOut.Feature)
-			assert.Equal(t, "hello-cp", pingOut.Echo)
-			assert.Equal(t, fixedNow.Unix(), pingOut.Timestamp)
+			verifyCheckpointClock(ctx, t, session)
 		})
 	}
+}
+
+func verifyCheckpointClock(ctx context.Context, t *testing.T, session *mcp.ClientSession) {
+	t.Helper()
+	callRes, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name: "checkpoint_init",
+		Arguments: map[string]any{
+			"project":      "test-proj",
+			"branch":       "main",
+			"context":      "clock-check",
+			"title":        "Clock Check",
+			"objective":    "Verify injected clock timestamp",
+			"propose_only": true,
+		},
+	})
+	require.NoError(t, err)
+	assert.False(t, callRes.IsError)
+	require.NotEmpty(t, callRes.Content)
+	tc, ok := callRes.Content[0].(*mcp.TextContent)
+	require.True(t, ok)
+	assert.Contains(t, tc.Text, "checkpoint-20261115-020000.md")
 }
 
 func TestSafeToolFaults(t *testing.T) {

@@ -5,6 +5,8 @@ import (
 	"math"
 	"slices"
 	"time"
+
+	"github.com/berquerant/agent-skills/mcp/internal/guard"
 )
 
 const defaultPollCooldownSec = 30
@@ -70,6 +72,9 @@ func ApplyTransition(dag *DAG, in TransitionInput, now time.Time) (TransitionRes
 }
 
 func validateTransition(tasks []Task, curr Task, in TransitionInput, now time.Time) error {
+	if err := guard.CheckNoSecrets(in.Note); err != nil {
+		return err
+	}
 	if !isAllowedTransition(curr.State, in.To) {
 		return fmt.Errorf("invalid transition for task %q: %s -> %s", curr.ID, curr.State, in.To)
 	}

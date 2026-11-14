@@ -7,12 +7,17 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+
+	"github.com/berquerant/agent-skills/mcp/internal/guard"
 )
 
 const maxLintFileBytes = 2 * 1024 * 1024
 
 // LintSkill runs automated quality checks A through K on a single skill directory.
 func LintSkill(skillDir string, strict bool) (SkillReport, error) {
+	if err := guard.CheckPathAllowed(skillDir); err != nil {
+		return SkillReport{}, err
+	}
 	skillDirAbs, err := filepath.Abs(skillDir)
 	if err != nil {
 		return SkillReport{}, fmt.Errorf("resolve skill path: %w", err)
@@ -84,6 +89,9 @@ func LintSkill(skillDir string, strict bool) (SkillReport, error) {
 
 // LintAll discovers and lints all skill directories under rootDir.
 func LintAll(rootDir string, strict bool) (BatchReport, error) {
+	if err := guard.CheckPathAllowed(rootDir); err != nil {
+		return BatchReport{}, err
+	}
 	rootAbs, err := filepath.Abs(rootDir)
 	if err != nil {
 		return BatchReport{}, fmt.Errorf("resolve root dir: %w", err)

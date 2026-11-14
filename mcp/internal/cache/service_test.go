@@ -51,6 +51,18 @@ func TestServiceSet(t *testing.T) {
 			in:          cache.SetInput{Key: "svc_key", Type: "command", Name: "echo", Dir: "/tmp", TTL: 300, Stdout: "svc-v1", Success: true},
 			wantSuccess: true,
 		},
+		{
+			name:        "rejects secret token in stdout",
+			in:          cache.SetInput{Type: "command", Name: "echo", Dir: "/tmp", TTL: 300, Stdout: "token=" + "gh" + "p_1234567890abcdefghijklmnopqrstuv", Success: true},
+			wantSuccess: false,
+			wantMsgSub:  "sensitive secret pattern detected",
+		},
+		{
+			name:        "rejects sensitive file path in args",
+			in:          cache.SetInput{Type: "command", Name: "cat", Dir: "/tmp", Args: []string{".env.production"}, TTL: 300, Stdout: "ok", Success: true},
+			wantSuccess: false,
+			wantMsgSub:  "access to sensitive path",
+		},
 	}
 
 	for _, tt := range tests {
@@ -82,6 +94,7 @@ func TestServiceQueryVersionAndPurge(t *testing.T) {
 		{name: "get hit latest for svc_key", op: "get", in: cache.QueryInput{Key: "svc_key"}, wantHit: true},
 		{name: "exist missing key and triple", op: "exist", in: cache.QueryInput{}, wantHit: false},
 		{name: "exist hit by triple", op: "exist", in: cache.QueryInput{Type: "command", Name: "echo", Dir: "/tmp", Args: []string{"hello"}}, wantHit: true},
+		{name: "get rejects sensitive path in args", op: "get", in: cache.QueryInput{Type: "command", Name: "cat", Dir: "/tmp", Args: []string{"/etc/shadow"}}, wantHit: false, wantReason: "sensitive_path"},
 		{name: "delete missing key and triple", op: "delete", in: cache.QueryInput{}, wantHit: false},
 		{name: "delete specific version 1 of svc_key", op: "delete", in: cache.QueryInput{Key: "svc_key", Version: 1}, wantHit: true},
 	}

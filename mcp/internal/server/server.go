@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/berquerant/agent-skills/mcp/internal/cache"
+	"github.com/berquerant/agent-skills/mcp/internal/checkpoint"
 	"github.com/berquerant/agent-skills/mcp/internal/feature"
 	"github.com/berquerant/agent-skills/mcp/internal/skilllint"
 	"github.com/berquerant/agent-skills/mcp/internal/snippet"
@@ -151,6 +152,7 @@ func ensureRegistry(reg *feature.Registry) (*feature.Registry, error) {
 		"task-dag":         taskdag.NewFeature(),
 		"skill-lint":       skilllint.NewFeature(),
 		"snippet-analyzer": snippet.NewFeature(),
+		"checkpoint":       checkpoint.NewFeature(),
 	}
 	for _, f := range feature.RemainingStubFeatures() {
 		byName[f.Name()] = f

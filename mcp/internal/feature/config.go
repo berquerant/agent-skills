@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/berquerant/agent-skills/mcp/internal/guard"
 	"github.com/berquerant/structconfig"
 	"github.com/spf13/pflag"
 )
@@ -223,6 +224,11 @@ func (c *Config) validateLimits() error {
 	if c.MaxOutputSize <= 0 {
 		return fmt.Errorf("--max-output-size must be > 0 (got %d)", c.MaxOutputSize)
 	}
+	for _, p := range []string{c.StateDir, c.CacheDir, c.CheckpointRoot, c.LogFile} {
+		if err := guard.CheckPathAllowed(p); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -284,6 +290,9 @@ func resolveXDGDir(key, fallback string) (string, error) {
 func ensureWritableDir(dir string) error {
 	if dir == "" {
 		return fmt.Errorf("directory path is empty")
+	}
+	if err := guard.CheckPathAllowed(dir); err != nil {
+		return err
 	}
 	info, err := os.Stat(dir)
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/berquerant/agent-skills/mcp/internal/guard"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -96,11 +97,15 @@ func logToolCall[In, Out any](
 		slog.Int64("duration_ms", durationMS),
 		slog.Bool("is_error", isErr),
 	)
+	var errText any
+	if err != nil {
+		errText = guard.RedactSecretsInString(err.Error())
+	}
 	logger.Debug("tool call payload",
 		slog.String("tool", toolName),
-		slog.Any("input", in),
-		slog.Any("output", out),
-		slog.Any("error", err),
+		slog.Any("input", guard.SanitizeForLog(in)),
+		slog.Any("output", guard.SanitizeForLog(out)),
+		slog.Any("error", errText),
 	)
 }
 

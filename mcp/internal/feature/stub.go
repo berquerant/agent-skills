@@ -67,10 +67,6 @@ func (f *StubFeature) Close() error {
 func RemainingStubFeatures() []Feature {
 	return []Feature{
 		&StubFeature{
-			FeatureName: "checkpoint",
-			ToolVerbs:   []string{"checkpoint_ping"},
-		},
-		&StubFeature{
 			FeatureName: "pace-guard",
 			ToolVerbs:   []string{"pace_ping"},
 		},
