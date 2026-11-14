@@ -12,8 +12,8 @@ if command -v agent-skills-mcp >/dev/null 2>&1; then
   exec agent-skills-mcp skill-lint --strict "$@"
 fi
 
-if [ -x "${mcp_bin}" ]; then
-  exec "${mcp_bin}" skill-lint --strict "$@"
+if [ ! -x "${mcp_bin}" ]; then
+  (cd "${repo_root}/mcp" && go build -o "${mcp_bin}" ./cmd/agent-skills-mcp)
 fi
 
-exec go run ./mcp/cmd/agent-skills-mcp skill-lint --strict "$@"
+exec "${mcp_bin}" skill-lint --strict "$@"

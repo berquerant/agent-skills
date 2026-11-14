@@ -24,6 +24,7 @@ run = "./bin/lint.sh fmt"
 
 [tasks.check-skills]
 description = "Run automated quality checks across all skills"
+depends = ["mcp:build"]
 run = "./bin/check-skills.sh"
 
 [tasks."mcp:fix"]
