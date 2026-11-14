@@ -57,21 +57,21 @@ func TestServerFeatureToggles(t *testing.T) {
 		{
 			name:            "all features enabled by default",
 			wantSummarySub:  "features=[cache,task-dag,skill-lint,snippet-analyzer,checkpoint,pace-guard,pr-triage]",
-			wantTools:       []string{"cache_get", "dag_ping", "lint_skill", "lint_all", "snippet_ping", "checkpoint_ping", "pace_ping", "pr_triage_ping"},
+			wantTools:       []string{"cache_get", "dag_ping", "lint_skill", "lint_all", "snippet_audit", "checkpoint_ping", "pace_ping", "pr_triage_ping"},
 			wantAbsentTools: nil,
 		},
 		{
 			name:            "disabling pace-guard and pr-triage omits their tools",
 			extraArgs:       []string{"--pace-guard=false", "--pr-triage=false"},
 			wantSummarySub:  "features=[cache,task-dag,skill-lint,snippet-analyzer,checkpoint]",
-			wantTools:       []string{"cache_get", "cache_set", "dag_ping", "lint_skill", "snippet_ping", "checkpoint_ping"},
+			wantTools:       []string{"cache_get", "cache_set", "dag_ping", "lint_skill", "snippet_audit", "checkpoint_ping"},
 			wantAbsentTools: []string{"pace_ping", "pr_triage_ping"},
 		},
 		{
 			name:            "disabling cache omits cache_* tools",
 			extraArgs:       []string{"--cache=false"},
 			wantSummarySub:  "features=[task-dag,skill-lint,snippet-analyzer,checkpoint,pace-guard,pr-triage]",
-			wantTools:       []string{"dag_ping", "lint_skill", "snippet_ping", "checkpoint_ping", "pace_ping", "pr_triage_ping"},
+			wantTools:       []string{"dag_ping", "lint_skill", "snippet_audit", "checkpoint_ping", "pace_ping", "pr_triage_ping"},
 			wantAbsentTools: []string{"cache_get", "cache_set", "cache_exist", "cache_delete", "cache_version", "cache_purge"},
 		},
 	}
@@ -271,6 +271,11 @@ func TestServerCacheEndToEnd(t *testing.T) {
 	assert.Contains(t, tc.Text, `"hit":true`)
 	assert.Contains(t, tc.Text, largeStdout)
 
+	verifyLintAndSnippetTools(ctx, t, session)
+}
+
+func verifyLintAndSnippetTools(ctx context.Context, t *testing.T, session *mcp.ClientSession) {
+	t.Helper()
 	skillDir, err := filepath.Abs(filepath.Join("..", "..", "..", "skills", "skill-review"))
 	require.NoError(t, err)
 	lintRes, err := session.CallTool(ctx, &mcp.CallToolParams{
@@ -299,4 +304,16 @@ func TestServerCacheEndToEnd(t *testing.T) {
 	lintAllTC, ok := lintAllRes.Content[0].(*mcp.TextContent)
 	require.True(t, ok)
 	assert.Contains(t, lintAllTC.Text, `"total_skills":1`)
+
+	snipRes, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name: "snippet_audit",
+		Arguments: map[string]any{
+			"code": "eval \"$CMD\"",
+		},
+	})
+	require.NoError(t, err)
+	assert.False(t, snipRes.IsError)
+	snipTC, ok := snipRes.Content[0].(*mcp.TextContent)
+	require.True(t, ok)
+	assert.Contains(t, snipTC.Text, `"level":4`)
 }
