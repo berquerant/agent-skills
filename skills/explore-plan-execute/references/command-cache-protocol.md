@@ -2,8 +2,8 @@
 
 Operational protocol for caching high-cost or external communication commands to minimize latency, API limits, and resource consumption across repetitive agent executions.
 
-> [!NOTE] Caching Mechanism Priority
-> If a dedicated caching or memoization skill, tool, or MCP server (such as `cache_get`, `cache_set`, `cache_exist`, `cache_delete`, `cache_purge`, and `cache_version` in `agent-skills-mcp`) is available in the current environment, prioritize using it for caching command and tool/MCP execution results. Use this file-based protocol as the standard fallback when no dedicated caching skill, tool, or MCP server is present.
+> [!NOTE] Caching Mechanism & Fallback
+> By default, caching of command and tool execution results is managed via the companion MCP server (`agent-skills-mcp`) tools (`cache_get`, `cache_set`, `cache_exist`, `cache_delete`, `cache_purge`, and `cache_version`). Use this file-based protocol as the manual fallback when the MCP server is unavailable in the environment.
 
 ---
 

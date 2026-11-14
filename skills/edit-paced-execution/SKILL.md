@@ -16,27 +16,22 @@ For reporting templates and threshold heuristics, refer to [pace-monitoring-guid
 
 ---
 
+## Prerequisites
+
+- Access to the companion MCP server (`agent-skills-mcp`) providing the `pace-guard` toolset (`pace_start`, `pace_tick`, `pace_status`, `pace_reset`, `pace_watch`, `pace_liveness`). If the MCP server is unavailable, refer to [pace-monitoring-guide.md](references/pace-monitoring-guide.md) (references/pace-monitoring-guide.md) as the manual pacing and stall reporting fallback.
+
+---
+
 ## Step 1: Assess Work Complexity and Propose Thresholds
 
 Before beginning task execution, analyze the task requirements and propose pacing thresholds and execution modes to the user.
 
-1. **Establish Baseline Edit-Pacing Thresholds**:
-   - Default: **3 minutes** or **20 non-edit tool calls / 6–8 non-edit reasoning turns** (commands, searches, reads, test runs without modifying project files).
-   - **Parallel Tool-Call Accounting**: When a model issues multiple read-only tool calls (such as parallel `read_file` or `grep` calls) within a single reasoning turn, count that parallel batch as **1 non-edit turn** (or weight it proportionally) so efficient parallel exploration does not prematurely trigger a stall checkpoint.
-2. **Determine Task & Command Execution Mode**:
-   - When executing commands or background tasks, determine their execution mode based on duration, retryability, and external volatility:
-     - **`standard`**: Routine tasks; easy & fast to retry (e.g. unit tests, linters). Default check interval: **3 minutes**.
-     - **`heavy`**: Long-running tasks, but cleanly retryable without special conditions (e.g. integration tests, release builds). Default check interval: **5 minutes**.
-     - **`critical`**: Sensitive tasks affected by uncontrollable conditions (network, API limits) or hard to retry (e.g. deployments, remote API batches, migrations). Default check interval: **1 minute**.
-     - **`unmonitored`**: Tasks known in advance to take very long where frequent checks are disruptive (e.g. model training, giant clones). Check interval: **60 minutes or none**.
-3. **Context-Aware Adjustment**:
-   - Tailor thresholds based on work scope (see [pace-monitoring-guide.md](references/pace-monitoring-guide.md) (references/pace-monitoring-guide.md)):
-     - Small/localized edits: 1–2 minutes or 5–10 non-edit tool calls.
-     - Standard tasks: 3 minutes or 20 non-edit tool calls.
-     - Broad cross-cutting exploration: 4–5 minutes or 25–30 non-edit tool calls.
-4. **Present Proposal**:
-   - Explicitly communicate proposed pacing limits, command execution mode, and rationale before executing actions:
-     > *"For this task, I propose an edit-pacing threshold of X minutes or Y non-edit tool calls. Long-running commands will run in `mode` (check interval: Z minutes). If I encounter unexpected delays, stalls, or exceed limits, I will pause and report for guidance."*
+1. **Initialize Session**: Call the `pace_start` MCP tool with the desired `preset` (`localized`, `standard`, `cross_cutting`), `time_limit_sec`, `call_limit`, and `command_mode` (`standard`, `heavy`, `critical`, `unmonitored`). The tool returns the structured proposal block.
+2. **Present Proposal**: Present the proposed limits and rationale to the user for acknowledgment.
+
+If the MCP server is unavailable, refer to [pace-monitoring-guide.md](references/pace-monitoring-guide.md) (references/pace-monitoring-guide.md) to establish thresholds manually:
+- Baseline: **3 minutes** or **20 non-edit tool calls / 6–8 reasoning turns** (batch parallel calls as 1 turn).
+- Command modes: `standard` (3m check), `heavy` (5m check), `critical` (1m check), `unmonitored` (60m).
 
 Verify: Pacing thresholds and command execution modes are proposed with clear rationale and acknowledged or adjusted by the user.
 
@@ -44,19 +39,16 @@ Verify: Pacing thresholds and command execution modes are proposed with clear ra
 
 ## Step 2: Track Progress and Pace
 
-Execute the planned task while continuously tracking pace against the agreed thresholds. If the companion MCP server (`agent-skills-mcp`) is available in the environment, prioritize calling `pace_start`, `pace_tick`, `pace_status`, and `pace_reset` for timing and `pace_watch` / `pace_liveness` for process and log liveness tracking; otherwise track pace manually:
+Track pace and command liveness using the MCP tools:
 
-1. **Define File Modifications**:
-   - Creating, editing, replacing, or patching repository code and documentation files counts as an edit event.
-   - Reading files, running read-only search commands, checking status, or testing without edits do **not** reset the interval.
-2. **Interval Reset**:
-   - Each time a target file is modified, reset the non-edit tool call counter and elapsed time baseline.
-3. **Pace Monitoring**:
-   - Maintain awareness of continuous non-edit operations.
-   - If an exploratory command or troubleshooting sequence is anticipated to take significant time, evaluate whether an early checkpoint is warranted before running it.
-4. **Command Liveness Tracking**:
-   - For long-running or background commands, check execution progress at the mode's interval (`standard`: 3m, `heavy`: 5m, `critical`: 1m, `unmonitored`: 60m).
-   - Evaluate liveness signals (CPU/memory consumption, file/artifact changes, and log activity).
+- **Interval Tracking**: On each tool call, invoke `pace_tick` with `kind: "edit"`, `"non_edit"`, or `"parallel_batch"`. When a repository file is modified (`kind: "edit"`), the server resets the non-edit counter and elapsed timer automatically.
+- **Status Checks**: Call `pace_status` to query elapsed seconds and remaining call allowances without modifying counters.
+- **Process and Log Liveness**: Register long-running commands or background tasks via `pace_watch` (passing `pid`, `log_path`, or `artifact_path`) and sample execution health with `pace_liveness`.
+
+If the MCP server is unavailable, follow the manual tracking procedure in [pace-monitoring-guide.md](references/pace-monitoring-guide.md) (references/pace-monitoring-guide.md):
+- Reset non-edit counters and time baselines upon file modifications.
+- Track non-edit queries and elapsed wall-clock time manually.
+- Sample command liveness (CPU, memory, log activity) at the mode's interval.
 
 Verify: Tool execution count, time elapsed since the last file modification, and command execution liveness are tracked accurately.
 
@@ -90,7 +82,7 @@ Upon receiving user input:
    - Adjust strategy according to the selected option or user-supplied instructions.
    - If the user requested adjusting thresholds (e.g., granting more time or tightening limits), apply the new thresholds.
 2. **Reset Tracking**:
-   - Reset the tool call counter and timer.
+   - Reset intervals and counters via the `pace_reset` MCP tool (updating thresholds if requested). If the MCP server is unavailable, reset the counter and timer manually.
 3. **Proceed to Target Edit**:
    - Execute the agreed remediation or next step directly toward the intended file edit.
    - Continue the monitoring loop from Step 2.

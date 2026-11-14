@@ -27,6 +27,7 @@ This skill supports two execution modes:
 
 - `git` is installed and the current directory is inside a git repository (or target repositories are available locally).
 - A supported platform tool is authenticated (`gh` CLI for GitHub or `glab` CLI for GitLab; refer to [platform-tools.md](../multi-repo-change/references/platform-tools.md) (../multi-repo-change/references/platform-tools.md)).
+- Access to the companion MCP server (`agent-skills-mcp`) providing the `pr-triage` toolset (`pr_classify_files`, `pr_filter_candidates`, `pr_detect_tasks`, `pr_match_failure`). If the MCP server is unavailable, refer to [filter-criteria.md](references/filter-criteria.md) (references/filter-criteria.md), [ci-detection.md](references/ci-detection.md) (references/ci-detection.md), and [failure-archetypes.md](references/failure-archetypes.md) (references/failure-archetypes.md) as the manual triage fallback.
 - **Cost & Rate Limits**: Follow cost-aware principles (`AGENTS.md` Rule 5 and [command-cache-protocol.md](../explore-plan-execute/references/command-cache-protocol.md) (../explore-plan-execute/references/command-cache-protocol.md)). Confirm API rate limit (default: 10s/call) and execution mode (`standard` or `thorough`).
 - **Explore & Plan First**: Follow [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md) to triage candidates and present a concrete resolution plan before modifying branches.
 
@@ -40,7 +41,9 @@ Retrieve open PRs/MRs along with files and body in a single query to avoid repet
 - **GitLab**: `glab mr list --state opened > candidate_mrs.txt` or `glab api "projects/:id/merge_requests?state=opened" > candidate_mrs.json`
 
 ### 1.2 File-Level Exclusivity Check
-Filter PRs according to [filter-criteria.md](references/filter-criteria.md) (references/filter-criteria.md). If the companion MCP server (`agent-skills-mcp`) is available in the environment, prioritize calling `pr_classify_files` or `pr_filter_candidates` to verify manifest exclusivity; otherwise filter candidates manually:
+Evaluate candidate PRs using the `pr_classify_files` tool (or filter batch candidates directly via `pr_filter_candidates`). The tool verifies that modifications are strictly confined to package manager manifests and lockfiles, immediately flagging disqualifying source, test, or workflow changes.
+
+If the MCP server is unavailable in the environment, refer to [filter-criteria.md](references/filter-criteria.md) (references/filter-criteria.md) and check files manually:
 - Ensure changes are strictly confined to package manager manifests and lockfiles.
 - **Immediately exclude** any PR modifying application code, test logic, CI configurations, or general project files.
 
@@ -155,8 +158,10 @@ Verify: The branch contains the latest default branch commits and is pushed clea
 ## Step 5: Verification & Multi-Repo Scheduling
 
 ### 5.1 Local-First Verification
-Follow [ci-detection.md](references/ci-detection.md) (references/ci-detection.md) to detect and execute project test/lint commands locally inside the worktree if runtime dependencies are available.
-- **Task Discovery Protocol**: Before running local task runner commands, verify defined task names (e.g. `./task --list`, `npm run`, or `make -qp`) per [ci-detection.md](references/ci-detection.md) (references/ci-detection.md) rather than guessing. If the companion MCP server (`agent-skills-mcp`) is available, prioritize calling `pr_detect_tasks` to extract available check and test targets safely without command execution.
+Discover project test/lint commands by calling the `pr_detect_tasks` MCP tool with `repo_dir`. The tool inspects build/task runner definitions (`Makefile`, `mise.toml`, `package.json`, `Cargo.toml`, etc.) safely without executing external commands.
+
+If the MCP server is unavailable, refer to [ci-detection.md](references/ci-detection.md) (references/ci-detection.md) to detect commands manually:
+- **Task Discovery Protocol**: Before running local task runner commands, verify defined task names (e.g. `./task --list`, `npm run`, or `make -qp`) per [ci-detection.md](references/ci-detection.md) (references/ci-detection.md) rather than guessing.
 - **Composite Execution**: Encapsulate multi-step verification into an atomic workflow snippet (e.g. `rebase_and_test_worktree.sh`) per [command-snippet](../command-snippet/SKILL.md) (../command-snippet/SKILL.md).
 
 In **`thorough` mode**, execute exhaustive multi-faceted checks (static analysis, dependency audits, tree integrity, clean builds) per [thorough-audit-and-verification.md](references/thorough-audit-and-verification.md) (references/thorough-audit-and-verification.md).
@@ -183,8 +188,8 @@ If all CI checks pass, proceed directly to **Step 7**.
 If any local or remote CI checks fail (e.g., breaking API changes, deprecations, type errors):
 
 1. **Analyze Failure**:
-   - Inspect build / test failure logs. If the companion MCP server (`agent-skills-mcp`) is available, prioritize calling `pr_match_failure` to match log excerpts against standard failure archetypes and obtain playbooks.
-   - Cross-reference failure symptoms against [failure-archetypes.md](references/failure-archetypes.md) (references/failure-archetypes.md) (outdated base branch, unsynced derived artifacts, snapshot drift) to apply standard playbooks before conjecturing code rewrites.
+   - Inspect build / test failure logs using the `pr_match_failure` MCP tool to match log excerpts against the standard failure archetypes and obtain recommended playbooks.
+   - If the MCP server is unavailable, refer to [failure-archetypes.md](references/failure-archetypes.md) (references/failure-archetypes.md) (outdated base branch, unsynced derived artifacts, snapshot drift) to diagnose failure symptoms manually before conjecturing code rewrites.
    - Determine the minimal adaptation needed to accommodate the upgraded dependency.
 2. **Present Remediation Plan (Human-in-the-Loop)**:
    - Present a concise plan modeled after [step-gate](../step-gate/SKILL.md) (../step-gate/SKILL.md) detailing Failure Summary, Proposed Changes, and Verification commands.
