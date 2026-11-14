@@ -40,7 +40,7 @@ Retrieve open PRs/MRs along with files and body in a single query to avoid repet
 - **GitLab**: `glab mr list --state opened > candidate_mrs.txt` or `glab api "projects/:id/merge_requests?state=opened" > candidate_mrs.json`
 
 ### 1.2 File-Level Exclusivity Check
-Filter PRs according to [filter-criteria.md](references/filter-criteria.md) (references/filter-criteria.md):
+Filter PRs according to [filter-criteria.md](references/filter-criteria.md) (references/filter-criteria.md). If the companion MCP server (`agent-skills-mcp`) is available in the environment, prioritize calling `pr_classify_files` or `pr_filter_candidates` to verify manifest exclusivity; otherwise filter candidates manually:
 - Ensure changes are strictly confined to package manager manifests and lockfiles.
 - **Immediately exclude** any PR modifying application code, test logic, CI configurations, or general project files.
 
@@ -156,7 +156,7 @@ Verify: The branch contains the latest default branch commits and is pushed clea
 
 ### 5.1 Local-First Verification
 Follow [ci-detection.md](references/ci-detection.md) (references/ci-detection.md) to detect and execute project test/lint commands locally inside the worktree if runtime dependencies are available.
-- **Task Discovery Protocol**: Before running local task runner commands, always verify defined task names (e.g. `./task --list`, `npm run`, or `make -qp`) per [ci-detection.md](references/ci-detection.md) (references/ci-detection.md) rather than guessing task names.
+- **Task Discovery Protocol**: Before running local task runner commands, verify defined task names (e.g. `./task --list`, `npm run`, or `make -qp`) per [ci-detection.md](references/ci-detection.md) (references/ci-detection.md) rather than guessing. If the companion MCP server (`agent-skills-mcp`) is available, prioritize calling `pr_detect_tasks` to extract available check and test targets safely without command execution.
 - **Composite Execution**: Encapsulate multi-step verification into an atomic workflow snippet (e.g. `rebase_and_test_worktree.sh`) per [command-snippet](../command-snippet/SKILL.md) (../command-snippet/SKILL.md).
 
 In **`thorough` mode**, execute exhaustive multi-faceted checks (static analysis, dependency audits, tree integrity, clean builds) per [thorough-audit-and-verification.md](references/thorough-audit-and-verification.md) (references/thorough-audit-and-verification.md).
@@ -183,7 +183,7 @@ If all CI checks pass, proceed directly to **Step 7**.
 If any local or remote CI checks fail (e.g., breaking API changes, deprecations, type errors):
 
 1. **Analyze Failure**:
-   - Inspect build / test failure logs.
+   - Inspect build / test failure logs. If the companion MCP server (`agent-skills-mcp`) is available, prioritize calling `pr_match_failure` to match log excerpts against standard failure archetypes and obtain playbooks.
    - Cross-reference failure symptoms against [failure-archetypes.md](references/failure-archetypes.md) (references/failure-archetypes.md) (outdated base branch, unsynced derived artifacts, snapshot drift) to apply standard playbooks before conjecturing code rewrites.
    - Determine the minimal adaptation needed to accommodate the upgraded dependency.
 2. **Present Remediation Plan (Human-in-the-Loop)**:

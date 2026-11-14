@@ -97,7 +97,7 @@ Verify:
 
 ## Step 4: Execute via Cooperative Scheduler Loop
 
-Execute tasks following the cooperative scheduling algorithm:
+Execute tasks following the cooperative scheduling algorithm. If the companion MCP server (`agent-skills-mcp`) is available in the environment, prioritize calling the `dag_create`, `dag_next`, `dag_transition`, `dag_status`, and `dag_render` MCP tools to maintain graph state and enforce anti-polling cooldowns deterministically; otherwise track state manually:
 
 1. **Evaluate Tasks**:
    - Promote `BLOCKED` tasks to `READY` as their dependencies reach `COMPLETED`.

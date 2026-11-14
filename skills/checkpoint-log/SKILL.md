@@ -23,7 +23,7 @@ For directory hierarchy, generation management, and path conventions, refer to [
 
 **Never create or write to a path without explicit user confirmation.**
 
-Resolve the candidate path following [path-conventions.md](references/path-conventions.md) (references/path-conventions.md):
+Resolve the candidate path following [path-conventions.md](references/path-conventions.md) (references/path-conventions.md). If the companion MCP server (`agent-skills-mcp`) is available in the environment, prioritize calling the `checkpoint_init`, `checkpoint_append`, `checkpoint_resume`, and `checkpoint_set_status` MCP tools to manage structured checkpoints with atomic writes and automatic sensitive data filtering; otherwise manage log files directly:
 1. **Identify Base Root**: Identify the designated storage root directory configured in the environment or request it from the user.
 2. **Derive Project & Branch**:
    - Project: Top-level repository directory name (e.g. `basename $(git rev-parse --show-toplevel)`).

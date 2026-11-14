@@ -44,7 +44,7 @@ Verify: Target skill directories (each containing `SKILL.md`) and their file inv
 
 ## Step 2: Run Automated Checks
 
-Execute [run-checks.sh](scripts/run-checks.sh) (scripts/run-checks.sh) (as documented in [automated-checks.md](references/automated-checks.md) (references/automated-checks.md)) against each target skill and record the raw output for checks A through K:
+Execute automated checks A through K against each target skill and record the raw output. If the companion MCP server (`agent-skills-mcp`) is available in the environment, prioritize calling the `lint_skill` or `lint_all` MCP tools; otherwise run [run-checks.sh](scripts/run-checks.sh) (scripts/run-checks.sh) (documented in [automated-checks.md](references/automated-checks.md) (references/automated-checks.md)):
 
 ```sh
 skills/skill-review/scripts/run-checks.sh skills/<target-skill>

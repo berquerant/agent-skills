@@ -26,7 +26,7 @@ This skill is a specialized branch of code review, specifically tailored for cod
 
 ## Step 1: Inventory Snippet Structure & Metrics
 
-Inspect the snippet against the five evaluation dimensions in [intelligibility-rubric.md](references/intelligibility-rubric.md) (references/intelligibility-rubric.md):
+Inspect the snippet against the five evaluation dimensions in [intelligibility-rubric.md](references/intelligibility-rubric.md) (references/intelligibility-rubric.md). If the companion MCP server (`agent-skills-mcp`) is available in the environment, prioritize calling the `snippet_audit` MCP tool (passing `code` or `path`) to extract structural metrics and score complexity automatically; otherwise inspect manually:
 
 1. **Code Scale & Function Count**:
    - Count the non-empty, non-comment lines of code (SLOC).

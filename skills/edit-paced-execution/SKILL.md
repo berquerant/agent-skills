@@ -44,7 +44,7 @@ Verify: Pacing thresholds and command execution modes are proposed with clear ra
 
 ## Step 2: Track Progress and Pace
 
-Execute the planned task while continuously tracking pace against the agreed thresholds.
+Execute the planned task while continuously tracking pace against the agreed thresholds. If the companion MCP server (`agent-skills-mcp`) is available in the environment, prioritize calling `pace_start`, `pace_tick`, `pace_status`, and `pace_reset` for timing and `pace_watch` / `pace_liveness` for process and log liveness tracking; otherwise track pace manually:
 
 1. **Define File Modifications**:
    - Creating, editing, replacing, or patching repository code and documentation files counts as an edit event.
