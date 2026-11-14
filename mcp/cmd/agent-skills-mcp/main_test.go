@@ -70,24 +70,7 @@ func TestCLISubcommands(t *testing.T) {
 			home := t.TempDir()
 
 			if tt.useTransport {
-				serverTransport, clientTransport := mcp.NewInMemoryTransports()
-				done := make(chan struct{})
-				go func() {
-					defer close(done)
-					_ = run(ctx, tt.args, home, &out, &errOut, serverTransport)
-				}()
-
-				client := mcp.NewClient(&mcp.Implementation{Name: "cli-test", Version: "1"}, nil)
-				session, err := client.Connect(ctx, clientTransport, nil)
-				require.NoError(t, err)
-
-				res, err := session.ListTools(ctx, nil)
-				require.NoError(t, err)
-				assert.NotEmpty(t, res.Tools)
-
-				_ = session.Close()
-				cancel()
-				<-done
+				runServeOverInMemoryTransport(ctx, cancel, t, tt.args, home, &out, &errOut)
 			} else {
 				err := run(ctx, tt.args, home, &out, &errOut, nil)
 				if tt.wantErr != "" {
@@ -111,4 +94,33 @@ func TestCLISubcommands(t *testing.T) {
 			}
 		})
 	}
+}
+
+func runServeOverInMemoryTransport(
+	ctx context.Context,
+	cancel context.CancelFunc,
+	t *testing.T,
+	args []string,
+	home string,
+	out, errOut *bytes.Buffer,
+) {
+	t.Helper()
+	serverTransport, clientTransport := mcp.NewInMemoryTransports()
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		_ = run(ctx, args, home, out, errOut, serverTransport)
+	}()
+
+	client := mcp.NewClient(&mcp.Implementation{Name: "cli-test", Version: "1"}, nil)
+	session, err := client.Connect(ctx, clientTransport, nil)
+	require.NoError(t, err)
+
+	res, err := session.ListTools(ctx, nil)
+	require.NoError(t, err)
+	assert.NotEmpty(t, res.Tools)
+
+	_ = session.Close()
+	cancel()
+	<-done
 }
