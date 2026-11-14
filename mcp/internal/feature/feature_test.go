@@ -169,16 +169,16 @@ func TestRegistryRegisterEnabled(t *testing.T) {
 	}
 }
 
-func TestParseConfig(t *testing.T) {
-	home := "/Users/testuser"
+type parseConfigTestCase struct {
+	name    string
+	args    []string
+	env     map[string]string
+	wantErr string
+	check   func(t *testing.T, cfg *feature.Config)
+}
 
-	tests := []struct {
-		name    string
-		args    []string
-		env     map[string]string
-		wantErr string
-		check   func(t *testing.T, cfg *feature.Config)
-	}{
+func parseConfigTestCases(home string) []parseConfigTestCase {
+	return []parseConfigTestCase{
 		{
 			name: "defaults when no flags or env vars are set",
 			check: func(t *testing.T, cfg *feature.Config) {
@@ -260,8 +260,12 @@ func TestParseConfig(t *testing.T) {
 			wantErr: "--cache-max-ttl must be > 0",
 		},
 	}
+}
 
-	for _, tt := range tests {
+func TestParseConfig(t *testing.T) {
+	home := "/Users/testuser"
+
+	for _, tt := range parseConfigTestCases(home) {
 		t.Run(tt.name, func(t *testing.T) {
 			for k, v := range tt.env {
 				t.Setenv(k, v)
