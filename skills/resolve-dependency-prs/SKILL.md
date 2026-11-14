@@ -207,7 +207,7 @@ Once remote and local CI checks succeed:
 1. **Pre-Merge Base Drift Check**: Verify the branch tip is a fast-forward descendant of latest default branch. If behind, rebase in worktree per Step 4 to satisfy fast-forward branch protection rules without resorting to `--admin`.
 2. **Execute Merge via Approvable Snippet**:
    - Do **not** execute raw inline merge commands (e.g., inline `gh pr merge ...`). Encapsulate the operation into a self-descriptive snippet (e.g., `merge_pr_squash.sh`) per [command-snippet](../command-snippet/SKILL.md) (../command-snippet/SKILL.md).
-   - Invoke directly as a standalone binary (`./merge_pr_squash.sh <pr-num>` or `<path> <pr-num>`) preceded by the mandatory Pre-Execution Notice. Do **not** use generic interpreter prefixes (`bash`) or compound `chmod +x ... && exec ...` patterns.
+   - Invoke directly as a standalone binary (`./merge_pr_squash.sh <pr-num>` or `<path> <pr-num>`) atomically within the same turn as the mandatory Pre-Execution Notice. Do **not** yield the chat turn to the user between notice and execution, and do **not** use generic interpreter prefixes (`bash`) or compound `chmod +x ... && exec ...` patterns.
 
 ### 7.2 Post-Merge Default Branch CI Verification Gate
 Before proceeding to the next dependent candidate PR in the same repository or concluding the workflow, verify that the default branch CI triggered by the merge commit passes:

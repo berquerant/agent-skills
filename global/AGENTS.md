@@ -14,8 +14,8 @@ Unless project-specific instructions dictate otherwise, agents must adhere to th
 
 ## 2. Command Execution & Scripting
 
-- **Read Snippet Skills Before Command Execution**:
-  Before running non-trivial shell commands, AI agents must read and follow the **`command-snippet`** and **`snippet-review`** skills to save, parameterize, audit, and explain immutable snippet files instead of executing inline scripts.
+- **Read Snippet Skills Before Command Execution & Atomic Invocation**:
+  Before running non-trivial shell commands, AI agents must read and follow the **`command-snippet`** and **`snippet-review`** skills to save, parameterize, audit, and explain immutable snippet files instead of executing inline scripts. When outputting a pre-execution notice or explaining command intent, agents MUST immediately invoke the execution tool within the exact same response turn. Yielding the chat turn to the user between explanation and tool execution is strictly forbidden.
 
 ---
 
@@ -44,6 +44,6 @@ Unless project-specific instructions dictate otherwise, agents must adhere to th
 
 ## 6. User Notifications
 
-- **Timely Alerts and Preceding Approval Notifications**:
-  Notify the user whenever a requested task completes, when user confirmation or input is required to proceed, or immediately before executing tools or commands that require elevated permissions or sandbox bypassing. For elevated commands, issue the notification in a standalone preceding step before requesting permission. Follow the **`user-notification`** skill for channel selection, preceding step execution, and verification details.
+- **Timely Alerts, Preceding Notifications, & Zero Redundant Chat Turns**:
+  Notify the user whenever a requested task completes, when user confirmation or input is required to proceed, or immediately before executing tools or commands that require elevated permissions or sandbox bypassing. For elevated commands, issue the notification in a standalone preceding step before requesting permission. In the subsequent command step, invoke the privileged tool atomically in the same turn as any pre-execution notice without yielding an intermediate chat turn. Follow the **`user-notification`** skill for channel selection, preceding step execution, and verification details.
 

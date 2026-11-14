@@ -186,10 +186,12 @@ Before executing any snippet, evaluate its cognitive intelligibility and ensure 
    ```
 
    - **Output Presentation Compliance**: Format all file and directory paths (including the script path itself, argument target files, and affected filesystem paths) by co-presenting an accessible Markdown link and an unadorned raw string in parentheses per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md) (e.g., `[script.sh](<file:///path/to/script.sh>) (path/to/script.sh)`).
+   - **Atomic Notice-and-Execute (Strict Prohibition of Yielding Turns)**:
+     You **MUST** invoke the execution tool in the exact same response turn where you output the notice. Never end your turn with plain text or ask the user to chat "ok" or "proceed" before running the tool. The host environment provides native execution approval dialogs at the tool-call boundary; yielding the chat turn beforehand forces the user into redundant chat replies and wastes interaction cycles.
    - Informal, single-sentence mentions (e.g., "Running script now to check files.") are strictly prohibited. The structured notice must be presented clearly.
    - **Approval Invalidation**: If any change or correction is made to the snippet after this notice is presented, the previous approval is automatically void. A new versioned file must be created and a new notice presented.
 
-Verify: The snippet's intelligibility is audited, any high complexity is simplified into a new versioned file or consulted on, and the mandatory Pre-Execution Notice is output before execution with all script and related file paths formatted per `output-presentation`.
+Verify: The snippet's intelligibility is audited, any high complexity is simplified into a new versioned file or consulted on, and the mandatory Pre-Execution Notice is output in the exact same turn that invokes the execution tool with all paths formatted per `output-presentation`.
 
 ---
 
@@ -238,7 +240,7 @@ Verify: Unneeded temporary files and superseded snippet versions are disposed of
 - **Include a complete documentation header**: Document purpose, arguments, usage, and prerequisites at the top of every snippet file.
 - **Treat saved snippets as write-once (immutable)**: Write any revision, bug fix, or simplification to a new versioned file (e.g., `_v2`) rather than editing in place to prevent TOCTOU approval discrepancies.
 - **Audit intelligibility before execution**: Evaluate every snippet with [snippet-review](../snippet-review/SKILL.md) (../snippet-review/SKILL.md) prior to execution.
-- **Output the structured Pre-Execution Notice**: Present the `### 📋 Snippet Pre-Execution Notice` block before invoking the execution tool, co-presenting all script and target paths per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md).
+- **Output Pre-Execution Notice atomically with tool invocation**: Present the `### 📋 Snippet Pre-Execution Notice` block and invoke the execution tool within the exact same response turn; strictly prohibit yielding the chat turn to the user between notice output and tool execution.
 - **Encapsulate atomic task stages rather than single command wrapping**: Group deterministic sequences of commands forming a single logical milestone (e.g., resolve -> commit -> verify) into an atomic snippet per [approvable-patterns.md](references/approvable-patterns.md) (references/approvable-patterns.md) to prevent script proliferation and approval fatigue, while keeping dynamic subcommands strictly forbidden.
 - **Curry multi-target batches into zero-argument monitor snippets**: For repetitive polling across a fixed batch of items (e.g. active PR CI checks), curry the target list into a zero-argument snippet (e.g. `./check_active_prs_status.sh`) to enable invariant, friction-free re-execution under approval rules without argument drift.
 - **Universal directory context encapsulation**: Validate target paths and enter the target directory via `cd "${target_dir:?}"` inside the script per [approvable-patterns.md](references/approvable-patterns.md) (references/approvable-patterns.md) instead of relying on tool-specific options (`git -C` vs `gh`).
