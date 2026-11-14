@@ -28,7 +28,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup mise
-        uses: jdx/mise-action@v5.2.6
+        uses: jdx/mise-action@v5.2.7
 
       - name: Run shell lint
         run: mise run lint
