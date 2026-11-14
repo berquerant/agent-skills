@@ -87,11 +87,16 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 ├── .github/
 │   ├── dependabot.yml           # Dependabot configuration
 │   └── workflows/
-│       └── lint.yml             # CI lint workflow
+│       ├── lint.yml             # CI lint workflow
+│       └── test.yml             # CI build & test workflow
 ├── bin/
 │   ├── check-skills.sh          # Automated quality and consistency checker across skills
 │   ├── install.sh               # Copies skills to a target directory
-│   └── lint.sh                  # Shellcheck and shfmt runner
+│   ├── lint.sh                  # Shellcheck and shfmt runner
+│   └── mcp-readme.sh            # Generates mcp/README.md from CLI help output
+├── mcp/
+│   ├── cmd/agent-skills-mcp/    # Single-binary MCP server entrypoint
+│   └── internal/                # Feature registry, store, and MCP server packages
 ├── skills/
 │   ├── change-message/
 │   │   └── references/          # Commit message & PR/MR description guides
@@ -188,9 +193,19 @@ ln -s ../skills .agents/skills
 
 AI agents scanning `.agents/skills` will then discover and activate these skills automatically.
 
+### Companion MCP Server (`agent-skills-mcp`)
+
+[`mcp/`](mcp/README.md) provides a single-binary Go MCP server (`agent-skills-mcp`) that exposes deterministic tools for `cache`, `task-dag`, `skill-lint`, `snippet-analyzer`, `checkpoint`, `pace-guard`, and `pr-triage`, with per-feature flags to enable or disable individual capabilities:
+
+```bash
+go install github.com/berquerant/agent-skills/mcp/cmd/agent-skills-mcp@latest
+```
+
+Skills remain platform-agnostic and work standalone without the MCP server; see [`mcp/README.md`](mcp/README.md) for flags and host configuration.
+
 ## Development
 
-This repository uses [mise](https://mise.jdx.dev/) to manage development tools (`shellcheck`, `shfmt`).
+This repository uses [mise](https://mise.jdx.dev/) to manage development tools (`go`, `golangci-lint`, `shellcheck`, `shfmt`).
 
 ```bash
 # Install development tools
@@ -202,7 +217,15 @@ mise run lint
 # Run automated skill review checks across all skills
 mise run check-skills
 
-# Run all checks (lint + check-skills)
+# Build, test, and lint the Go MCP module
+mise run mcp:build
+mise run mcp:test
+mise run mcp:lint
+
+# Regenerate mcp/README.md from CLI flags
+mise run mcp:readme-gen
+
+# Run all checks (lint + check-skills + mcp)
 mise run check
 
 # Format shell scripts

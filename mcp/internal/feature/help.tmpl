@@ -1,0 +1,27 @@
+Single-binary Model Context Protocol (MCP) server for `agent-skills`, implemented in Go.
+Every feature module can be independently enabled or disabled via CLI flags or environment variables.
+
+## Usage
+
+```shell
+# Run MCP server over stdio (default subcommand)
+agent-skills-mcp [serve] [flags]
+
+# Disable specific features
+agent-skills-mcp serve --pace-guard=false --pr-triage=false
+
+# Print build version
+agent-skills-mcp version
+```
+
+## Configuration & Precedence
+
+Configuration values are resolved in the following order of precedence (highest to lowest):
+1. Command-line flags (e.g. `--task-dag=false`)
+2. Environment variables prefixed with `AGENT_SKILLS_MCP_` (e.g. `AGENT_SKILLS_MCP_TASK_DAG=false`)
+3. Default values defined for each flag (`--cache-dir` also falls back to `CACHE_MCP_DIR` when unset)
+
+Environment variables are derived from flag names in uppercase with hyphens replaced by underscores.
+e.g. `--snippet-analyzer` -> `AGENT_SKILLS_MCP_SNIPPET_ANALYZER`
+
+## Flags
