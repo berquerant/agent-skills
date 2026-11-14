@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -16,6 +17,19 @@ import (
 var pythonASTScript string
 
 const pythonParseTimeout = 5 * time.Second
+
+var resolvePythonBin = sync.OnceValue(func() string {
+	if _, err := exec.LookPath("mise"); err == nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+		if out, err := exec.CommandContext(ctx, "mise", "which", "python3").Output(); err == nil {
+			if p := strings.TrimSpace(string(out)); p != "" {
+				return p
+			}
+		}
+	}
+	return "python3"
+})
 
 type pythonASTResponse struct {
 	OK      bool     `json:"ok"`
@@ -28,7 +42,7 @@ func analyzePythonAST(code string) (Metrics, []Hazard, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), pythonParseTimeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "python3", "-I", "-c", pythonASTScript)
+	cmd := exec.CommandContext(ctx, resolvePythonBin(), "-I", "-c", pythonASTScript)
 	cmd.Stdin = strings.NewReader(code)
 	cmd.Env = []string{
 		"PATH=" + os.Getenv("PATH"),

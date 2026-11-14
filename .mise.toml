@@ -1,6 +1,9 @@
 [tools]
+"aqua:boyter/scc" = "4.1.0"
 go = "1.27.4"
 golangci-lint = "2.15.0"
+"pipx:lizard" = "1.24.1"
+python = "3.14.9"
 shellcheck = "0.11.0"
 shfmt = "3.14.1"
 
@@ -48,9 +51,17 @@ description = "Verify mcp/README.md is up to date"
 depends = ["mcp:readme-gen"]
 run = "git diff --exit-code mcp/README.md"
 
+[tasks.lizard]
+description = "Run lizard complexity check"
+run = "lizard -w -C 15 -L 100 -s cyclomatic_complexity"
+
+[tasks.scc]
+description = "Run scc code and complexity report"
+run = "scc --by-file -s complexity"
+
 [tasks."mcp:lint"]
 description = "Run all lint and doc checks on mcp module"
-depends = ["mcp:fix", "mcp:vet", "mcp:golangci-lint", "mcp:readme-diff"]
+depends = ["mcp:fix", "mcp:vet", "mcp:golangci-lint", "mcp:readme-diff", "lizard", "scc"]
 
 [tasks."mcp:test"]
 description = "Run agent-skills-mcp tests with coverage and race detector"
