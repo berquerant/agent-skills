@@ -71,10 +71,6 @@ func RemainingStubFeatures() []Feature {
 			ToolVerbs:   []string{"dag_ping"},
 		},
 		&StubFeature{
-			FeatureName: "skill-lint",
-			ToolVerbs:   []string{"skill_lint_ping"},
-		},
-		&StubFeature{
 			FeatureName: "snippet-analyzer",
 			ToolVerbs:   []string{"snippet_ping"},
 		},

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -56,21 +57,21 @@ func TestServerFeatureToggles(t *testing.T) {
 		{
 			name:            "all features enabled by default",
 			wantSummarySub:  "features=[cache,task-dag,skill-lint,snippet-analyzer,checkpoint,pace-guard,pr-triage]",
-			wantTools:       []string{"cache_get", "dag_ping", "skill_lint_ping", "snippet_ping", "checkpoint_ping", "pace_ping", "pr_triage_ping"},
+			wantTools:       []string{"cache_get", "dag_ping", "lint_skill", "lint_all", "snippet_ping", "checkpoint_ping", "pace_ping", "pr_triage_ping"},
 			wantAbsentTools: nil,
 		},
 		{
 			name:            "disabling pace-guard and pr-triage omits their tools",
 			extraArgs:       []string{"--pace-guard=false", "--pr-triage=false"},
 			wantSummarySub:  "features=[cache,task-dag,skill-lint,snippet-analyzer,checkpoint]",
-			wantTools:       []string{"cache_get", "cache_set", "dag_ping", "skill_lint_ping", "snippet_ping", "checkpoint_ping"},
+			wantTools:       []string{"cache_get", "cache_set", "dag_ping", "lint_skill", "snippet_ping", "checkpoint_ping"},
 			wantAbsentTools: []string{"pace_ping", "pr_triage_ping"},
 		},
 		{
 			name:            "disabling cache omits cache_* tools",
 			extraArgs:       []string{"--cache=false"},
 			wantSummarySub:  "features=[task-dag,skill-lint,snippet-analyzer,checkpoint,pace-guard,pr-triage]",
-			wantTools:       []string{"dag_ping", "skill_lint_ping", "snippet_ping", "checkpoint_ping", "pace_ping", "pr_triage_ping"},
+			wantTools:       []string{"dag_ping", "lint_skill", "snippet_ping", "checkpoint_ping", "pace_ping", "pr_triage_ping"},
 			wantAbsentTools: []string{"cache_get", "cache_set", "cache_exist", "cache_delete", "cache_version", "cache_purge"},
 		},
 	}
@@ -269,4 +270,33 @@ func TestServerCacheEndToEnd(t *testing.T) {
 	require.True(t, ok)
 	assert.Contains(t, tc.Text, `"hit":true`)
 	assert.Contains(t, tc.Text, largeStdout)
+
+	skillDir, err := filepath.Abs(filepath.Join("..", "..", "..", "skills", "skill-review"))
+	require.NoError(t, err)
+	lintRes, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name: "lint_skill",
+		Arguments: map[string]any{
+			"path":   skillDir,
+			"strict": true,
+		},
+	})
+	require.NoError(t, err)
+	assert.False(t, lintRes.IsError)
+	lintTC, ok := lintRes.Content[0].(*mcp.TextContent)
+	require.True(t, ok)
+	assert.Contains(t, lintTC.Text, `"passed":true`)
+	assert.Contains(t, lintTC.Text, `"skill_name":"skill-review"`)
+
+	lintAllRes, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name: "lint_all",
+		Arguments: map[string]any{
+			"root":   skillDir,
+			"strict": true,
+		},
+	})
+	require.NoError(t, err)
+	assert.False(t, lintAllRes.IsError)
+	lintAllTC, ok := lintAllRes.Content[0].(*mcp.TextContent)
+	require.True(t, ok)
+	assert.Contains(t, lintAllTC.Text, `"total_skills":1`)
 }

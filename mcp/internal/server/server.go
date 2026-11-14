@@ -10,6 +10,7 @@ import (
 
 	"github.com/berquerant/agent-skills/mcp/internal/cache"
 	"github.com/berquerant/agent-skills/mcp/internal/feature"
+	"github.com/berquerant/agent-skills/mcp/internal/skilllint"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -143,12 +144,18 @@ func ensureRegistry(reg *feature.Registry) (*feature.Registry, error) {
 		return reg, nil
 	}
 	reg = feature.NewRegistry()
-	if err := reg.Add(cache.NewFeature()); err != nil {
-		return nil, err
+	byName := map[string]feature.Feature{
+		"cache":      cache.NewFeature(),
+		"skill-lint": skilllint.NewFeature(),
 	}
 	for _, f := range feature.RemainingStubFeatures() {
-		if err := reg.Add(f); err != nil {
-			return nil, err
+		byName[f.Name()] = f
+	}
+	for _, name := range feature.FeatureNames {
+		if f, ok := byName[name]; ok {
+			if err := reg.Add(f); err != nil {
+				return nil, err
+			}
 		}
 	}
 	return reg, nil
