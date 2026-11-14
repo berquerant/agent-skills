@@ -1,3 +1,13 @@
+// Package store provides foundational filesystem primitives for safe local persistence,
+// atomic writes, cross-process/multi-goroutine file locking, and stale file cleanup.
+//
+// Security & Correctness Invariants:
+//  1. All directory operations use [os.OpenRoot] to guarantee directory containment and
+//     prevent symlink traversal attacks (TOCTOU).
+//  2. Atomic writes write to a PID- and random ID-scoped temporary file in the target
+//     directory before issuing an atomic rename, ensuring callers never observe partial writes.
+//  3. File locking combines POSIX flock (for inter-process coordination) with sync.Mutex
+//     (for goroutine-level synchronization within the same process).
 package store
 
 import (

@@ -10,6 +10,11 @@ import (
 )
 
 // ClassifyFiles inspects a list of modified file paths and verifies dependency manifest exclusivity.
+//
+// Classification & Eligibility Invariant:
+// A PR is eligible for automated triage only if all modified files are dependency manifests, lockfiles,
+// or non-code metadata (docs, tool configs). If unknown files or source files are touched, the PR is
+// deemed ineligible unless the caller provides explicit AgentOverrides.
 func ClassifyFiles(in ClassifyFilesInput) (ClassifyFilesOutput, error) {
 	for _, f := range in.Files {
 		if err := guard.CheckPathAllowed(f); err != nil {

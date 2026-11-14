@@ -1,3 +1,10 @@
+// Package skilllint implements automated static linting and quality conformance checks (A through K)
+// for agent skills against the Agent Skills Specification and repository conventions.
+//
+// Automated Check Coverage:
+//   - Checks A-C: Inventory completeness, frontmatter structure, and third-person trigger descriptions.
+//   - Checks D-F: Standard SKILL.md sections (Step/Verify checkpoints), link portability, and script permissions.
+//   - Checks G-K: Security patterns, repository skill index synchronization, and reference self-containment.
 package skilllint
 
 // Severity represents the severity of a skill lint finding.

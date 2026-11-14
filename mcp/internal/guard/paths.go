@@ -1,3 +1,8 @@
+// Package guard enforces security boundaries across all MCP server features by rejecting
+// access to sensitive files, system paths, private keys, and high-entropy secret patterns.
+//
+// Rules and patterns are derived from industry-standard tools (Gitleaks, TruffleHog, and
+// git-secrets) to protect user credentials and host operating system configurations.
 package guard
 
 import (

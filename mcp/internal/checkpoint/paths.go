@@ -1,3 +1,11 @@
+// Package checkpoint implements structured, append-only milestone logging, task lifecycle
+// tracking, and context recovery for the checkpoint-log skill.
+//
+// File & Path Conventions:
+//   - Logs follow the hierarchical structure: `<root>/<doc_type>/<context>/<project>__<branch>__<timestamp>.md`
+//   - Each file contains a YAML frontmatter header, an objective section, and zero or more
+//     chronological, append-only milestone entries.
+//   - Writes are guarded by cross-process file locks to prevent race conditions during parallel execution.
 package checkpoint
 
 import (

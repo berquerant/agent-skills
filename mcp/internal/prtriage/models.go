@@ -1,3 +1,12 @@
+// Package prtriage implements automated Pull Request triage, file classification, local CI task
+// detection, and test failure archetype matching for the resolve-dependency-prs skill.
+//
+// Capabilities:
+//   - File Classification: Categorizes touched files into manifests, lockfiles, source, tests, CI, docs, or unknown.
+//   - Candidate Filtering: Validates bot authors, dependency labels, title signatures, and disqualification criteria.
+//   - Task Detection: Discovers local test, build, lint, and lockfile update commands across 12+ package ecosystems.
+//   - Failure Matching: Analyzes CI/build error logs to classify failures into structured archetypes with remediation hints.
+//   - Agent Overrides: Allows agents to supply explicit classifications or allowed PR numbers when heuristics return unknown.
 package prtriage
 
 // Ecosystem identifies package management ecosystems from filter-criteria.md §2.

@@ -1,3 +1,7 @@
+// Package feature defines the modular architecture for agent-skills-mcp capabilities.
+// Each functional area (cache, task-dag, skill-lint, snippet-analyzer, checkpoint, pace-guard,
+// and pr-triage) implements the Feature interface and can be independently enabled or disabled
+// via command-line flags or environment variables.
 package feature
 
 import (

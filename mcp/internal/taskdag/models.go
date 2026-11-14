@@ -1,3 +1,11 @@
+// Package taskdag provides directed acyclic graph (DAG) dependency modeling, topological
+// sorting, cycle detection, cooperative task scheduling, and state transitions for the
+// task-dependency-pipeline skill.
+//
+// Key Scheduling Features:
+//   - Resource Exclusivity: Prevents simultaneous execution of tasks that share a working tree or resource key.
+//   - Wait Interleaving: Prioritizes local tasks while long-running external tasks (CI, builds) wait asynchronously.
+//   - Anti-Polling Cooldown: Enforces exponential backoff and cooldown delays on recurring checks to avoid API rate limits.
 package taskdag
 
 // TaskState represents the formal lifecycle state of a task node in a DAG.

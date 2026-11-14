@@ -1,3 +1,13 @@
+// Package cache implements high-performance, compressed, atomic local command result
+// and execution output caching.
+//
+// Key Design & Partitioning:
+//   - Cache entries are keyed by arbitrary identifiers or deterministic SHA-256 digests
+//     of canonicalized command invocations.
+//   - Files on disk are sharded into 256 two-character subdirectories (e.g. `ab/`) to prevent
+//     filesystem performance degradation with large numbers of cached entries.
+//   - Payloads are compressed using zstandard with a bounded memory decoder to guard against
+//     decompression resource exhaustion.
 package cache
 
 import (

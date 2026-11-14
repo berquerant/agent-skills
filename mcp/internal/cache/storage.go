@@ -38,6 +38,8 @@ func NewStorage(cfg Config) (*Storage, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create zstd encoder: %w", err)
 	}
+	// Cap zstd decoder memory consumption to prevent decompression bomb attacks (zip bombs)
+	// from consuming unbounded host memory.
 	maxDecodeMem := uint64(max(cfg.MaxCacheSize*2, 16*1024*1024)) //nolint:gosec // G115: max() guarantees positive int64
 	dec, err := zstd.NewReader(nil, zstd.WithDecoderMaxMemory(maxDecodeMem))
 	if err != nil {

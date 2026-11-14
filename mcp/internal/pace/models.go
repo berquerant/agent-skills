@@ -1,3 +1,10 @@
+// Package pace implements edit-paced execution tracking, non-edit tool call budget enforcement,
+// cyclic failure detection, and background process liveness monitoring for the edit-paced-execution skill.
+//
+// Invariants & Guardrails:
+//   - Non-edit thresholds and elapsed time limits prevent unbounded investigative loops without progress.
+//   - Cyclic failure detection halts execution if consecutive identical failures occur (cyclic failure limit: 3).
+//   - Process watching tracks background command PIDs, heartbeats, and resource consumption.
 package pace
 
 // Profile identifies the work complexity preset from pace-monitoring-guide.md §1.

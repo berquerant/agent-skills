@@ -1,3 +1,10 @@
+// catalog.go provides declarative, table-driven rule sets for package ecosystem manifests,
+// programming language extensions, build configurations, bot authors, and test markers.
+//
+// Invariant:
+// All matching tables are decoupled from imperative execution logic to allow easy expansion
+// and deterministic, table-driven testing.
+
 package prtriage
 
 import (

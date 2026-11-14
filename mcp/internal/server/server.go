@@ -1,3 +1,5 @@
+// Package server wires together the MCP JSON-RPC protocol implementation, runtime logger,
+// configuration validation, and enabled capability features into a runnable MCP server instance.
 package server
 
 import (

@@ -1,3 +1,12 @@
+// Package snippet performs static AST analysis, complexity scoring, and hazard detection
+// on shell snippets and inline command scripts for the snippet-review skill.
+//
+// Analysis Capabilities:
+//   - AST Extraction: Uses mvdan.cc/sh/v3 to parse POSIX/Bash syntax into concrete syntax trees
+//     to compute exact SLOC, nesting depth, branch count, pipeline length, and variable counts.
+//   - Hazard Detection: Detects high-risk shell idioms (e.g. `eval`, unquoted variable expansion,
+//     pipe-to-shell, arbitrary interpreter execution) and flags their line numbers.
+//   - Tier Classification: Maps metrics against the 4-level Intelligibility Rubric (Level 1 to 4).
 package snippet
 
 // Confidence indicates whether metrics were extracted via full AST parsing or heuristic fallback.
