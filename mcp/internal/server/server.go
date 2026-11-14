@@ -12,6 +12,7 @@ import (
 	"github.com/berquerant/agent-skills/mcp/internal/feature"
 	"github.com/berquerant/agent-skills/mcp/internal/skilllint"
 	"github.com/berquerant/agent-skills/mcp/internal/snippet"
+	"github.com/berquerant/agent-skills/mcp/internal/taskdag"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -147,6 +148,7 @@ func ensureRegistry(reg *feature.Registry) (*feature.Registry, error) {
 	reg = feature.NewRegistry()
 	byName := map[string]feature.Feature{
 		"cache":            cache.NewFeature(),
+		"task-dag":         taskdag.NewFeature(),
 		"skill-lint":       skilllint.NewFeature(),
 		"snippet-analyzer": snippet.NewFeature(),
 	}

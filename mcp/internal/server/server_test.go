@@ -57,21 +57,21 @@ func TestServerFeatureToggles(t *testing.T) {
 		{
 			name:            "all features enabled by default",
 			wantSummarySub:  "features=[cache,task-dag,skill-lint,snippet-analyzer,checkpoint,pace-guard,pr-triage]",
-			wantTools:       []string{"cache_get", "dag_ping", "lint_skill", "lint_all", "snippet_audit", "checkpoint_ping", "pace_ping", "pr_triage_ping"},
+			wantTools:       []string{"cache_get", "dag_create", "dag_next", "lint_skill", "lint_all", "snippet_audit", "checkpoint_ping", "pace_ping", "pr_triage_ping"},
 			wantAbsentTools: nil,
 		},
 		{
 			name:            "disabling pace-guard and pr-triage omits their tools",
 			extraArgs:       []string{"--pace-guard=false", "--pr-triage=false"},
 			wantSummarySub:  "features=[cache,task-dag,skill-lint,snippet-analyzer,checkpoint]",
-			wantTools:       []string{"cache_get", "cache_set", "dag_ping", "lint_skill", "snippet_audit", "checkpoint_ping"},
+			wantTools:       []string{"cache_get", "cache_set", "dag_create", "lint_skill", "snippet_audit", "checkpoint_ping"},
 			wantAbsentTools: []string{"pace_ping", "pr_triage_ping"},
 		},
 		{
 			name:            "disabling cache omits cache_* tools",
 			extraArgs:       []string{"--cache=false"},
 			wantSummarySub:  "features=[task-dag,skill-lint,snippet-analyzer,checkpoint,pace-guard,pr-triage]",
-			wantTools:       []string{"dag_ping", "lint_skill", "snippet_audit", "checkpoint_ping", "pace_ping", "pr_triage_ping"},
+			wantTools:       []string{"dag_create", "lint_skill", "snippet_audit", "checkpoint_ping", "pace_ping", "pr_triage_ping"},
 			wantAbsentTools: []string{"cache_get", "cache_set", "cache_exist", "cache_delete", "cache_version", "cache_purge"},
 		},
 	}
@@ -126,8 +126,8 @@ func TestServerFeatureToggles(t *testing.T) {
 
 			// Verify calling an active tool uses the injected clock
 			callRes, err := session.CallTool(ctx, &mcp.CallToolParams{
-				Name:      "dag_ping",
-				Arguments: map[string]any{"message": "hello-dag"},
+				Name:      "checkpoint_ping",
+				Arguments: map[string]any{"message": "hello-cp"},
 			})
 			require.NoError(t, err)
 			assert.False(t, callRes.IsError)
@@ -138,8 +138,8 @@ func TestServerFeatureToggles(t *testing.T) {
 			var pingOut feature.PingResult
 			require.NoError(t, json.Unmarshal([]byte(tc.Text), &pingOut))
 			assert.True(t, pingOut.OK)
-			assert.Equal(t, "task-dag", pingOut.Feature)
-			assert.Equal(t, "hello-dag", pingOut.Echo)
+			assert.Equal(t, "checkpoint", pingOut.Feature)
+			assert.Equal(t, "hello-cp", pingOut.Echo)
 			assert.Equal(t, fixedNow.Unix(), pingOut.Timestamp)
 		})
 	}
@@ -316,4 +316,20 @@ func verifyLintAndSnippetTools(ctx context.Context, t *testing.T, session *mcp.C
 	snipTC, ok := snipRes.Content[0].(*mcp.TextContent)
 	require.True(t, ok)
 	assert.Contains(t, snipTC.Text, `"level":4`)
+
+	dagRes, err := session.CallTool(ctx, &mcp.CallToolParams{
+		Name: "dag_create",
+		Arguments: map[string]any{
+			"dag_id": "dag-e2e",
+			"tasks": []map[string]any{
+				{"id": "step-1", "title": "Setup"},
+				{"id": "step-2", "title": "Verify", "depends_on": []string{"step-1"}},
+			},
+		},
+	})
+	require.NoError(t, err)
+	assert.False(t, dagRes.IsError)
+	dagTC, ok := dagRes.Content[0].(*mcp.TextContent)
+	require.True(t, ok)
+	assert.Contains(t, dagTC.Text, `"dag_id":"dag-e2e"`)
 }
