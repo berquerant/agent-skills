@@ -85,7 +85,6 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │       └── skill-modernize/
 │           └── references/      # 5-axis model delta matrix & 3-phase remediation playbook (repo-local)
 ├── .github/
-│   ├── dependabot.yml           # Dependabot configuration
 │   └── workflows/
 │       ├── lint.yml             # CI lint workflow
 │       └── test.yml             # CI build & test workflow
@@ -153,6 +152,7 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 ├── AGENTS.md                    # Operational guidelines & context for AI agents
 ├── .gitignore
 ├── .mise.toml                   # Tool configuration and mise tasks
+├── renovate.json                # Renovate configuration
 └── README.md
 ```
 
