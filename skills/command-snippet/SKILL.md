@@ -44,6 +44,15 @@ Inspect the intended command against the avoidance thresholds:
   Commands that embed dynamic context variables in the middle of command lines
   (e.g., `git -C <dir> status`), which disrupt prefix-based approval rules or
   obscure the critical action verb during human review.
+- **Trailing target arguments & persistent read approval friction**:
+  Commands where the target resource is placed at the end of the command line preceded
+  by variable flags and patterns (e.g., `grep [options...] <pattern> <file>`). While
+  reading the specific target file is safe once authorized, prefix matching cannot bind
+  approval to trailing arguments. Approving `grep` globally grants dangerous blanket
+  read access to the entire filesystem, while changing flags (`-i`, `-C 5`) invalidates
+  prefix rules and triggers repetitive approval friction. Currying the target file
+  into a dedicated search snippet establishes a stable prefix for persistent read
+  approval while strictly confining read scope.
 - **Overly broad command scope & persistent approval friction**:
   Commands invoking omnipotent CLI tools with wide capability blast radiuses
   (e.g., `gh`, `aws`, `gcloud`, `kubectl`), where approving raw commands imposes
@@ -55,7 +64,7 @@ inline execution and proceed to create a snippet file with the appropriate exten
 (e.g., `.sh`, `.py`, `.js`).
 
 - **Risk-Proportional Lightweight Path for Read-Only Local Inspection**:
-  When a command is strictly **read-only, local, and side-effect-free** (e.g., local `find`/`grep`/`awk` inspection pipelines that do not mutate files, access external networks, or require elevated sandbox permissions), prefer splitting it into simple $<120$-character commands first; only escalate to full snippet creation and `snippet-review` when the inspection logic must be reused or exceeds simple command splitting.
+  When a command is strictly **read-only, local, and side-effect-free** (e.g., local `find`/`grep`/`awk` inspection pipelines that do not mutate files, access external networks, or require elevated sandbox permissions), prefer splitting it into simple $<120$-character commands first; escalate to full snippet creation and `snippet-review` when the inspection logic must be reused, exceeds simple command splitting, or requires persistent read approval on a specific file without triggering repetitive approval gates.
 
 Verify: You have checked the command against all avoidance thresholds and confirmed
 that it requires snippet creation.
@@ -99,8 +108,9 @@ Design the snippet's interface:
 4. **Trailing Variable Arguments & Single Responsibility**:
    - Apply approvable snippet patterns per [approvable-patterns.md](references/approvable-patterns.md) (references/approvable-patterns.md):
      - **Right-align dynamic variables**: Curry fixed commands and operations inside the snippet so that context-dependent variables (such as directory paths or hostnames) are exposed exclusively as trailing CLI arguments (`$1`, `$2`).
+     - **Curry target files for persistent read approval**: When repeatedly searching or inspecting a specific target file (e.g., `grep` over a log file or codebase target), curry the target file path inside the snippet as a constant and expose search patterns and optional flags as arguments. This allows prefix-based approval systems to grant persistent read approval for that file without granting blanket read access to the rest of the filesystem.
      - **Strict single responsibility**: Every snippet must perform exactly one concrete action. Never pass subcommands or action verbs as parameters to a generalized wrapper (e.g., generate `run_git_status.sh` and `run_git_tag.sh` separately instead of a multi-purpose `git -C "$1" "$2"`).
-     - **Constrain operational scope granularity**: Apply the 4-tier scope granularity model. Select parameter-constrained snippets (Level 2) for recurring read-only queries across multiple items, and fully fixed resource snippets (Level 3) for state-mutating operations or workflows strictly focused on a single target, minimizing human review friction without introducing approval fatigue.
+     - **Constrain operational scope granularity**: Apply the 4-tier scope granularity model. Select parameter-constrained snippets (Level 2) for recurring read-only queries across multiple items, and fully fixed resource snippets (Level 3) for state-mutating operations, workflows strictly focused on a single target, or persistent read access to a specific file, minimizing human review friction without introducing approval fatigue.
      - **Shell hardening**: Include `set -euo pipefail`, explicit argument checks (`"${1:?error message}"`), input existence validation, and replace the wrapper process via `exec`.
 
 Verify: All variable inputs are mapped to explicit positional arguments or
@@ -220,4 +230,5 @@ Verify: Unneeded temporary files and superseded snippet versions are disposed of
 - **Audit intelligibility before execution**: Evaluate every snippet with [snippet-review](../snippet-review/SKILL.md) (../snippet-review/SKILL.md) prior to execution.
 - **Output the structured Pre-Execution Notice**: Present the `### 📋 Snippet Pre-Execution Notice` block before invoking the execution tool, co-presenting all script and target paths per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md).
 - **Enforce single responsibility and trailing arguments**: Curry fixed operations into dedicated snippet files and place dynamic variables in trailing CLI arguments per [approvable-patterns.md](references/approvable-patterns.md) (references/approvable-patterns.md) to support prefix-based approval rules.
+- **Curry target files for persistent read approval**: When repeatedly searching or inspecting a specific target file (e.g., `grep [options] <pattern> <file>`), curry the target file path inside a dedicated snippet per [approvable-patterns.md](references/approvable-patterns.md) (references/approvable-patterns.md) so users can grant persistent read approval for that file via prefix matching without granting blanket read access to the rest of the filesystem.
 - **Constrain operational scope**: Restrict broad CLI tools (`gh`, `aws`, `kubectl`) to specific subcommands or exact targets per [approvable-patterns.md](references/approvable-patterns.md) (references/approvable-patterns.md) to reduce review friction.

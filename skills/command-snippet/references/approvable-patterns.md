@@ -23,6 +23,23 @@ This structure causes two distinct failures:
 1. **Approval Rule Invalidation**: A user or security tool wishing to grant permanent approval for `git status` cannot rely on simple prefix rules because the dynamic directory path splits the command (`git` ... `status`).
 2. **Cognitive Audit Fatigue**: When human reviewers inspect commands with long paths or complex options, the critical operation (e.g., whether the command is a read-only `status` or a destructive `reset --hard`) is pushed to the far right or buried inside flags, increasing review error rates.
 
+### The Trailing Target Argument & Persistent Read Dilemma
+A symmetrical but inverted approval friction occurs with inspection commands such as `grep [options...] <pattern> <file>`:
+
+```sh
+# Target file is fixed, but options and patterns vary across investigation steps:
+grep -i "error" /path/to/app.log
+grep -n -C 5 "connection reset" /path/to/app.log
+grep -E "(FATAL|CRITICAL)" /path/to/app.log
+```
+
+Here, the user or harness may explicitly decide: *"Reading `/path/to/app.log` is safe; once approved, the agent may search it freely throughout this investigation."*
+
+However, standard CLI syntax places the target `<file>` at the very end of the command line, preceded by dynamic options and search patterns:
+1. **Blanket Read Approval Hazard**: Granting a prefix-based approval on `grep` or `grep -i` is dangerous because it permits reading **any** arbitrary file on the filesystem (including `.env`, private keys, or `/etc/shadow`), destroying the principle of least privilege.
+2. **Persistent Approval Impossibility**: Because the target file is buried at the tail of the command, prefix matching cannot recognize that all these queries target the same pre-approved file. Every variation of flags (`-C 5`, `-E`) and patterns triggers a new approval gate, causing severe **approval fatigue** and interrupting the agent's investigation loop.
+3. **The Solution (Currying the Target File)**: By currying the target file path inside a dedicated snippet (e.g. `./search_app_log.sh "pattern" [options...]`), the snippet invocation prefix (`./search_app_log.sh`) becomes stable. A single user approval enables persistent, safe inspection of that specific file without exposing the rest of the filesystem.
+
 ---
 
 ## 2. Core Design Principles
@@ -61,6 +78,7 @@ What constitutes a "variable argument" is not fixed by the command's syntax alon
 - **Multi-Repository Operations**: When auditing or reporting status across multiple repositories, the repository path (`-C <dir>`) is variable, while the query (`status`, `rev-parse`, `log -1`) is fixed.
 - **Multi-Branch Operations**: When inspecting branch heads within a single repository, the directory is fixed, but the branch reference is variable (`git show "$1"`).
 - **Remote Host Operations**: When inspecting multiple remote hosts, the host identifier in `ssh "$1" systemctl status service` is variable, while the inspection command is fixed.
+- **Target-Focused File/Log Inspection**: When investigating an issue by repeatedly querying a specific log file or codebase target (e.g. `/path/to/app.log`), the target file path is fixed, while the search pattern and filter options (`-i`, `-C 3`, `-v`) are variable. Currying the file path inside the snippet allows one-time approval to cover all iterative searches on that file.
 
 Evaluate the execution pattern across the overall workflow before deciding which inputs to parameterize.
 
@@ -73,10 +91,10 @@ Constraining broad CLI tools into specialized snippet files minimizes capability
 
 | Tier | Granularity Level | Invocation Form | Review Burden & Approval Predictability |
 |---|---|---|---|
-| **Level 0** | **Raw Broad CLI** | `gh pr view 123` | **High Review Burden**: Approving `gh` grants blanket permissions to destructive capabilities (`gh repo delete`, etc.). Every single invocation must be audited end-to-end. |
-| **Level 1** | **Subcommand-Constrained** | `./run_gh_pr_view.sh "$@"` | **Moderate Review Ease**: Locks the action to `pr view`, blocking destructive subcommands, but permits arbitrary flags and targets. Suitable for ad-hoc exploration. |
-| **Level 2** | **Parameter-Constrained** | `./view_pr_details.sh "$1"` | **Low Review Friction (Continuous Approval)**: Subcommand and flags (e.g. `--json number,title,body`) are hardcoded. Reviewer only audits the trailing target `$1`. Optimal for repetitive inspection across items. |
-| **Level 3** | **Fully Fixed Resource** | `./view_target_pr.sh` | **Zero Cognitive Friction**: Both the action and the target (e.g. PR #123) are curried inside the snippet. Zero blast radius, trivial approval. Ideal for single-resource tasks and mutating operations. |
+| **Level 0** | **Raw Broad CLI** | `gh pr view 123`<br/>`grep -i "err" /path/to/app.log` | **High Review Burden**: Approving raw commands grants blanket permissions (e.g. `gh` destructive actions, or `grep` reading arbitrary files across the filesystem). Every single invocation must be audited end-to-end. |
+| **Level 1** | **Subcommand-Constrained** | `./run_gh_pr_view.sh "$@"`<br/>`./run_grep.sh "$@"` | **Moderate Review Ease**: Locks the action/binary, blocking destructive subcommands, but permits arbitrary flags and target files. Suitable for ad-hoc exploration. |
+| **Level 2** | **Parameter-Constrained** | `./view_pr_details.sh "$1"`<br/>`./search_logs_dir.sh "$1"` | **Low Review Friction (Continuous Approval)**: Subcommand and search scope (e.g. log directory) are hardcoded. Reviewer only audits the trailing target `$1`. Optimal for repetitive inspection across items. |
+| **Level 3** | **Fully Fixed Resource** | `./view_target_pr.sh`<br/>`./search_app_log.sh "pattern" [opts]` | **Zero Cognitive Friction & Persistent Approval**: Both the action and target resource (e.g. PR #123 or `/path/to/app.log`) are curried inside the snippet. Zero blast radius, trivial approval. Ideal for single-resource tasks, mutating operations, or persistent read access to a specific file. |
 
 #### Trade-off Analysis: Per-Approval Anxiety vs. Approval Fatigue
 
@@ -89,6 +107,7 @@ Constraining scope to Level 3 offers maximum safety and easiest per-step approva
 - **Use Level 3 (Fully Fixed Resource)** when:
   - Executing **state-mutating or irreversible operations** (e.g., commenting on or merging a specific PR, deploying a specific tag).
   - The entire workflow is known to target exactly one single item from the start.
+  - **Persistent read approval is desired for a specific file** (e.g., searching `/var/log/app.log` multiple times with different filters). Currying the file into `./search_app_log.sh` enables one-time approval for the file without exposing arbitrary filesystem read permissions.
   - Absolute confinement is required so the agent cannot inadvertently target an incorrect resource.
 
 ---
@@ -220,6 +239,42 @@ readonly TARGET_PR="123"
 exec gh pr view "${TARGET_PR}" --json number,title,state,body,url
 ```
 
+### Example E: Fixed-File Search Snippet (Persistent Read Approval for `grep`)
+
+```bash
+#!/usr/bin/env bash
+#
+# Description:
+#   Searches specifically within the target application log file.
+#   Curries the target file path inside the snippet so users can grant
+#   persistent read approval via prefix matching (./search_app_log.sh)
+#   without exposing arbitrary filesystem read access via raw grep commands.
+#
+# Arguments:
+#   $1 - pattern    (regular expression or string to search)
+#   $@ - extra_opts (optional grep flags, e.g., -i, -n, -C 3, -m 50)
+#
+# Usage:
+#   ./search_app_log.sh "ERROR"
+#   ./search_app_log.sh "Exception" -i -C 3
+#
+# Prerequisites:
+#   grep
+#
+set -euo pipefail
+
+readonly TARGET_FILE="/path/to/target/app.log"
+pattern="${1:?Error: search pattern is required}"
+shift
+
+if [[ ! -f "${TARGET_FILE}" ]]; then
+  echo "Error: Target file not found: ${TARGET_FILE}" >&2
+  exit 1
+fi
+
+exec grep "$@" -e "${pattern}" "${TARGET_FILE}"
+```
+
 ---
 
 ## 5. Verification Checklist
@@ -229,6 +284,7 @@ Before presenting an approvable snippet for user execution:
 - [ ] Does the snippet perform exactly one action (no dynamic subcommands)?
 - [ ] Is the scope granularity tier (Level 1–3) chosen appropriately to minimize review friction without causing approval fatigue?
 - [ ] Are omnipotent tools (e.g., `gh`, `aws`, `kubectl`) constrained to explicit, minimal subcommands?
+- [ ] For repetitive file inspections (e.g., `grep`), is the target file curried internally (Level 3) to enable persistent read approval without broad filesystem read permissions?
 - [ ] Are dynamic variables exposed exclusively as trailing CLI arguments (`$1`, `$2`), or curried internally (Level 3) when targeting a fixed resource?
 - [ ] Are required parameters guarded with `${1:?message}` and format-validated (e.g., regex pattern check)?
 - [ ] Is input validation in place for paths or required entities?
