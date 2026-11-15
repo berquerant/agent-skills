@@ -72,6 +72,37 @@ type BatchReport struct {
 	Reports       []SkillReport `json:"reports"`
 }
 
+// BuildBatchReport aggregates individual skill reports into a consolidated BatchReport.
+func BuildBatchReport(reports []SkillReport, rootDir string, strict bool) BatchReport {
+	passedSkills := 0
+	failedSkills := 0
+	totalErrors := 0
+	totalWarnings := 0
+
+	for _, rep := range reports {
+		totalErrors += rep.Errors
+		totalWarnings += rep.Warnings
+		if rep.Passed {
+			passedSkills++
+		} else {
+			failedSkills++
+		}
+	}
+
+	return BatchReport{
+		OK:            true,
+		Passed:        failedSkills == 0,
+		Strict:        strict,
+		RootDir:       rootDir,
+		TotalSkills:   len(reports),
+		PassedSkills:  passedSkills,
+		FailedSkills:  failedSkills,
+		TotalErrors:   totalErrors,
+		TotalWarnings: totalWarnings,
+		Reports:       reports,
+	}
+}
+
 // LintSkillInput defines MCP tool parameters for lint_skill.
 type LintSkillInput struct {
 	Path   string `json:"path" jsonschema:"Path to the target skill directory containing SKILL.md"`

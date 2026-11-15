@@ -135,3 +135,37 @@ func TestRepositorySkillsParity(t *testing.T) {
 	assert.Equal(t, 0, batch.TotalErrors)
 	assert.Equal(t, 0, batch.TotalWarnings)
 }
+
+func TestLintTargets(t *testing.T) {
+	repoRoot, skillDir1 := setupTestRepo(t, "skill-one", validSkillMarkdown("skill-one"))
+	_, skillDir2 := setupTestRepo(t, "skill-two", validSkillMarkdown("skill-two"))
+
+	t.Run("multiple distinct skill directories", func(t *testing.T) {
+		batch, err := skilllint.LintTargets([]string{skillDir1, skillDir2}, true)
+		require.NoError(t, err)
+		assert.True(t, batch.Passed)
+		assert.Equal(t, 2, batch.TotalSkills)
+		assert.Equal(t, 2, batch.PassedSkills)
+	})
+
+	t.Run("deduplicate identical targets", func(t *testing.T) {
+		batch, err := skilllint.LintTargets([]string{skillDir1, skillDir1}, true)
+		require.NoError(t, err)
+		assert.True(t, batch.Passed)
+		assert.Equal(t, 1, batch.TotalSkills)
+	})
+
+	t.Run("nonexistent target returns error", func(t *testing.T) {
+		_, err := skilllint.LintTargets([]string{"/nonexistent/dir/path"}, false)
+		require.Error(t, err)
+	})
+
+	t.Run("empty targets defaults to current directory", func(t *testing.T) {
+		// repoRoot contains skills/
+		batch, err := skilllint.LintTargets([]string{repoRoot}, true)
+		require.NoError(t, err)
+		assert.True(t, batch.Passed)
+		assert.Equal(t, 1, batch.TotalSkills)
+	})
+}
+

@@ -87,53 +87,71 @@ func LintSkill(skillDir string, strict bool) (SkillReport, error) {
 	}, nil
 }
 
+// LintTargets discovers and lints skill directories for the specified targets.
+// If targets is empty, it defaults to the current working directory (".").
+func LintTargets(targets []string, strict bool) (BatchReport, error) {
+	if len(targets) == 0 {
+		targets = []string{"."}
+	}
+
+	var allReports []SkillReport
+	seenDirs := make(map[string]bool)
+
+	for _, target := range targets {
+		if err := guard.CheckPathAllowed(target); err != nil {
+			return BatchReport{}, err
+		}
+		abs, err := filepath.Abs(target)
+		if err != nil {
+			return BatchReport{}, fmt.Errorf("resolve path %s: %w", target, err)
+		}
+		info, err := os.Stat(abs)
+		if err != nil {
+			return BatchReport{}, fmt.Errorf("stat target %s: %w", target, err)
+		}
+		if !info.IsDir() {
+			return BatchReport{}, fmt.Errorf("target is not a directory: %s", target)
+		}
+
+		if _, err := os.Stat(filepath.Join(abs, "SKILL.md")); err == nil {
+			if !seenDirs[abs] {
+				seenDirs[abs] = true
+				rep, lintErr := LintSkill(abs, strict)
+				if lintErr != nil {
+					return BatchReport{}, lintErr
+				}
+				allReports = append(allReports, rep)
+			}
+			continue
+		}
+
+		skillDirs, err := discoverSkillDirs(abs)
+		if err != nil {
+			return BatchReport{}, err
+		}
+		for _, dir := range skillDirs {
+			dirAbs, absErr := filepath.Abs(dir)
+			if absErr != nil {
+				return BatchReport{}, fmt.Errorf("resolve skill dir %s: %w", dir, absErr)
+			}
+			if !seenDirs[dirAbs] {
+				seenDirs[dirAbs] = true
+				rep, lintErr := LintSkill(dirAbs, strict)
+				if lintErr != nil {
+					return BatchReport{}, lintErr
+				}
+				allReports = append(allReports, rep)
+			}
+		}
+	}
+
+	rootDir := strings.Join(targets, ", ")
+	return BuildBatchReport(allReports, rootDir, strict), nil
+}
+
 // LintAll discovers and lints all skill directories under rootDir.
 func LintAll(rootDir string, strict bool) (BatchReport, error) {
-	if err := guard.CheckPathAllowed(rootDir); err != nil {
-		return BatchReport{}, err
-	}
-	rootAbs, err := filepath.Abs(rootDir)
-	if err != nil {
-		return BatchReport{}, fmt.Errorf("resolve root dir: %w", err)
-	}
-	skillDirs, err := discoverSkillDirs(rootAbs)
-	if err != nil {
-		return BatchReport{}, err
-	}
-
-	reports := make([]SkillReport, 0, len(skillDirs))
-	passedSkills := 0
-	failedSkills := 0
-	totalErrors := 0
-	totalWarnings := 0
-
-	for _, dir := range skillDirs {
-		rep, lintErr := LintSkill(dir, strict)
-		if lintErr != nil {
-			return BatchReport{}, lintErr
-		}
-		reports = append(reports, rep)
-		totalErrors += rep.Errors
-		totalWarnings += rep.Warnings
-		if rep.Passed {
-			passedSkills++
-		} else {
-			failedSkills++
-		}
-	}
-
-	return BatchReport{
-		OK:            true,
-		Passed:        failedSkills == 0,
-		Strict:        strict,
-		RootDir:       rootDir,
-		TotalSkills:   len(reports),
-		PassedSkills:  passedSkills,
-		FailedSkills:  failedSkills,
-		TotalErrors:   totalErrors,
-		TotalWarnings: totalWarnings,
-		Reports:       reports,
-	}, nil
+	return LintTargets([]string{rootDir}, strict)
 }
 
 func loadSkillDirectoryFiles(skillDirAbs string) ([]string, map[string]string, map[string]string, error) {
