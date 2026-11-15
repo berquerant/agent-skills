@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+
+	"github.com/berquerant/agent-skills/mcp/internal/guard"
 )
 
 var (
@@ -48,6 +50,15 @@ func checkELinksAndPortability(skillDirAbs string, mdContents map[string]string)
 					File:     rel,
 					Line:     idx + 1,
 					Message:  fmt.Sprintf("ABSOLUTE/MACHINE path found in %s:%d", rel, idx+1),
+				})
+			}
+			for _, sec := range guard.ScanTextForSecrets(line) {
+				findings = append(findings, Finding{
+					Check:    CheckE,
+					Severity: SeverityError,
+					File:     rel,
+					Line:     idx + 1,
+					Message:  fmt.Sprintf("CREDENTIAL/SECRET pattern detected (%s) in %s:%d", sec, rel, idx+1),
 				})
 			}
 		}

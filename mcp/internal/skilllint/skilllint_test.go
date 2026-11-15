@@ -89,6 +89,17 @@ func TestLintSkillChecks(t *testing.T) {
 			wantCheckIDs: []skilllint.CheckID{skilllint.CheckD, skilllint.CheckE},
 		},
 		{
+			name:      "check E: credential pattern detected in markdown",
+			skillName: "secret-skill",
+			mutate: func(t *testing.T, _, skillDir string) {
+				md := validSkillMarkdown("secret-skill")
+				md += "\nExample token: ghp_111111111111111111111111111111111111\n"
+				require.NoError(t, os.WriteFile(filepath.Join(skillDir, "SKILL.md"), []byte(md), 0o600))
+			},
+			wantPassed:   false,
+			wantCheckIDs: []skilllint.CheckID{skilllint.CheckE},
+		},
+		{
 			name:      "check F, H, K: non-executable script, unregistered repo doc, long shell command and CoT",
 			skillName: "bad-hygiene",
 			mutate: func(t *testing.T, repoRoot, skillDir string) {

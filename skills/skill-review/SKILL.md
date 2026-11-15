@@ -62,7 +62,7 @@ Verify: Automated check results (both `[F]` errors and `[W]` warnings) are recor
 
 Using the automated results and direct file inspection, evaluate each target against dimensions **1. Scope & Granularity**, **2. Modularity & File Split**, and **3. Maintainability & Conventions** in [skill-review-checklist.md](references/skill-review-checklist.md) (references/skill-review-checklist.md):
 
-- Check that triggers define clear activation boundaries, guardrails scale proportionally with operational risk (low friction for read-only exploration, strict gates for state mutation), deep content is offloaded to one-level-deep `references/` with version/date anchors on external snapshots, and guidelines pair affirmative rules with brief "Why" rationale.
+- Check that triggers define clear activation boundaries, guardrails scale proportionally with operational risk (low friction for read-only exploration, strict gates for state mutation), deep content is offloaded to one-level-deep `references/` with version/date anchors on external snapshots, no real names, paths, or configs are committed even as examples, and guidelines pair affirmative rules with brief "Why" rationale.
 - Record every finding with its severity (`[F]` / `[W]`) and exact location formatted per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md).
 
 Verify: Every checklist item in dimensions 1–3 has an explicit Pass, Warn, or Fail backed by line-level evidence.

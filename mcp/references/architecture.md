@@ -280,6 +280,7 @@ classDiagram
 4. **Credential & Secret Protection (`internal/guard`)**:
    - `guard.CheckPathAllowed`: Denies inspection or writes targeting sensitive paths (e.g., `~/.ssh`, `~/.aws`, `~/.gnupg`, `/etc`).
    - `guard.CheckNoSecrets`: Scans payloads for high-entropy tokens, private keys, and authorization headers to prevent accidental leakage into persistent state files.
+   - **No Real Identifiers or Configurations in Commits**: Real personal names, host-specific paths (e.g. user home directories), and actual environment configurations must never be committed even as examples or test fixtures; synthetic mock data and generic placeholders (`<placeholder>`, `/path/to/...`, `example.com`) are mandatory.
 5. **Atomic File Operations & Process Concurrency (`internal/store`)**:
    - All state modifications are performed via `store.AtomicWriteFile` (write to temporary sibling file followed by atomic rename).
    - Cross-process file locks (`store.FileLock`) prevent race conditions between concurrent agent runs.

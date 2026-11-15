@@ -32,6 +32,7 @@ Skills in this repository must be portable across different AI agent platforms (
 - **Project Structure Agnostic**: Do not assume fixed directory layouts, toolchains, package managers, or tech stacks (e.g., provide language-neutral workflows or multi-language examples like Go, Rust, Python, Node).
 - **Environment & Tool Adaptability**: Prefer standard shell commands (`git`, `grep`, `find`) and generic terminology (e.g., "run tests with the project's toolchain") over vendor-locked tooling.
 - **Relative Path References**: Keep internal links and references relative within each skill directory (e.g., `[references/spec.md](references/spec.md)`).
+- **Sanitization & Placeholder Hygiene**: Never commit real user or machine names, host-specific absolute paths (e.g. user home directories), internal server addresses, or actual configurations/credentials—even as illustrative examples, code snippets, or test fixtures. Always use generic placeholders (`<placeholder>`, `/path/to/...`), RFC-standard dummy domains (`example.com`), and synthetic test data.
 
 ### 4. File Modification & Git Protocol
 - When adding or editing skills, write changes directly to `skills/<name>/`.
