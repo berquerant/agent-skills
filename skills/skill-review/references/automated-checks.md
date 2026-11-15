@@ -49,9 +49,9 @@ The script runs read-only inspection commands and prints a structured report cov
 - **Check**: Prints section headings with line numbers, checks that `## Step 1` starts at or before line 100, verifies that `## Guidelines` is the final top-level section, and confirms that every `## Step N` section contains an explicit `Verify:` checkpoint.
 - **Criteria**: Every step ends with an observable `Verify:` checkpoint `[F]`/`[W]`. `## Step 1` begins within the first 100 lines `[W]`. Standard section ordering ending with `## Guidelines` followed `[W]`.
 
-### E. Links & Path Portability (Dimension 2)
-- **Check**: Validates internal relative markdown links outside code blocks and scans for hardcoded absolute or machine-specific paths.
-- **Criteria**: Zero broken relative links and zero machine-specific paths `[F]`. Never commit real names, host-specific paths, or environment configs even as examples; always use synthetic placeholders or relative paths.
+### E. Links, Path Portability & Credential Sanitization (Dimension 2)
+- **Check**: Validates internal relative markdown links outside code blocks, scans for hardcoded absolute or machine-specific paths, and scans for high-entropy secret/credential patterns.
+- **Criteria**: Zero broken relative links, zero machine-specific paths, and zero committed secret/credential patterns `[F]`. Never commit real names, host-specific paths, internal hostnames, or actual environment configs/credentials even as examples; always use synthetic placeholders or relative paths.
 
 ### F. Script Permissions (Dimension 2)
 - **Check**: Verifies executable permission (`u+x`) on all files under `scripts/`.
