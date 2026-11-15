@@ -135,10 +135,11 @@ type FileLock struct {
 	timeout      time.Duration
 	pollInterval time.Duration
 
-	mu          sync.Mutex
-	readers     int
-	isExclusive bool
-	f           *os.File
+	mu              sync.Mutex
+	readers         int
+	isExclusive     bool
+	readerAcquiring bool
+	f               *os.File
 }
 
 // NewFileLock creates a FileLock on lockPath with the given timeout.
@@ -156,11 +157,15 @@ func NewFileLock(lockPath string, timeout time.Duration) *FileLock {
 // Lock acquires an exclusive lock (`LOCK_EX`), blocking up to timeout.
 func (l *FileLock) Lock() error {
 	deadline := time.Now().Add(l.timeout)
+	poll := l.pollInterval
+	if poll <= 0 {
+		poll = 10 * time.Millisecond
+	}
 
 	// Step 1: Wait until in-process exclusivity is available.
 	for {
 		l.mu.Lock()
-		if !l.isExclusive && l.readers == 0 {
+		if !l.isExclusive && l.readers == 0 && !l.readerAcquiring {
 			l.isExclusive = true
 			l.mu.Unlock()
 			break
@@ -169,7 +174,7 @@ func (l *FileLock) Lock() error {
 		if time.Now().After(deadline) {
 			return fmt.Errorf("%w: in-process lock on %s", ErrLockTimeout, l.path)
 		}
-		time.Sleep(l.pollInterval)
+		time.Sleep(poll)
 	}
 
 	// Step 2: Acquire OS-level exclusive flock.
@@ -211,39 +216,45 @@ func (l *FileLock) Lock() error {
 			l.mu.Unlock()
 			return fmt.Errorf("%w: flock on %s", ErrLockTimeout, l.path)
 		}
-		time.Sleep(l.pollInterval)
+		time.Sleep(poll)
 	}
 }
 
 // RLock acquires a shared lock (`LOCK_SH`), blocking up to timeout.
 func (l *FileLock) RLock() error {
 	deadline := time.Now().Add(l.timeout)
+	poll := l.pollInterval
+	if poll <= 0 {
+		poll = 10 * time.Millisecond
+	}
 
 	// Step 1: Wait until in-process shared access is available.
 	for {
 		l.mu.Lock()
 		if !l.isExclusive {
-			if l.readers > 0 {
+			if l.readers > 0 && !l.readerAcquiring {
 				l.readers++
 				l.mu.Unlock()
 				return nil
 			}
-			l.readers = 1
-			l.mu.Unlock()
-			break
+			if !l.readerAcquiring && l.readers == 0 {
+				l.readerAcquiring = true
+				l.mu.Unlock()
+				break
+			}
 		}
 		l.mu.Unlock()
 		if time.Now().After(deadline) {
 			return fmt.Errorf("%w: in-process lock on %s", ErrLockTimeout, l.path)
 		}
-		time.Sleep(l.pollInterval)
+		time.Sleep(poll)
 	}
 
 	// Step 2: First reader acquires OS-level shared flock.
 	dir := filepath.Dir(l.path)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		l.mu.Lock()
-		l.readers = 0
+		l.readerAcquiring = false
 		l.mu.Unlock()
 		return fmt.Errorf("create lock dir: %w", err)
 	}
@@ -251,7 +262,7 @@ func (l *FileLock) RLock() error {
 	f, err := os.OpenFile(l.path, os.O_CREATE|os.O_RDWR, 0o600)
 	if err != nil {
 		l.mu.Lock()
-		l.readers = 0
+		l.readerAcquiring = false
 		l.mu.Unlock()
 		return fmt.Errorf("open lock file: %w", err)
 	}
@@ -261,24 +272,26 @@ func (l *FileLock) RLock() error {
 		if err == nil {
 			l.mu.Lock()
 			l.f = f
+			l.readers = 1
+			l.readerAcquiring = false
 			l.mu.Unlock()
 			return nil
 		}
 		if !isWouldBlock(err) {
 			_ = f.Close()
 			l.mu.Lock()
-			l.readers = 0
+			l.readerAcquiring = false
 			l.mu.Unlock()
 			return fmt.Errorf("flock %s: %w", l.path, err)
 		}
 		if time.Now().After(deadline) {
 			_ = f.Close()
 			l.mu.Lock()
-			l.readers = 0
+			l.readerAcquiring = false
 			l.mu.Unlock()
 			return fmt.Errorf("%w: flock on %s", ErrLockTimeout, l.path)
 		}
-		time.Sleep(l.pollInterval)
+		time.Sleep(poll)
 	}
 }
 

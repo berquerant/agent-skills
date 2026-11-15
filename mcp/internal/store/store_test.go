@@ -94,15 +94,15 @@ func TestFileLockConcurrencyAndTimeout(t *testing.T) {
 	})
 
 	t.Run("multiple goroutines sharing same FileLock can RLock concurrently", func(t *testing.T) {
-		sharedLock := store.NewFileLock(lockPath, 500*time.Millisecond)
-		const readers = 5
+		sharedLock := store.NewFileLock(lockPath, 1*time.Second)
+		const readers = 10
 		var wg sync.WaitGroup
 		wg.Add(readers)
 		for range readers {
 			go func() {
 				defer wg.Done()
 				require.NoError(t, sharedLock.RLock())
-				time.Sleep(20 * time.Millisecond)
+				time.Sleep(10 * time.Millisecond)
 				require.NoError(t, sharedLock.Unlock())
 			}()
 		}
