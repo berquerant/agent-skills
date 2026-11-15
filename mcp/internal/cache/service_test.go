@@ -1,7 +1,6 @@
 package cache_test
 
 import (
-	"fmt"
 	"path/filepath"
 	"testing"
 
@@ -68,9 +67,10 @@ func TestServiceSet(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			res := svc.Set(tt.in)
-			assert.Equal(t, tt.wantSuccess, res["success"])
+			assert.Equal(t, tt.wantSuccess, res.Success)
 			if tt.wantMsgSub != "" {
-				assert.Contains(t, fmt.Sprint(res["message"]), tt.wantMsgSub)
+				require.NotNil(t, res.Message)
+				assert.Contains(t, *res.Message, tt.wantMsgSub)
 			}
 		})
 	}
@@ -101,23 +101,30 @@ func TestServiceQueryVersionAndPurge(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var res map[string]any
+			var gotHit bool
+			var gotReason string
 			switch tt.op {
 			case "get":
-				res = svc.Get(tt.in)
+				res := svc.Get(tt.in)
+				gotHit = res.Hit
+				gotReason = res.Reason
 			case "exist":
-				res = svc.Exist(tt.in)
+				res := svc.Exist(tt.in)
+				gotHit = res.Hit
+				gotReason = res.Reason
 			case "delete":
-				res = svc.Delete(tt.in)
+				res := svc.Delete(tt.in)
+				gotHit = res.Hit
+				gotReason = res.Reason
 			}
-			assert.Equal(t, tt.wantHit, res["hit"])
+			assert.Equal(t, tt.wantHit, gotHit)
 			if tt.wantReason != "" {
-				assert.Equal(t, tt.wantReason, res["reason"])
+				assert.Equal(t, tt.wantReason, gotReason)
 			}
 		})
 	}
 
-	assert.Equal(t, false, svc.Version(cache.VersionInput{})["hit"])
-	assert.Equal(t, true, svc.Version(cache.VersionInput{Key: "svc_key"})["hit"])
-	assert.Equal(t, true, svc.Purge(cache.PurgeInput{All: true})["success"])
+	assert.Equal(t, false, svc.Version(cache.VersionInput{}).Hit)
+	assert.Equal(t, true, svc.Version(cache.VersionInput{Key: "svc_key"}).Hit)
+	assert.Equal(t, true, svc.Purge(cache.PurgeInput{All: true}).Success)
 }

@@ -160,9 +160,6 @@ func ensureRegistry(reg *feature.Registry) (*feature.Registry, error) {
 		"pace-guard":       pace.NewFeature(),
 		"pr-triage":        prtriage.NewFeature(),
 	}
-	for _, f := range feature.RemainingStubFeatures() {
-		byName[f.Name()] = f
-	}
 	for _, name := range feature.FeatureNames {
 		if f, ok := byName[name]; ok {
 			if err := reg.Add(f); err != nil {

@@ -206,6 +206,7 @@ func (s *Storage) ensureCapacity(root *os.Root, newSize, now int64) bool {
 
 func (s *Storage) evictExpiredAcrossShards(root *os.Root, now int64) []cacheFileRecord {
 	var valid []cacheFileRecord
+	var currentTotalSize int64
 	for _, shard := range listShardDirs(s.config.Dir) {
 		forEachShardZstEntry(filepath.Join(s.config.Dir, shard), shard, func(rel, name string, info os.FileInfo) {
 			if isTmpFile(name) {
@@ -219,11 +220,13 @@ func (s *Storage) evictExpiredAcrossShards(root *os.Root, now int64) []cacheFile
 				return
 			}
 			if rec.ttlTS <= now {
-				s.unlinkAndDeduct(root, rel, rec.size)
+				_ = root.Remove(rel)
 			} else {
 				valid = append(valid, rec)
+				currentTotalSize += rec.size
 			}
 		})
 	}
+	s.totalCompressedSize = currentTotalSize
 	return valid
 }

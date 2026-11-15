@@ -93,9 +93,10 @@ flowchart TD
         F_PRTriage["pr-triage<br/>(pr_*)"]
     end
 
-    subgraph L4 ["4. Shared Infrastructure & Guardrails (internal/guard, internal/store)"]
+    subgraph L4 ["4. Shared Infrastructure & Guardrails (internal/guard, internal/store, internal/pathutil)"]
         Guard["Security Guard<br/>(CheckPathAllowed, CheckNoSecrets)"]
         Store["Atomic Storage<br/>(AtomicWriteFile, FileLock)"]
+        PathUtil["Path Utilities<br/>(FormatDualPath)"]
         Containment["Directory Containment<br/>(os.OpenRoot boundary enforcement)"]
         Compression["Safe Compression<br/>(zstd with decoder memory limits)"]
     end
@@ -124,7 +125,7 @@ flowchart TD
 | **1. Transport & CLI** | `cmd/agent-skills-mcp` | Parses CLI flags/subcommands, isolates `stdout` for JSON-RPC, routes logs to `stderr`, and coordinates graceful process shutdown. |
 | **2. Server Core** | `internal/server`, `internal/feature` | Instantiates MCP server instance, validates storage directories, registers enabled capabilities, and wraps tool handlers in safety guards. |
 | **3. Feature Domain** | `internal/cache`, `internal/taskdag`, `internal/skilllint`, `internal/snippet`, `internal/checkpoint`, `internal/pace`, `internal/prtriage` | Implements discrete domain logic without network calls. Each module exposes zero or more tools conforming to the `feature.Feature` interface. |
-| **4. Guardrails & Store** | `internal/guard`, `internal/store` | Blocks access to forbidden system paths, prevents credential leaks, manages atomic file swaps, cross-process file locks, and directory root containment (`os.OpenRoot`). |
+| **4. Guardrails & Store** | `internal/guard`, `internal/store`, `internal/pathutil` | Blocks access to forbidden system paths, prevents credential leaks, formats output paths per output-presentation, manages atomic file swaps, cross-process and in-process file locks, and directory root containment (`os.OpenRoot`). |
 | **5. Storage** | Standard Library (`os`, `io`) | Local non-volatile state and caches adhering to XDG base directory specifications. |
 
 ---

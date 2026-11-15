@@ -100,3 +100,62 @@ type PurgeResult struct {
 	All          bool
 	Message      *string
 }
+
+// GetOutput is the typed output struct for cache_get tool.
+type GetOutput struct {
+	Hit     bool        `json:"hit"`
+	Key     string      `json:"key,omitempty"`
+	Version *int        `json:"version,omitempty"`
+	Data    *CacheEntry `json:"data,omitempty"`
+	Reason  string      `json:"reason,omitempty"`
+	Error   string      `json:"error,omitempty"`
+	Message string      `json:"message,omitempty"`
+}
+
+// SetOutput is the typed output struct for cache_set tool.
+type SetOutput struct {
+	Success bool    `json:"success"`
+	Key     *string `json:"key,omitempty"`
+	Version *int    `json:"version,omitempty"`
+	Message *string `json:"message,omitempty"`
+}
+
+// ExistOutput is the typed output struct for cache_exist tool.
+type ExistOutput struct {
+	Hit     bool   `json:"hit"`
+	Key     string `json:"key,omitempty"`
+	Reason  string `json:"reason,omitempty"`
+	Error   string `json:"error,omitempty"`
+	Message string `json:"message,omitempty"`
+}
+
+// DeleteOutput is the typed output struct for cache_delete tool.
+type DeleteOutput struct {
+	Hit          bool   `json:"hit"`
+	Deleted      bool   `json:"deleted"`
+	Key          string `json:"key,omitempty"`
+	Version      any    `json:"version,omitempty"`
+	DeletedCount int    `json:"deleted_count"`
+	Reason       string `json:"reason,omitempty"`
+	Error        string `json:"error,omitempty"`
+	Message      string `json:"message,omitempty"`
+}
+
+// VersionOutput is the typed output struct for cache_version tool.
+type VersionOutput struct {
+	Hit      bool          `json:"hit"`
+	Key      string        `json:"key,omitempty"`
+	Versions []VersionInfo `json:"versions"`
+	Reason   string        `json:"reason,omitempty"`
+	Error    string        `json:"error,omitempty"`
+	Message  string        `json:"message,omitempty"`
+}
+
+// PurgeOutput is the typed output struct for cache_purge tool.
+type PurgeOutput struct {
+	Success      bool    `json:"success"`
+	DeletedCount int     `json:"deleted_count"`
+	FreedBytes   int64   `json:"freed_bytes"`
+	All          bool    `json:"all"`
+	Message      *string `json:"message,omitempty"`
+}

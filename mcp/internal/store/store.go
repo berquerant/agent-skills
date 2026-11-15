@@ -20,7 +20,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 )
 
@@ -129,15 +128,18 @@ func CleanStaleTmpFiles(rootDir string, now time.Time, maxAge time.Duration) (in
 	return removed, walkErr
 }
 
-// FileLock provides combined in-process (sync.Mutex) and cross-process (POSIX flock)
+// FileLock provides combined in-process and cross-process (flock)
 // mutual exclusion with a configurable timeout.
 type FileLock struct {
 	path         string
 	timeout      time.Duration
 	pollInterval time.Duration
 
-	mu sync.Mutex
-	f  *os.File
+	mu              sync.Mutex
+	readers         int
+	isExclusive     bool
+	readerAcquiring bool
+	f               *os.File
 }
 
 // NewFileLock creates a FileLock on lockPath with the given timeout.
@@ -154,79 +156,181 @@ func NewFileLock(lockPath string, timeout time.Duration) *FileLock {
 
 // Lock acquires an exclusive lock (`LOCK_EX`), blocking up to timeout.
 func (l *FileLock) Lock() error {
-	return l.acquire(true)
-}
-
-// RLock acquires a shared lock (`LOCK_SH`), blocking up to timeout.
-func (l *FileLock) RLock() error {
-	return l.acquire(false)
-}
-
-func (l *FileLock) acquire(exclusive bool) error {
 	deadline := time.Now().Add(l.timeout)
+	poll := l.pollInterval
+	if poll <= 0 {
+		poll = 10 * time.Millisecond
+	}
 
-	// Acquire in-process mutex with polling so we respect the timeout across goroutines.
-	for !l.mu.TryLock() {
+	// Step 1: Wait until in-process exclusivity is available.
+	for {
+		l.mu.Lock()
+		if !l.isExclusive && l.readers == 0 && !l.readerAcquiring {
+			l.isExclusive = true
+			l.mu.Unlock()
+			break
+		}
+		l.mu.Unlock()
 		if time.Now().After(deadline) {
 			return fmt.Errorf("%w: in-process lock on %s", ErrLockTimeout, l.path)
 		}
-		time.Sleep(l.pollInterval)
+		time.Sleep(poll)
 	}
 
+	// Step 2: Acquire OS-level exclusive flock.
 	dir := filepath.Dir(l.path)
 	if err := os.MkdirAll(dir, 0o700); err != nil {
+		l.mu.Lock()
+		l.isExclusive = false
 		l.mu.Unlock()
 		return fmt.Errorf("create lock dir: %w", err)
 	}
 
 	f, err := os.OpenFile(l.path, os.O_CREATE|os.O_RDWR, 0o600)
 	if err != nil {
+		l.mu.Lock()
+		l.isExclusive = false
 		l.mu.Unlock()
 		return fmt.Errorf("open lock file: %w", err)
 	}
 
-	how := syscall.LOCK_SH | syscall.LOCK_NB
-	if exclusive {
-		how = syscall.LOCK_EX | syscall.LOCK_NB
-	}
-
 	for {
-		err := syscall.Flock(int(f.Fd()), how)
+		err := flockExclusive(int(f.Fd()))
 		if err == nil {
+			l.mu.Lock()
 			l.f = f
+			l.mu.Unlock()
 			return nil
 		}
-		if !errors.Is(err, syscall.EWOULDBLOCK) && !errors.Is(err, syscall.EAGAIN) {
+		if !isWouldBlock(err) {
 			_ = f.Close()
+			l.mu.Lock()
+			l.isExclusive = false
 			l.mu.Unlock()
 			return fmt.Errorf("flock %s: %w", l.path, err)
 		}
 		if time.Now().After(deadline) {
 			_ = f.Close()
+			l.mu.Lock()
+			l.isExclusive = false
 			l.mu.Unlock()
 			return fmt.Errorf("%w: flock on %s", ErrLockTimeout, l.path)
 		}
-		time.Sleep(l.pollInterval)
+		time.Sleep(poll)
 	}
 }
 
-// Unlock releases the held lock.
+// RLock acquires a shared lock (`LOCK_SH`), blocking up to timeout.
+func (l *FileLock) RLock() error {
+	deadline := time.Now().Add(l.timeout)
+	poll := l.pollInterval
+	if poll <= 0 {
+		poll = 10 * time.Millisecond
+	}
+
+	// Step 1: Wait until in-process shared access is available.
+	for {
+		l.mu.Lock()
+		if !l.isExclusive {
+			if l.readers > 0 && !l.readerAcquiring {
+				l.readers++
+				l.mu.Unlock()
+				return nil
+			}
+			if !l.readerAcquiring && l.readers == 0 {
+				l.readerAcquiring = true
+				l.mu.Unlock()
+				break
+			}
+		}
+		l.mu.Unlock()
+		if time.Now().After(deadline) {
+			return fmt.Errorf("%w: in-process lock on %s", ErrLockTimeout, l.path)
+		}
+		time.Sleep(poll)
+	}
+
+	// Step 2: First reader acquires OS-level shared flock.
+	dir := filepath.Dir(l.path)
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		l.mu.Lock()
+		l.readerAcquiring = false
+		l.mu.Unlock()
+		return fmt.Errorf("create lock dir: %w", err)
+	}
+
+	f, err := os.OpenFile(l.path, os.O_CREATE|os.O_RDWR, 0o600)
+	if err != nil {
+		l.mu.Lock()
+		l.readerAcquiring = false
+		l.mu.Unlock()
+		return fmt.Errorf("open lock file: %w", err)
+	}
+
+	for {
+		err := flockShared(int(f.Fd()))
+		if err == nil {
+			l.mu.Lock()
+			l.f = f
+			l.readers = 1
+			l.readerAcquiring = false
+			l.mu.Unlock()
+			return nil
+		}
+		if !isWouldBlock(err) {
+			_ = f.Close()
+			l.mu.Lock()
+			l.readerAcquiring = false
+			l.mu.Unlock()
+			return fmt.Errorf("flock %s: %w", l.path, err)
+		}
+		if time.Now().After(deadline) {
+			_ = f.Close()
+			l.mu.Lock()
+			l.readerAcquiring = false
+			l.mu.Unlock()
+			return fmt.Errorf("%w: flock on %s", ErrLockTimeout, l.path)
+		}
+		time.Sleep(poll)
+	}
+}
+
+// Unlock releases the held lock (exclusive or shared).
 func (l *FileLock) Unlock() error {
-	if l.mu.TryLock() {
-		l.mu.Unlock()
-		return errors.New("cannot unlock un-acquired FileLock")
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	if l.isExclusive {
+		f := l.f
+		l.f = nil
+		l.isExclusive = false
+		if f == nil {
+			return errors.New("cannot unlock un-acquired FileLock")
+		}
+		unlockErr := flockUnlock(int(f.Fd()))
+		closeErr := f.Close()
+		if unlockErr != nil {
+			return fmt.Errorf("flock unlock: %w", unlockErr)
+		}
+		return closeErr
 	}
-	f := l.f
-	l.f = nil
-	if f == nil {
-		l.mu.Unlock()
-		return errors.New("cannot unlock un-acquired FileLock")
+
+	if l.readers > 0 {
+		l.readers--
+		if l.readers == 0 {
+			f := l.f
+			l.f = nil
+			if f != nil {
+				unlockErr := flockUnlock(int(f.Fd()))
+				closeErr := f.Close()
+				if unlockErr != nil {
+					return fmt.Errorf("flock unlock: %w", unlockErr)
+				}
+				return closeErr
+			}
+		}
+		return nil
 	}
-	unlockErr := syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
-	closeErr := f.Close()
-	l.mu.Unlock()
-	if unlockErr != nil {
-		return fmt.Errorf("flock unlock: %w", unlockErr)
-	}
-	return closeErr
+
+	return errors.New("cannot unlock un-acquired FileLock")
 }

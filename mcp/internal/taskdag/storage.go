@@ -181,10 +181,6 @@ func (s *Storage) Delete(dagID string) (bool, error) {
 		return false, err
 	}
 	_ = root.Remove(dagID + ".journal.jsonl")
-	_ = root.Remove(dagID + ".lock")
-	s.mu.Lock()
-	delete(s.locks, dagID)
-	s.mu.Unlock()
 	return true, nil
 }
 
