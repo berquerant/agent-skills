@@ -42,6 +42,7 @@ All skills are maintained under `skills/`.
 | [`task-dependency-pipeline`](skills/task-dependency-pipeline/SKILL.md) | Models task dependencies as a DAG and executes via a cooperative idle-wait scheduler. | DAG decomposition, cooperative context switching, idle-wait interleaving, anti-polling rules. |
 | [`output-presentation`](skills/output-presentation/SKILL.md) | Co-presents clickable Markdown links and unadorned raw strings for paths, targets, and URLs. | Dual format (`[label](url) (raw_url)`), link viability guarantee, copy-pasting without enclosing backticks. |
 | [`user-notification`](skills/user-notification/SKILL.md) | Dispatches notifications on completion, approval gates, or before elevated tool execution. | Multi-channel delivery, preceding step protocol for elevated commands, anti-fatigue filtering. |
+| [`agent-retrospective`](skills/agent-retrospective/SKILL.md) | Analyzes agent transcripts to mine recurring patterns, proposing snippets, rules, and skill refinements. | Focus × Scope mode matrix (all/auto/refine/rules × session/recent/custom), 4 diagnostic signals (corrections, friction, deviations, repetitions), read-only proposal report, hand-off to command-snippet/skill-creator/doc-refactor. |
 
 ## Skill Selection Matrix
 
@@ -77,6 +78,7 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 | Audit execution snippet intelligibility & safety | [`snippet-review`](skills/snippet-review/SKILL.md) | `command-snippet` |
 | Co-present clickable links and raw copy-paste paths & URLs | [`output-presentation`](skills/output-presentation/SKILL.md) | — |
 | Alert user on completion, gates, or elevated tools | [`user-notification`](skills/user-notification/SKILL.md) | — |
+| Agent log retrospective & workflow mining | [`agent-retrospective`](skills/agent-retrospective/SKILL.md) | `command-snippet` / `skill-creator` / `doc-refactor` |
 
 ## Project Structure
 
