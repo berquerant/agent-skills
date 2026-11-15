@@ -8,12 +8,40 @@ Operational guidelines and architectural conventions for AI agents developing an
 
 - **Standalone Single-Binary Module**:
   The MCP server is implemented as an independent Go module under `mcp/` (`go 1.27.4`). The compiled binary (`cmd/agent-skills-mcp`) exposes a standard MCP stdio server with CLI subcommands: `serve` (default), `version`, and `help`.
+- **Architecture Reference**:
+  For detailed multi-tier diagrams, component interactions, and lifecycle flows, see [references/architecture.md](references/architecture.md).
 - **Stdio Transport Integrity**:
   `stdout` is strictly reserved for JSON-RPC MCP messages. All server logging, operational traces, and diagnostic messages must go to `stderr` (e.g. via `env.Logger` in `internal/feature`). Never write arbitrary text to `stdout`.
 - **Offline-Only Operation (Zero Network Dependencies)**:
   The MCP server is purely local and offline. It must never make autonomous HTTP/HTTPS or network calls. Remote fetching, repository querying, and platform mutations are delegated to host CLI tools (`gh`, `glab`) and cached via `cache_*` tools.
 - **Panic Recovery & Safe Tool Dispatch**:
   All MCP tool handlers must be registered using `feature.AddSafeTool` or `feature.AddSafeToolWithMax` (`internal/feature/safetool.go`), which automatically catches panics, enforces output size limits, and logs tool invocations.
+
+```mermaid
+flowchart TD
+    subgraph Host ["Host AI Agent"]
+        Agent["AI Agent / LLM Client"]
+    end
+
+    subgraph Server ["agent-skills-mcp (cmd/agent-skills-mcp)"]
+        direction TB
+        Stdio["Stdio Transport (stdout / stderr)"]
+        Core["Server Core & Registry (internal/server, internal/feature)"]
+        Safe["SafeTool (Panic Catch & Max Output Cap)"]
+        Modules["Features: cache, task-dag, skill-lint, snippet-analyzer, checkpoint, pace-guard, pr-triage"]
+        Guard["Guardrails: internal/guard, internal/store, os.OpenRoot"]
+
+        Stdio --> Core --> Safe --> Modules --> Guard
+    end
+
+    subgraph Storage ["Local Storage (XDG & Repo)"]
+        FS["Caches, Checkpoints & State"]
+    end
+
+    Agent -->|JSON-RPC Request| Stdio
+    Guard --> FS
+    Stdio -->|JSON-RPC Response| Agent
+```
 
 ---
 

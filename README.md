@@ -93,6 +93,8 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │   ├── install.sh               # Copies skills to a target directory
 │   ├── lint.sh                  # Shellcheck and shfmt runner
 │   └── mcp-readme.sh            # Generates mcp/README.md from CLI help output
+├── docs/
+│   └── skill-interoperability.md # Skill workflow architecture & category hand-off diagrams
 ├── mcp/
 │   ├── cmd/agent-skills-mcp/    # Single-binary MCP server entrypoint
 │   └── internal/                # Feature registry, store, and MCP server packages
@@ -201,7 +203,7 @@ AI agents scanning `.agents/skills` will then discover and activate these skills
 go install github.com/berquerant/agent-skills/mcp/cmd/agent-skills-mcp@latest
 ```
 
-Skills remain platform-agnostic and work standalone without the MCP server; see [`mcp/README.md`](mcp/README.md) for flags and host configuration.
+Skills remain platform-agnostic and work standalone without the MCP server; see [`mcp/README.md`](mcp/README.md) for flags and host configuration, and [`mcp/references/architecture.md`](mcp/references/architecture.md) for architectural diagrams and component specifications.
 
 ## Development
 
