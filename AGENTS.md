@@ -7,7 +7,7 @@ Operational guidelines and conventions for AI agents operating within this repos
 This repository hosts agent skills following the [Agent Skills Specification](skills/skill-creator/references/agent-skills-spec.md).
 Each skill defines clear triggers, procedures, step-by-step verification methods, and guidelines.
 
-Additionally, [`global/AGENTS.md`](global/AGENTS.md) provides portable, general-purpose operational guidelines intended for use in external repositories and global agent environments, distinct from this repository's own development guidelines.
+Additionally, the [`agent-skills-setup`](skills/agent-skills-setup/SKILL.md) skill bootstraps portable, general-purpose operational guidelines for AI agents in any project or global agent environment without bloating startup prompts.
 
 ## Development & Maintenance Rules
 
@@ -84,7 +84,7 @@ flowchart TD
     end
 
     subgraph Execution ["3. Execution, Pacing & Presentation"]
-        EXEC["step-gate<br/>edit-paced-execution<br/>checkpoint-log<br/>command-snippet<br/>output-presentation<br/>user-notification"]
+        EXEC["agent-skills-setup<br/>step-gate<br/>edit-paced-execution<br/>checkpoint-log<br/>command-snippet<br/>output-presentation<br/>user-notification"]
     end
 
     subgraph Audit ["4. Audit & Verification (Read-Only)"]
@@ -115,7 +115,7 @@ flowchart TD
 |---|---|---|
 | **Dispatch & Routing** | `skill-router` | [High-Level Category Architecture](docs/skill-interoperability.md#1-high-level-category-architecture) |
 | **Planning & Isolation** | `explore-plan-execute`, `scrutinize-plan-execute`, `task-dependency-pipeline`, `git-worktree` | [Planning & Step-Gated Execution Workflow](docs/skill-interoperability.md#2-planning--step-gated-execution-workflow) |
-| **Execution & Pacing** | `step-gate`, `edit-paced-execution`, `checkpoint-log`, `command-snippet`, `output-presentation`, `user-notification` | [Planning & Step-Gated Execution Workflow](docs/skill-interoperability.md#2-planning--step-gated-execution-workflow) |
+| **Execution & Pacing** | `agent-skills-setup`, `step-gate`, `edit-paced-execution`, `checkpoint-log`, `command-snippet`, `output-presentation`, `user-notification` | [Planning & Step-Gated Execution Workflow](docs/skill-interoperability.md#2-planning--step-gated-execution-workflow) |
 | **Audit & Inquiry (Read-Only)** | `doctor`, `evidentiary-inquiry`, `code-review`, `doc-review`, `project-audit`, `project-status`, `snippet-review` | [Audit, Diagnostics & Remediation Workflow](docs/skill-interoperability.md#3-audit-diagnostics--remediation-workflow) |
 | **Remediation & PR Lifecycle** | `refactor`, `doc-refactor`, `diff-continue`, `resolve-dependency-prs`, `resolve-recent-dependency-prs`, `multi-repo-change`, `change-message`, `review-discussion` | [Multi-Repository & Dependency PR Triage Workflow](docs/skill-interoperability.md#4-multi-repository--dependency-pr-triage-workflow) |
 | **Meta & Lifecycle** | `skill-creator`, `skill-review`, `skill-modernize`, `mcp-creator`, `agent-retrospective` | [Skill Meta & Modernization Lifecycle](docs/skill-interoperability.md#5-skill-meta--modernization-lifecycle) |
