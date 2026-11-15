@@ -17,6 +17,7 @@ All skills are maintained under `skills/`.
 | [`code-review`](skills/code-review/SKILL.md) | Inspects code and documentation quality, security, and public release safety. | Default branch diff check, public exposure hazard alerts, severity categorization, read-only audit. |
 | [`refactor`](skills/refactor/SKILL.md) | Safely transforms code and docs without changing behavior. | Baseline tests, pragmatic DRY, code-review integration, mandatory lint/test passing, doc synchronization. |
 | [`doc-refactor`](skills/doc-refactor/SKILL.md) | Refines documentation and code comments with zero code mutation. | Information preservation, clarity & logical depth, zero code diff verification, Why-first explanations. |
+| [`doc-review`](skills/doc-review/SKILL.md) | Audits documentation and specifications against code reality, clarity, and safety. | Code-truth alignment, structural clarity, asset hygiene, public exposure safety, read-only audit. |
 | [`diff-continue`](skills/diff-continue/SKILL.md) | Continues work-in-progress git diffs across other files. | Pattern extraction, style preservation, scope detection. |
 | [`git-worktree`](skills/git-worktree/SKILL.md) | Manages git worktrees for parallel branch work. | WORKTREE_ROOT organization, subagent parallelism, cleanup on request. |
 | [`project-status`](skills/project-status/SKILL.md) | Audits the current state of a project. | Git state inspection, file change analysis, test/lint result reporting, pass/fail judgments. |
@@ -59,6 +60,7 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 | Working-tree status & diff drift check | [`project-status`](skills/project-status/SKILL.md) | `refactor` / `change-message` |
 | Behavior-preserving code cleanup / DRY | [`refactor`](skills/refactor/SKILL.md) | `project-status` → `change-message` |
 | Pure documentation & comment refinement | [`doc-refactor`](skills/doc-refactor/SKILL.md) | `project-status` → `change-message` |
+| Technical documentation & specification review | [`doc-review`](skills/doc-review/SKILL.md) | `doc-refactor` / `review-discussion` / `change-message` |
 | Apply in-progress diff pattern to other files | [`diff-continue`](skills/diff-continue/SKILL.md) | `refactor` → `change-message` |
 | Parallel branch work in isolated worktree | [`git-worktree`](skills/git-worktree/SKILL.md) | `explore-plan-execute` / `multi-repo-change` |
 | Multi-repository synchronized changes | [`multi-repo-change`](skills/multi-repo-change/SKILL.md) | `git-worktree` → `change-message` |
@@ -109,6 +111,8 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │   ├── diff-continue/
 │   ├── doc-refactor/
 │   │   └── references/          # Information inventory & zero-code-diff guide
+│   ├── doc-review/
+│   │   └── references/          # Review checklists, code-alignment guide, report template
 │   ├── doctor/
 │   │   └── references/          # Mode axes, diagnostic axes routing & report template
 │   ├── edit-paced-execution/

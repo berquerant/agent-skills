@@ -9,7 +9,7 @@
 Covers missing documentation, and comments that are too few, too many, outdated, or low quality.
 
 - **Criteria**:
-  - Documentation Review focus in [`code-review`](../../code-review/SKILL.md) Step 1 (clarity, completeness, accuracy against the code, broken links and examples).
+  - The 5 documentation dimensions in [`doc-review`](../../doc-review/SKILL.md) and [`doc-review-checklist.md`](../../doc-review/references/doc-review-checklist.md) (Code-Truth Alignment, Structural Clarity, Technical Hygiene, Public Exposure Safety, and Information Economy).
   - The "hard-to-understand code" categories and the Why-first principle in [`doc-refactor`](../../doc-refactor/SKILL.md) Step 1 and Step 2, with the checklist in [`doc-refactor-guide.md`](../../doc-refactor/references/doc-refactor-guide.md).
 - **Look for**: missing README or usage docs; undocumented public interfaces; complex logic without a Why comment; comments that only restate the code; comments that contradict the code.
 - **`quick`**: public interfaces and entry points of the sampled files.
