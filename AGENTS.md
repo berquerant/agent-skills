@@ -60,6 +60,12 @@ Skills and agent operations in this repository are strictly self-contained and o
 - **Optional Dependency Principle**: Skills under `skills/` must remain portable and usable without the MCP server; when MCP tools are available in the host environment, skills prioritize calling them and retain concise fallback procedures otherwise.
 - **Domain & Adapter Separation**: Keep feature logic under `mcp/internal/<feature>` decoupled from MCP transport concerns, manage flags and environment variables via `github.com/berquerant/structconfig`, regenerate `mcp/README.md` via `mise run mcp:readme-gen`, and verify changes with `mise run mcp:test` (`go test -cover -race ./...`) and `mise run mcp:lint` (`mcp:fix`, `mcp:vet`, `mcp:golangci-lint`, `mcp:readme-diff`).
 
+### 8. Approvable Snippet Catalog Operation via `agent-retrospective`
+The production-ready reference snippets under [`skills/command-snippet/references/examples/`](skills/command-snippet/references/examples/) (and recurring approvable patterns in `approvable-patterns.md`) must be operated, evolved, and maintained through [`agent-retrospective`](skills/agent-retrospective/SKILL.md):
+- **Log-Driven Evolution**: Do not invent speculative or unvetted snippet templates ad hoc. Extract candidate templates by analyzing repetitive scratch files, command patterns, and approval friction across multi-day interaction logs using `agent-retrospective` (Mode 1: Friction & Repetition Mining).
+- **Sanitization & Anonymization Invariant**: Snippet examples added to the catalog must never retain real repository names, internal paths, active PR numbers, or commit SHAs observed in source logs. All examples must be thoroughly generalized with abstract placeholders (`a1b2c3d`, `42`, `feature/sample-update`).
+- **Audit & Review Gate**: Any new catalog addition or refinement must pass `snippet-review` (evaluating SLOC, nesting depth, and parameter guards) and `doc-review` before being incorporated into the repository.
+
 ## Skill Interoperability & Architecture
 
 Skills in this repository follow a **loosely coupled, sequential hand-off architecture**. Skills operate independently and do not hard-depend on or invoke each other as mandatory subroutines. Instead, they produce clear outputs and recommend the next appropriate skill upon user approval.
