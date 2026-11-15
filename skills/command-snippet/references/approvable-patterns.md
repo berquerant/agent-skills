@@ -138,9 +138,9 @@ What constitutes a "variable argument" is determined by the **task context**:
 ### Principle 7: Zero-Argument Batch Monitor Pattern (Currying Multi-Target Batches)
 When monitoring or polling status across multiple specific targets in parallel workflows (e.g., tracking remote CI progress across 3 concurrently rebased PRs, checking health of 4 local services, or verifying multiple worktree builds):
 - **The Problem with Parameterized Polling**:
-  Passing target IDs as arguments (e.g., `./check_prs.sh 380 398 395`) exposes dynamic parameters on every call. Reviewers must check for argument drift, and any variation in target list order breaks exact-match approval rules. Furthermore, running separate single-target queries (`gh pr checks 380`, `gh pr checks 398`, `gh pr checks 395`) multiplies command turns and causes severe approval fatigue.
+  Passing target IDs as arguments (e.g., `./check_prs.sh 42 45 48`) exposes dynamic parameters on every call. Reviewers must check for argument drift, and any variation in target list order breaks exact-match approval rules. Furthermore, running separate single-target queries (`gh pr checks 42`, `gh pr checks 45`, `gh pr checks 48`) multiplies command turns and causes severe approval fatigue.
 - **The Solution (Currying the Target Collection)**:
-  Hardcode the active target collection (e.g., `TARGET_PRS=(380 398 395)`) inside the snippet as a constant array and expose **zero arguments**:
+  Hardcode the active target collection (e.g., `TARGET_PRS=(42 45 48)`) inside the snippet as a constant array and expose **zero arguments**:
   ```sh
   ./check_active_prs_status.sh
   ```
@@ -459,7 +459,7 @@ Curries a specific batch of active pull requests into a zero-argument monitoring
 #!/usr/bin/env bash
 #
 # Description:
-#   Monitors and summarizes CI status for active concurrent pull requests (#380, #398, #395).
+#   Monitors and summarizes CI status for active concurrent pull requests (#42, #45, #48).
 #   Currying target PRs into a zero-argument snippet guarantees invariant command-line
 #   invocations for frictionless polling under approval whitelists.
 #
@@ -475,7 +475,7 @@ Curries a specific batch of active pull requests into a zero-argument monitoring
 set -euo pipefail
 
 # Fixed active batch under verification
-readonly TARGET_PRS=(380 398 395)
+readonly TARGET_PRS=(42 45 48)
 
 echo "=== Active Batch CI Status ($(date '+%Y-%m-%d %H:%M:%S')) ==="
 for pr in "${TARGET_PRS[@]}"; do
@@ -505,3 +505,21 @@ Before presenting an approvable snippet for user execution:
 - [ ] Is input validation in place for paths or required entities?
 - [ ] Is the final command executed cleanly via `exec` (for single commands) or protected by `set -euo pipefail` (for multi-step pipelines and batch loops)?
 - [ ] Has the snippet been audited via `snippet-review` and preceded by the mandatory Pre-Execution Notice?
+
+---
+
+## 6. Standalone Reference Examples Catalog
+
+For complete, self-contained reference files with ready-to-run scripts, parameter validations, and user pre-execution notice templates across recurring workflows, see the dedicated catalog in [examples/README.md](examples/README.md) (examples/README.md):
+
+- **GitHub PR & Issue Lifecycle**:
+  - [gh-pr-list.md](examples/gh-pr-list.md) (examples/gh-pr-list.md): Structured batch PR metadata retrieval.
+  - [gh-pr-merge.md](examples/gh-pr-merge.md) (examples/gh-pr-merge.md): Squash-merge and branch deletion under strict argument validation.
+  - [gh-pr-checks.md](examples/gh-pr-checks.md) (examples/gh-pr-checks.md): Multi-target CI status monitor.
+  - [gh-main-ci.md](examples/gh-main-ci.md) (examples/gh-main-ci.md): Default branch CI monitoring.
+- **Git Worktree Isolation & Lifecycle**:
+  - [git-worktree-setup.md](examples/git-worktree-setup.md) (examples/git-worktree-setup.md): Remote fetch and isolated worktree creation.
+  - [git-worktree-rebase.md](examples/git-worktree-rebase.md) (examples/git-worktree-rebase.md): Worktree rebase onto `origin/main`.
+  - [git-worktree-push.md](examples/git-worktree-push.md) (examples/git-worktree-push.md): `--force-with-lease` remote push.
+  - [git-worktree-cleanup.md](examples/git-worktree-cleanup.md) (examples/git-worktree-cleanup.md): Worktree removal and local branch deletion.
+
