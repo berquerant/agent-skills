@@ -17,6 +17,7 @@ This reference provides the intent classification criteria, recommended entry sk
 | **Working Tree & Diff Drift** | "Check current git status", "Did tests pass?", "Any uncommitted changes?" | `project-status` | `diff-continue` / `refactor` |
 | **Behavior-Preserving Refactoring** | "Clean up this module without changing behavior", "DRY this code" | `refactor` | `code-review` → `change-message` |
 | **Documentation & Comment Clarification** | "Improve docstrings", "Clarify comments without touching code" | `doc-refactor` | `project-status` → `change-message` |
+| **Technical Documentation Review** | "Review this documentation", "Review README/docs", "Check doc accuracy", "Audit doc drift" | `doc-review` | `doc-refactor` / `review-discussion` / `change-message` |
 | **Continuing Partial Diffs** | "Apply this WIP pattern to the rest of the codebase" | `diff-continue` | `refactor` → `change-message` |
 | **Parallel Branch / Isolated Work** | "Work in a separate branch/worktree", "Isolate changes" | `git-worktree` | `explore-plan-execute` / `multi-repo-change` |
 | **Multi-Repository Coordination** | "Update across multiple repos", "Coordinate linked PRs" | `multi-repo-change` | `git-worktree` → `change-message` |
@@ -66,7 +67,7 @@ Is the request clear and targeted at a single skill?
 ## 3. Pipeline Synthesis Patterns
 
 ### Pattern A: Diagnostic & Remediation
-1. Entry: `doctor` (or `project-audit` / `code-review`)
+1. Entry: `doctor` (or `project-audit` / `code-review` / `doc-review`)
 2. Remediation Gate:
    - For code cleanup: `refactor`
    - For doc/comment polish: `doc-refactor`

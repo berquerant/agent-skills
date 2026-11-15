@@ -17,7 +17,7 @@ flowchart TD
     end
 
     subgraph Audit ["2. Audit & Inquiry (Read-Only)"]
-        AUD["Audit & Diagnostics<br/>(doctor, code-review, project-audit, evidentiary-inquiry)"]
+        AUD["Audit & Diagnostics<br/>(doctor, code-review, doc-review, project-audit, evidentiary-inquiry)"]
     end
 
     subgraph Planning ["3. Planning & Scheduling"]
@@ -105,6 +105,7 @@ flowchart TD
         DOC["doctor<br/>(Mode-selectable health checkup)"]
         EI["evidentiary-inquiry<br/>(Evidence & version-pinned facts)"]
         CR["code-review<br/>(Diff/PR review & security audit)"]
+        DCR["doc-review<br/>(Documentation & specification audit)"]
         PA["project-audit<br/>(Repository baseline & tech debt)"]
         PS["project-status<br/>(Working-tree diff & drift check)"]
     end
@@ -124,6 +125,7 @@ flowchart TD
     %% Handoffs
     DOC -->|"Factual uncertainty"| EI
     DOC -->|"Security / quality standards"| CR
+    DOC -->|"Documentation & comment standards"| DCR
     DOC -->|"Maintainability standards"| PA
     DOC -->|"Proposes bug/security fix plan"| EPE
     DOC -->|"Proposes focused refactor"| RF
@@ -133,9 +135,13 @@ flowchart TD
     EI -->|"Recommends doc remediation"| DR
     EI -->|"Recommends planned fix"| SG
 
+    CR -->|"Dedicated documentation audit"| DCR
     CR -->|"Suggests comment resolutions"| RD
     CR -->|"Suggests documentation clarity"| DR
     CR -->|"Suggests refactoring"| RF
+
+    DCR -->|"Proposes document refinement"| DR
+    DCR -->|"Suggests comment discussions"| RD
 
     PA -->|"Prioritized debt remediation"| RF
     PA -->|"Phased multi-step fixes"| SG
@@ -219,7 +225,7 @@ flowchart TD
 ## 6. Interoperability Principles
 
 1. **Intent-Driven Dispatch & Pipeline Routing**: `skill-router` acts as a read-only entrypoint dispatcher to analyze context, map user intent, and present an explicit sequential pipeline for user sign-off before executing any skill.
-2. **Read-Only vs. Mutation Separation**: Audit and investigation skills (`project-audit`, `project-status`, `code-review`, `skill-review`, `evidentiary-inquiry`, `doctor`, `snippet-review`, `skill-router`) are strictly read-only and never mutate files. When changes are required, they suggest mutation skills (`refactor`, `doc-refactor`, `step-gate`, `diff-continue`).
+2. **Read-Only vs. Mutation Separation**: Audit and investigation skills (`project-audit`, `project-status`, `code-review`, `doc-review`, `skill-review`, `evidentiary-inquiry`, `doctor`, `snippet-review`, `skill-router`) are strictly read-only and never mutate files. When changes are required, they suggest mutation skills (`refactor`, `doc-refactor`, `step-gate`, `diff-continue`).
 3. **Sequential Hand-off (User-in-the-Loop)**: Rather than calling other skills directly in a deep nested chain, skills present findings and recommend the next skill for the user to approve.
 4. **Reference Sharing over Duplication**: When audit standards overlap (such as security and public release checklists), skills share references (e.g. `../code-review/references/security-checklist.md`) via relative links instead of duplicating checklist content.
 5. **Gate Ownership**: When a skill's guidance or artifact is used inside another workflow, the calling workflow owns the approval gates; avoid introducing duplicate or redundant approval checkpoints.

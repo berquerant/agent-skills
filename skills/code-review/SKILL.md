@@ -86,6 +86,7 @@ Present the structured report to the user.
 - When posting feedback as inline review comments or notes on a PR/MR, format and discuss them following [review-discussion](../review-discussion/SKILL.md) (../review-discussion/SKILL.md).
 - Provide an executive summary and recommend sequential hand-off options based on findings:
   - **For behavior-preserving cleanup & refactoring**: Recommend [refactor](../refactor/SKILL.md) (../refactor/SKILL.md).
+  - **For dedicated documentation, specification, or guide audit**: Recommend [doc-review](../doc-review/SKILL.md) (../doc-review/SKILL.md).
   - **For pure documentation & comment clarifications**: Recommend [doc-refactor](../doc-refactor/SKILL.md) (../doc-refactor/SKILL.md).
   - **For functional fixes, behavioral changes, or feature work**: Recommend [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md).
   - **For conducting interactive PR discussions & resolving threads**: Recommend [review-discussion](../review-discussion/SKILL.md) (../review-discussion/SKILL.md).
