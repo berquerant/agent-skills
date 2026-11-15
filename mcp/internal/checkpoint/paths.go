@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/berquerant/agent-skills/mcp/internal/guard"
+	"github.com/berquerant/agent-skills/mcp/internal/pathutil"
 )
 
 var unsafeSlugChars = regexp.MustCompile(`[^a-zA-Z0-9_-]+`)
@@ -54,9 +55,7 @@ func NormalizeDocType(dt DocType) (DocType, error) {
 // FormatDualPath formats an absolute file path according to the output-presentation convention:
 // [<basename>](file://<abs_path>) (<abs_path>).
 func FormatDualPath(absPath string) string {
-	slashPath := filepath.ToSlash(absPath)
-	base := filepath.Base(slashPath)
-	return fmt.Sprintf("[%s](file://%s) (%s)", base, slashPath, slashPath)
+	return pathutil.FormatDualPath(absPath)
 }
 
 // ResolveProjectAndBranch resolves project and branch from explicit inputs or git in workDir.
