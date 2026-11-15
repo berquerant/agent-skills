@@ -186,8 +186,8 @@ gh skill install berquerant/agent-skills --all
 # Install for a specific agent (e.g. github-copilot, claude-code, cursor, antigravity)
 gh skill install berquerant/agent-skills doctor --agent claude-code
 
-# Pin to a specific version or release tag
-gh skill install berquerant/agent-skills doctor@<version>
+# Install all skills pinned to a specific version or release tag
+gh skill install berquerant/agent-skills --all --pin <version>
 ```
 
 ### Installing Skills into a Target Directory (Script)
