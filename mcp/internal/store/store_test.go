@@ -114,4 +114,72 @@ func TestFileLockConcurrencyAndTimeout(t *testing.T) {
 		err := unacquired.Unlock()
 		require.ErrorContains(t, err, "cannot unlock un-acquired FileLock")
 	})
+
+	t.Run("RLock times out when exclusive lock is held on same FileLock", func(t *testing.T) {
+		l := store.NewFileLock(lockPath, 50*time.Millisecond)
+		require.NoError(t, l.Lock())
+		defer func() { _ = l.Unlock() }()
+
+		err := l.RLock()
+		require.ErrorIs(t, err, store.ErrLockTimeout)
+	})
+
+	t.Run("Lock times out when reader holds lock on same FileLock", func(t *testing.T) {
+		l := store.NewFileLock(lockPath, 50*time.Millisecond)
+		require.NoError(t, l.RLock())
+		defer func() { _ = l.Unlock() }()
+
+		err := l.Lock()
+		require.ErrorIs(t, err, store.ErrLockTimeout)
+	})
+}
+
+func TestStoreEdgeCases(t *testing.T) {
+	t.Run("CleanStaleTmpFiles returns 0 on non-existent dir", func(t *testing.T) {
+		removed, err := store.CleanStaleTmpFiles(filepath.Join(t.TempDir(), "nonexistent"), time.Now(), time.Minute)
+		require.NoError(t, err)
+		assert.Equal(t, 0, removed)
+	})
+
+	t.Run("CleanStaleTmpFiles skips directories with .tmp_ prefix", func(t *testing.T) {
+		dir := t.TempDir()
+		require.NoError(t, os.Mkdir(filepath.Join(dir, ".tmp_dir"), 0o700))
+		removed, err := store.CleanStaleTmpFiles(dir, time.Now(), 0)
+		require.NoError(t, err)
+		assert.Equal(t, 0, removed)
+	})
+
+	t.Run("WriteAtomic returns error when parent dir is not a directory", func(t *testing.T) {
+		fileAsDir := filepath.Join(t.TempDir(), "file")
+		require.NoError(t, os.WriteFile(fileAsDir, []byte("x"), 0o600))
+		err := store.WriteAtomic(filepath.Join(fileAsDir, "sub", "test.txt"), []byte("data"), 0o600)
+		require.Error(t, err)
+	})
+
+	t.Run("Lock returns error when lock dir cannot be created", func(t *testing.T) {
+		fileAsDir := filepath.Join(t.TempDir(), "file")
+		require.NoError(t, os.WriteFile(fileAsDir, []byte("x"), 0o600))
+		l := store.NewFileLock(filepath.Join(fileAsDir, "sub", "lock"), 50*time.Millisecond)
+		err := l.Lock()
+		require.Error(t, err)
+	})
+
+	t.Run("RLock returns error when lock dir cannot be created", func(t *testing.T) {
+		fileAsDir := filepath.Join(t.TempDir(), "file")
+		require.NoError(t, os.WriteFile(fileAsDir, []byte("x"), 0o600))
+		l := store.NewFileLock(filepath.Join(fileAsDir, "sub", "lock"), 50*time.Millisecond)
+		err := l.RLock()
+		require.Error(t, err)
+	})
+
+	t.Run("GenerateID produces valid hex string", func(t *testing.T) {
+		id, err := store.GenerateID()
+		require.NoError(t, err)
+		assert.Len(t, id, 32)
+	})
+
+	t.Run("NewFileLock with zero timeout sets default", func(t *testing.T) {
+		l := store.NewFileLock("/tmp/dummy.lock", 0)
+		require.NotNil(t, l)
+	})
 }
