@@ -172,7 +172,25 @@ In addition to modular skills, this repository provides portable, project-agnost
 
 ## Setup & Usage
 
-### Installing Skills into a Target Directory
+### Installing Skills via GitHub CLI (`gh skill`)
+
+You can install skills directly from this repository using the GitHub CLI `gh skill` command:
+
+```bash
+# Install a specific skill (e.g. doctor)
+gh skill install berquerant/agent-skills doctor
+
+# Install all skills from the repository
+gh skill install berquerant/agent-skills --all
+
+# Install for a specific agent (e.g. github-copilot, claude-code, cursor, antigravity)
+gh skill install berquerant/agent-skills doctor --agent claude-code
+
+# Pin to a specific version or release tag
+gh skill install berquerant/agent-skills doctor@<version>
+```
+
+### Installing Skills into a Target Directory (Script)
 
 Use `mise run install` or `bin/install.sh` to copy each skill directory into your target directory:
 
@@ -205,7 +223,26 @@ AI agents scanning `.agents/skills` will then discover and activate these skills
 
 ### Companion MCP Server (`agent-skills-mcp`)
 
-[`mcp/`](mcp/README.md) provides a single-binary Go MCP server (`agent-skills-mcp`) that exposes deterministic tools for `cache`, `task-dag`, `skill-lint`, `snippet-analyzer`, `checkpoint`, `pace-guard`, and `pr-triage`, with per-feature flags to enable or disable individual capabilities:
+[`mcp/`](mcp/README.md) provides a single-binary Go MCP server (`agent-skills-mcp`) that exposes deterministic tools for `cache`, `task-dag`, `skill-lint`, `snippet-analyzer`, `checkpoint`, `pace-guard`, and `pr-triage`, with per-feature flags to enable or disable individual capabilities.
+
+You can obtain the `agent-skills-mcp` binary in one of two ways:
+
+#### Option 1: Download from GitHub Releases
+
+Pre-compiled standalone binaries for Linux and macOS (`amd64` and `arm64`) are published on [GitHub Releases](https://github.com/berquerant/agent-skills/releases).
+
+Download the binary for your platform, make it executable, and place it in your `PATH`:
+
+```bash
+# Example: Download via gh CLI
+gh release download --repo berquerant/agent-skills --pattern "agent-skills-mcp_*_$(uname -s | tr '[:upper:]' '[:lower:]')_$(uname -m | sed 's/x86_64/amd64/')" --output agent-skills-mcp
+chmod +x agent-skills-mcp
+mv agent-skills-mcp /usr/local/bin/
+```
+
+#### Option 2: Install via `go install`
+
+Build and install from source using Go:
 
 ```bash
 go install github.com/berquerant/agent-skills/mcp/cmd/agent-skills-mcp@latest

@@ -24,9 +24,15 @@ import (
 // ServerName is the canonical MCP server implementation name.
 const ServerName = "agent-skills-mcp"
 
-// BuildVersion returns the module build version from runtime/debug.ReadBuildInfo,
-// falling back to "dev" when built from a local workspace without version stamping.
+// version is optionally set at build time via -ldflags "-X ...server.version=v1.2.3".
+var version string
+
+// BuildVersion returns the build version stamped at link time or extracted from
+// runtime/debug.ReadBuildInfo, falling back to "dev" when built from a local workspace without version stamping.
 func BuildVersion() string {
+	if version != "" {
+		return version
+	}
 	info, ok := debug.ReadBuildInfo()
 	if !ok {
 		return "dev"

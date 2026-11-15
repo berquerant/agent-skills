@@ -18,6 +18,7 @@ builds:
       - -trimpath
     ldflags:
       - -s -w
+      - -X github.com/berquerant/agent-skills/mcp/internal/server.version={{.Tag}}
 
 archives:
   - formats: binary
