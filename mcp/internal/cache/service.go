@@ -81,66 +81,65 @@ type PurgeInput struct {
 }
 
 // Get retrieves a cached entry.
-func (s *Service) Get(in QueryInput) map[string]any {
+func (s *Service) Get(in QueryInput) GetOutput {
 	if err := validatePathArgs(in.Dir, in.Args); err != nil {
-		return map[string]any{
-			"hit":     false,
-			"reason":  "sensitive_path",
-			"error":   err.Error(),
-			"message": err.Error(),
+		return GetOutput{
+			Hit:     false,
+			Reason:  "sensitive_path",
+			Error:   err.Error(),
+			Message: err.Error(),
 		}
 	}
 	targetKey, ok := ResolveKey(in.Key, in.Type, in.Name, in.Dir, in.Args, in.Stdin)
 	if !ok {
-		return map[string]any{
-			"hit":     false,
-			"message": missingKeyOrParamsMsg,
+		return GetOutput{
+			Hit:     false,
+			Message: missingKeyOrParamsMsg,
 		}
 	}
 
 	getRes, err := s.storage.Get(targetKey, in.Version)
 	if err != nil {
-		return map[string]any{
-			"hit":     false,
-			"key":     targetKey,
-			"version": nil,
-			"reason":  classifyStorageErr(err),
-			"error":   err.Error(),
+		return GetOutput{
+			Hit:     false,
+			Key:     targetKey,
+			Version: nil,
+			Reason:  classifyStorageErr(err),
+			Error:   err.Error(),
 		}
 	}
 
-	result := map[string]any{
-		"hit":     getRes.Hit,
-		"key":     getRes.Key,
-		"version": getRes.Version,
-		"data":    getRes.Data,
+	return GetOutput{
+		Hit:     getRes.Hit,
+		Key:     getRes.Key,
+		Version: getRes.Version,
+		Data:    getRes.Data,
+		Reason:  getRes.Reason,
 	}
-	if getRes.Reason != "" {
-		result["reason"] = getRes.Reason
-	}
-	return result
 }
 
 // Set constructs a CacheEntry with server-assigned timestamps and stores it.
-func (s *Service) Set(in SetInput) map[string]any {
+func (s *Service) Set(in SetInput) SetOutput {
 	resolvedKey := in.Key
 	if resolvedKey == "" {
 		resolvedKey = ComputeCacheKey(in.Type, in.Name, in.Dir, in.Args, in.Stdin)
 	}
 	if in.TTL <= 0 {
-		return map[string]any{
-			"success": false,
-			"key":     resolvedKey,
-			"version": nil,
-			"message": "ttl must be > 0",
+		msg := "ttl must be > 0"
+		return SetOutput{
+			Success: false,
+			Key:     &resolvedKey,
+			Version: nil,
+			Message: &msg,
 		}
 	}
 	if err := validateSetSensitivity(in); err != nil {
-		return map[string]any{
-			"success": false,
-			"key":     resolvedKey,
-			"version": nil,
-			"message": err.Error(),
+		msg := err.Error()
+		return SetOutput{
+			Success: false,
+			Key:     &resolvedKey,
+			Version: nil,
+			Message: &msg,
 		}
 	}
 
@@ -173,158 +172,148 @@ func (s *Service) Set(in SetInput) map[string]any {
 
 	stRes, err := s.storage.Set(resolvedKey, entry)
 	if err != nil {
-		return map[string]any{
-			"success": false,
-			"key":     resolvedKey,
-			"version": nil,
-			"message": err.Error(),
+		msg := err.Error()
+		return SetOutput{
+			Success: false,
+			Key:     &resolvedKey,
+			Version: nil,
+			Message: &msg,
 		}
 	}
-	return map[string]any{
-		"success": stRes.Success,
-		"key":     stRes.Key,
-		"version": stRes.Version,
-		"message": stRes.Message,
-	}
+	return SetOutput(stRes)
 }
 
 // Exist checks whether a non-expired cache entry exists.
-func (s *Service) Exist(in QueryInput) map[string]any {
+func (s *Service) Exist(in QueryInput) ExistOutput {
 	if err := validatePathArgs(in.Dir, in.Args); err != nil {
-		return map[string]any{
-			"hit":     false,
-			"reason":  "sensitive_path",
-			"error":   err.Error(),
-			"message": err.Error(),
+		return ExistOutput{
+			Hit:     false,
+			Reason:  "sensitive_path",
+			Error:   err.Error(),
+			Message: err.Error(),
 		}
 	}
 	targetKey, ok := ResolveKey(in.Key, in.Type, in.Name, in.Dir, in.Args, in.Stdin)
 	if !ok {
-		return map[string]any{
-			"hit":     false,
-			"message": missingKeyOrParamsMsg,
+		return ExistOutput{
+			Hit:     false,
+			Message: missingKeyOrParamsMsg,
 		}
 	}
 
 	hit, err := s.storage.Exist(targetKey, in.Version)
 	if err != nil {
-		return map[string]any{
-			"hit":    false,
-			"key":    targetKey,
-			"reason": classifyStorageErr(err),
-			"error":  err.Error(),
+		return ExistOutput{
+			Hit:    false,
+			Key:    targetKey,
+			Reason: classifyStorageErr(err),
+			Error:  err.Error(),
 		}
 	}
-	return map[string]any{
-		"hit": hit,
-		"key": targetKey,
+	return ExistOutput{
+		Hit: hit,
+		Key: targetKey,
 	}
 }
 
 // Delete removes cache entries for a key (all versions or a specific version).
-func (s *Service) Delete(in QueryInput) map[string]any {
+func (s *Service) Delete(in QueryInput) DeleteOutput {
 	if err := validatePathArgs(in.Dir, in.Args); err != nil {
-		return map[string]any{
-			"hit":           false,
-			"deleted":       false,
-			"deleted_count": 0,
-			"reason":        "sensitive_path",
-			"error":         err.Error(),
-			"message":       err.Error(),
+		return DeleteOutput{
+			Hit:          false,
+			Deleted:      false,
+			DeletedCount: 0,
+			Reason:       "sensitive_path",
+			Error:        err.Error(),
+			Message:      err.Error(),
 		}
 	}
 	targetKey, ok := ResolveKey(in.Key, in.Type, in.Name, in.Dir, in.Args, in.Stdin)
 	if !ok {
-		return map[string]any{
-			"hit":     false,
-			"deleted": false,
-			"message": missingKeyOrParamsMsg,
+		return DeleteOutput{
+			Hit:     false,
+			Deleted: false,
+			Message: missingKeyOrParamsMsg,
 		}
 	}
 
 	delRes, err := s.storage.Delete(targetKey, in.Version)
 	if err != nil {
-		return map[string]any{
-			"hit":           false,
-			"deleted":       false,
-			"key":           targetKey,
-			"version":       in.Version,
-			"deleted_count": 0,
-			"reason":        classifyStorageErr(err),
-			"error":         err.Error(),
+		return DeleteOutput{
+			Hit:          false,
+			Deleted:      false,
+			Key:          targetKey,
+			Version:      in.Version,
+			DeletedCount: 0,
+			Reason:       classifyStorageErr(err),
+			Error:        err.Error(),
 		}
 	}
-	return map[string]any{
-		"hit":           delRes.Hit,
-		"deleted":       delRes.Deleted,
-		"key":           delRes.Key,
-		"version":       delRes.Version,
-		"deleted_count": delRes.DeletedCount,
+	return DeleteOutput{
+		Hit:          delRes.Hit,
+		Deleted:      delRes.Deleted,
+		Key:          delRes.Key,
+		Version:      delRes.Version,
+		DeletedCount: delRes.DeletedCount,
 	}
 }
 
 // Version lists all valid, non-expired versions for a key without reading payloads.
-func (s *Service) Version(in VersionInput) map[string]any {
+func (s *Service) Version(in VersionInput) VersionOutput {
 	if err := validatePathArgs(in.Dir, in.Args); err != nil {
-		return map[string]any{
-			"hit":      false,
-			"key":      nil,
-			"versions": []VersionInfo{},
-			"reason":   "sensitive_path",
-			"error":    err.Error(),
-			"message":  err.Error(),
+		return VersionOutput{
+			Hit:      false,
+			Versions: []VersionInfo{},
+			Reason:   "sensitive_path",
+			Error:    err.Error(),
+			Message:  err.Error(),
 		}
 	}
 	targetKey, ok := ResolveKey(in.Key, in.Type, in.Name, in.Dir, in.Args, in.Stdin)
 	if !ok {
-		return map[string]any{
-			"hit":      false,
-			"key":      nil,
-			"versions": []VersionInfo{},
-			"message":  missingKeyOrParamsMsg,
+		return VersionOutput{
+			Hit:      false,
+			Versions: []VersionInfo{},
+			Message:  missingKeyOrParamsMsg,
 		}
 	}
 
 	verRes, err := s.storage.Version(targetKey)
 	if err != nil {
-		return map[string]any{
-			"hit":      false,
-			"key":      targetKey,
-			"versions": []VersionInfo{},
-			"reason":   classifyStorageErr(err),
-			"error":    err.Error(),
+		return VersionOutput{
+			Hit:      false,
+			Key:      targetKey,
+			Versions: []VersionInfo{},
+			Reason:   classifyStorageErr(err),
+			Error:    err.Error(),
 		}
 	}
-	result := map[string]any{
-		"hit":      verRes.Hit,
-		"key":      verRes.Key,
-		"versions": verRes.Versions,
+	vers := verRes.Versions
+	if vers == nil {
+		vers = []VersionInfo{}
 	}
-	if verRes.Reason != "" {
-		result["reason"] = verRes.Reason
+	return VersionOutput{
+		Hit:      verRes.Hit,
+		Key:      verRes.Key,
+		Versions: vers,
+		Reason:   verRes.Reason,
 	}
-	return result
 }
 
 // Purge deletes expired (or all) cache files across all shard directories.
-func (s *Service) Purge(in PurgeInput) map[string]any {
+func (s *Service) Purge(in PurgeInput) PurgeOutput {
 	purgeRes, err := s.storage.Purge(in.All)
 	if err != nil {
-		return map[string]any{
-			"success":       false,
-			"deleted_count": 0,
-			"freed_bytes":   0,
-			"all":           in.All,
-			"message":       err.Error(),
+		msg := err.Error()
+		return PurgeOutput{
+			Success:      false,
+			DeletedCount: 0,
+			FreedBytes:   0,
+			All:          in.All,
+			Message:      &msg,
 		}
 	}
-	return map[string]any{
-		"success":       purgeRes.Success,
-		"deleted_count": purgeRes.DeletedCount,
-		"freed_bytes":   purgeRes.FreedBytes,
-		"all":           purgeRes.All,
-		"message":       purgeRes.Message,
-	}
+	return PurgeOutput(purgeRes)
 }
 
 func validatePathArgs(dir string, args []string) error {
