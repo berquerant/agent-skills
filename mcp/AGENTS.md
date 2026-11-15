@@ -7,7 +7,7 @@ Operational guidelines and architectural conventions for AI agents developing an
 ## 1. Module Scope & Architecture
 
 - **Standalone Single-Binary Module**:
-  The MCP server is implemented as an independent Go module under `mcp/` (`go 1.27.4`). The compiled binary (`cmd/agent-skills-mcp`) exposes a standard MCP stdio server with CLI subcommands: `serve` (default), `version`, and `help`.
+  The MCP server is implemented as an independent Go module under `mcp/` (`go 1.27.4`). The compiled binary (`cmd/agent-skills-mcp`) exposes a standard MCP stdio server with CLI subcommands: `serve` (default), `skill-lint`, `version`, and `help`.
 - **Architecture Reference**:
   For detailed multi-tier diagrams, component interactions, and lifecycle flows, see [references/architecture.md](references/architecture.md).
 - **Stdio Transport Integrity**:

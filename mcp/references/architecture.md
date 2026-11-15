@@ -148,15 +148,17 @@ sequenceDiagram
     Stdio->>Safe: Dispatch with context
     activate Safe
 
-    Safe->>Guard: Validate target path & secret boundaries
+    Safe->>Feature: Execute tool logic (with panic recovery)
+    activate Feature
+
+    Feature->>Guard: Validate target path & secret boundaries
     alt Boundary Violation
-        Guard-->>Safe: Error: forbidden path / sensitive credential detected
+        Guard-->>Feature: Error: forbidden path / sensitive credential detected
+        Feature-->>Safe: Boundary error
         Safe-->>Stdio: Structured error response
         Stdio-->>Agent: JSON-RPC error payload
     else Validation Passed
-        Guard-->>Safe: OK
-        Safe->>Feature: Execute tool logic (with panic recovery)
-        activate Feature
+        Guard-->>Feature: OK
 
         opt State Mutation / Persistence
             Feature->>Store: AtomicWriteFile / FileLock with os.OpenRoot
@@ -164,11 +166,11 @@ sequenceDiagram
         end
 
         Feature-->>Safe: Raw Tool Response Struct
-        deactivate Feature
-
-        Safe->>Safe: Truncate response if exceeding max_output_size (32 KiB)
-        Safe->>Stdio: Formatted MCP CallToolResult
     end
+    deactivate Feature
+
+    Safe->>Safe: Truncate response if exceeding max_output_size (default: 32 KiB)
+    Safe->>Stdio: Formatted MCP CallToolResult
     deactivate Safe
 
     Stdio-->>Agent: JSON-RPC response

@@ -1,3 +1,12 @@
+"""
+Static AST analyzer for Python code snippets.
+
+Reads Python source code from stdin, traverses the AST to extract cognitive
+complexity metrics, line counts, and security hazard patterns (dynamic eval,
+shell execution, and concurrent constructs), and outputs a JSON response to
+stdout for ingestion by the Go snippet-analyzer feature.
+"""
+
 import ast
 import json
 import sys
@@ -18,6 +27,8 @@ SUBPROCESS_FUNCS = {"run", "call", "check_call", "check_output"}
 
 
 class Analyzer:
+    """AST visitor that computes complexity metrics and collects security hazards."""
+
     def __init__(self):
         self.metrics = {
             "total_lines": 0,

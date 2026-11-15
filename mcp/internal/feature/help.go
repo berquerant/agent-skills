@@ -32,5 +32,5 @@ func HelpMarkdown() string {
 
 // Usage returns the complete CLI usage and flags markdown block.
 func Usage() string {
-	return fmt.Sprintf("%s\n```\n%s\n```", HelpMarkdown(), FlagUsages())
+	return fmt.Sprintf("%s\n```text\n%s\n```", HelpMarkdown(), FlagUsages())
 }

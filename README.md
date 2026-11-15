@@ -103,6 +103,8 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │   ├── cmd/agent-skills-mcp/    # Single-binary MCP server entrypoint
 │   └── internal/                # Feature registry, store, and MCP server packages
 ├── skills/
+│   ├── agent-retrospective/
+│   │   └── references/          # Modes, diagnostic signals & proposal template
 │   ├── change-message/
 │   │   └── references/          # Commit message & PR/MR description guides
 │   ├── checkpoint-log/
