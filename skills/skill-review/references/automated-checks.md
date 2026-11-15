@@ -51,7 +51,7 @@ The script runs read-only inspection commands and prints a structured report cov
 
 ### E. Links & Path Portability (Dimension 2)
 - **Check**: Validates internal relative markdown links outside code blocks and scans for hardcoded absolute or machine-specific paths.
-- **Criteria**: Zero broken relative links and zero machine-specific paths `[F]`.
+- **Criteria**: Zero broken relative links and zero machine-specific paths `[F]`. Never commit real names, host-specific paths, or environment configs even as examples; always use synthetic placeholders or relative paths.
 
 ### F. Script Permissions (Dimension 2)
 - **Check**: Verifies executable permission (`u+x`) on all files under `scripts/`.

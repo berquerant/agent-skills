@@ -93,6 +93,9 @@ Applies across all projects.
    Do not include general coding practices the agent already knows.
    Focus strictly on the unique procedures of this workflow.
 
+5. **Sanitization & Placeholder Hygiene**
+   Never commit real user or machine names, host-specific absolute paths (e.g. user home directories), internal hostnames, or actual configurations/credentials, even as examples. Always use generic placeholders (`<placeholder>`, `/path/to/...`), RFC-standard dummy domains (`example.com`), and synthetic mock data.
+
 ---
 
 ## Reference Documentation

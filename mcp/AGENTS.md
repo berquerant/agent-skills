@@ -73,6 +73,8 @@ flowchart TD
   - `guard.CheckNoSecrets`: Rejects high-entropy API tokens, private keys, and credential headers before writing state or logs.
 - **Safe Persistence & Memory Caps**:
   All file persistence operations must use atomic file writes (`store.AtomicWriteFile`), temporary file cleanups, and cross-process file locks (`store.FileLock`). Decompression streams (such as zstd) must enforce maximum decoder memory limits to prevent compression bomb exploits.
+- **No Real Names, Paths, or Configurations in Commits**:
+  Never commit real personal or user names, host-specific absolute paths (e.g. user home directories), internal network hostnames/IPs, or actual environment configurations/credentials—even within test fixtures, code comments, usage examples, documentation, or mock data. Always use sanitized placeholders (`/path/to/...`, `<placeholder>`, `example.com`, `user`) and synthetic test fixtures.
 
 ---
 

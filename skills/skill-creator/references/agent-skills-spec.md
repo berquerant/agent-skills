@@ -70,3 +70,4 @@ A standard `SKILL.md` adheres to the following structure:
   ```text
   [link text](references/spec.md)
   ```
+- **Sanitization & Placeholder Hygiene**: Never commit real user names, machine-specific absolute paths, internal network hostnames, or actual credentials/configurations, even as examples. Always use generic placeholders or synthetic fixtures.
