@@ -201,7 +201,7 @@ AI agents scanning `.agents/skills` will then discover and activate these skills
 go install github.com/berquerant/agent-skills/mcp/cmd/agent-skills-mcp@latest
 ```
 
-Skills remain platform-agnostic and work standalone without the MCP server; see [`mcp/README.md`](mcp/README.md) for flags and host configuration.
+Skills remain platform-agnostic and work standalone without the MCP server; see [`mcp/README.md`](mcp/README.md) for flags and host configuration, and [`mcp/references/architecture.md`](mcp/references/architecture.md) for architectural diagrams and component specifications.
 
 ## Development
 
