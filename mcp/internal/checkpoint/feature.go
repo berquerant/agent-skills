@@ -19,13 +19,19 @@ var toolNames = []string{
 
 // Feature registers the checkpoint MCP tools.
 type Feature struct {
-	mgr   *Manager
-	clock feature.Clock
+	rootDir string
+	mgr     *Manager
+	clock   feature.Clock
 }
 
 // NewFeature creates a checkpoint Feature.
 func NewFeature() *Feature {
 	return &Feature{}
+}
+
+// NewFeatureWithDir creates a checkpoint Feature with a custom root directory.
+func NewFeatureWithDir(rootDir string) *Feature {
+	return &Feature{rootDir: rootDir}
 }
 
 // Name returns the canonical feature name ("checkpoint").
@@ -44,7 +50,11 @@ func (f *Feature) Register(s *mcp.Server, env feature.Env) error {
 	if clock == nil {
 		clock = feature.SystemClock{}
 	}
-	mgr, err := NewManager(env.CheckpointDir)
+	rootDir := f.rootDir
+	if rootDir == "" {
+		rootDir = env.CheckpointDir
+	}
+	mgr, err := NewManager(rootDir)
 	if err != nil {
 		return err
 	}

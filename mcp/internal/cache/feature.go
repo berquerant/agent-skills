@@ -11,12 +11,18 @@ const getOutputEnvelopeAllowance = 16384
 
 // Feature implements feature.Feature for the cache module.
 type Feature struct {
+	cfg Config
 	svc *Service
 }
 
 // NewFeature creates a cache Feature.
 func NewFeature() *Feature {
 	return &Feature{}
+}
+
+// NewFeatureWithConfig creates a cache Feature with explicit configuration.
+func NewFeatureWithConfig(cfg Config) *Feature {
+	return &Feature{cfg: cfg}
 }
 
 // Name returns the canonical feature name ("cache").
@@ -38,12 +44,21 @@ func (f *Feature) Tools() []string {
 
 // Register initializes the cache service and registers the 6 cache MCP tools on s.
 func (f *Feature) Register(s *mcp.Server, env feature.Env) error {
-	cfg := Config{
-		Dir:                         env.CacheDir,
-		MaxTTL:                      env.CacheMaxTTL,
-		MaxCacheSize:                env.CacheMaxEntrySize,
-		MaxTotalCompressedCacheSize: env.CacheMaxTotalSize,
-		Clock:                       env.Clock,
+	cfg := f.cfg
+	if cfg.Dir == "" {
+		cfg.Dir = env.CacheDir
+	}
+	if cfg.MaxTTL <= 0 {
+		cfg.MaxTTL = env.CacheMaxTTL
+	}
+	if cfg.MaxCacheSize <= 0 {
+		cfg.MaxCacheSize = env.CacheMaxEntrySize
+	}
+	if cfg.MaxTotalCompressedCacheSize <= 0 {
+		cfg.MaxTotalCompressedCacheSize = env.CacheMaxTotalSize
+	}
+	if cfg.Clock == nil {
+		cfg.Clock = env.Clock
 	}
 	svc, err := NewService(cfg)
 	if err != nil {

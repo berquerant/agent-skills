@@ -25,13 +25,19 @@ var toolNames = []string{
 
 // Feature registers the task-dag MCP tools.
 type Feature struct {
-	storage *Storage
-	clock   feature.Clock
+	stateDir string
+	storage  *Storage
+	clock    feature.Clock
 }
 
 // NewFeature creates a task-dag Feature.
 func NewFeature() *Feature {
 	return &Feature{}
+}
+
+// NewFeatureWithDir creates a task-dag Feature with a custom state directory.
+func NewFeatureWithDir(stateDir string) *Feature {
+	return &Feature{stateDir: stateDir}
 }
 
 // Name returns the canonical feature name ("task-dag").
@@ -50,7 +56,11 @@ func (f *Feature) Register(s *mcp.Server, env feature.Env) error {
 	if clock == nil {
 		clock = feature.SystemClock{}
 	}
-	st, err := NewStorage(filepath.Join(env.StateDir, featureName))
+	baseDir := f.stateDir
+	if baseDir == "" {
+		baseDir = filepath.Join(env.StateDir, featureName)
+	}
+	st, err := NewStorage(baseDir)
 	if err != nil {
 		return err
 	}

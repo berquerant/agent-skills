@@ -21,13 +21,19 @@ var toolNames = []string{
 
 // Feature registers the pace-guard MCP tools.
 type Feature struct {
-	tracker *Tracker
-	clock   feature.Clock
+	stateDir string
+	tracker  *Tracker
+	clock    feature.Clock
 }
 
 // NewFeature creates a pace-guard Feature.
 func NewFeature() *Feature {
 	return &Feature{}
+}
+
+// NewFeatureWithDir creates a pace-guard Feature with a custom state directory.
+func NewFeatureWithDir(stateDir string) *Feature {
+	return &Feature{stateDir: stateDir}
 }
 
 // Name returns the canonical feature name ("pace-guard").
@@ -46,7 +52,11 @@ func (f *Feature) Register(s *mcp.Server, env feature.Env) error {
 	if clock == nil {
 		clock = feature.SystemClock{}
 	}
-	tr, err := NewTracker(filepath.Join(env.StateDir, featureName))
+	baseDir := f.stateDir
+	if baseDir == "" {
+		baseDir = filepath.Join(env.StateDir, featureName)
+	}
+	tr, err := NewTracker(baseDir)
 	if err != nil {
 		return err
 	}
