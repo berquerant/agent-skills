@@ -11,11 +11,14 @@ import (
 	"github.com/spf13/pflag"
 )
 
+// skillLintOptions holds parsed CLI configuration flags for the skill-lint subcommand.
 type skillLintOptions struct {
 	strict bool
 	format string
 }
 
+// runSkillLint parses flags, executes automated static conformance checks across the specified
+// skill directory paths, renders results as markdown or json, and reports any failures.
 func runSkillLint(args []string, out io.Writer, _ io.Writer) error {
 	fs := pflag.NewFlagSet("skill-lint", pflag.ContinueOnError)
 	fs.SetOutput(out)

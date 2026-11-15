@@ -1,3 +1,5 @@
+// Package pathutil provides formatting utilities for file paths conforming to
+// repository output-presentation conventions.
 package pathutil
 
 import (

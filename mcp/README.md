@@ -31,7 +31,7 @@ e.g. `--snippet-analyzer` -> `AGENT_SKILLS_MCP_SNIPPET_ANALYZER`
 
 ## Flags
 
-```
+```text
       --cache[=true|false]              enable cache feature (default true)
       --cache-dir string                cache directory (default: $XDG_CACHE_HOME/agent-skills-mcp/cache)
       --cache-max-entry-size int        maximum uncompressed cache entry size in bytes (default 10485760)
@@ -76,3 +76,7 @@ go install github.com/berquerant/agent-skills/mcp/cmd/agent-skills-mcp@mcp/v0.1.
   }
 }
 ```
+
+## Architecture & Tools Reference
+
+For internal system architecture, security guardrails, and the complete catalog of tools registered across all 7 features, see [references/architecture.md](references/architecture.md).
