@@ -27,6 +27,10 @@ description = "Run automated quality checks across all skills"
 depends = ["mcp:build"]
 run = "./bin/check-skills.sh"
 
+[tasks.check-skill-publish]
+description = "Validate skills for publishing via gh skill"
+run = "gh skill publish --dry-run"
+
 [tasks."mcp:fix"]
 description = "Run go fix -diff on mcp module"
 dir = "mcp"
@@ -76,4 +80,4 @@ run = "go build -o bin/agent-skills-mcp ./cmd/agent-skills-mcp"
 
 [tasks.check]
 description = "Run all checks"
-depends = ["lint", "check-skills", "mcp:lint", "mcp:test", "mcp:build"]
+depends = ["lint", "check-skills", "check-skill-publish", "mcp:lint", "mcp:test", "mcp:build"]
