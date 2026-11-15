@@ -5,6 +5,7 @@ description: >-
   rigorous evidence, premise clarification, and version-pinned fact verification. Scopes
   trusted sources, separates observed facts from logical deductions, and prevents
   speculative diagnoses.
+license: MIT
 ---
 
 # Evidentiary Inquiry

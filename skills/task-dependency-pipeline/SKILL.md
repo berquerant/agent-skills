@@ -1,6 +1,7 @@
 ---
 name: task-dependency-pipeline
 description: Use this skill when managing complex, multi-step workflows with task dependencies, or when independent tasks can be executed in parallel or cooperatively interleaved during idle wait states (e.g., waiting for CI, builds, long-running processes, or user approvals).
+license: MIT
 ---
 
 # Task Dependency Pipeline

@@ -5,6 +5,7 @@ description: >-
   worktree. Creates a worktree directory under WORKTREE_ROOT (organized by
   origin URL and branch name), optionally manages parallel worktrees via
   subagents, and cleans up completed worktrees on request.
+license: MIT
 ---
 
 # Git Worktree Workflow

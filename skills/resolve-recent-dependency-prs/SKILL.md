@@ -6,6 +6,7 @@ description: >-
   Discovers candidate repositories, guides multi-repository mode selection (batch
   or interactive), and delegates to resolve-dependency-prs under user approval
   without idle CI waiting.
+license: MIT
 ---
 
 # Resolve Recent Dependency PRs

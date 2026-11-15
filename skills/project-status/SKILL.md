@@ -6,6 +6,7 @@ description: >-
   that diverges from expectations. Systematically inspects git state, file
   changes, recent commits, and test/lint results, then reports findings with
   clear pass/fail judgments.
+license: MIT
 ---
 
 # Project Status

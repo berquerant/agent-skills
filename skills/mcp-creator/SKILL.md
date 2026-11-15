@@ -5,6 +5,7 @@ description: >-
   Protocol) server. Guides through requirements collection, generates
   implementation code with tools/resources/prompts, and scaffolds the
   project directory structure.
+license: MIT
 ---
 
 # MCP Creator

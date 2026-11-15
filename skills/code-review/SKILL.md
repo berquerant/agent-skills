@@ -5,6 +5,7 @@ description: >-
   documentation. Analyzes quality, readability, maintainability, design, and
   potential vulnerabilities, producing a structured, actionable report without
   modifying files.
+license: MIT
 ---
 
 # Code & Documentation Review (with Security Audit)

@@ -6,6 +6,7 @@ description: >-
   generates an execution plan with verification and completion criteria for each
   step, then executes one step at a time — reporting results and requesting user
   approval before proceeding to the next.
+license: MIT
 ---
 
 # Step Gate

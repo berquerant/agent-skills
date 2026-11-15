@@ -4,6 +4,7 @@ description: >-
   Use this skill when communicating file paths, workspace targets, web URLs,
   or commands to the user to co-present clickable Markdown links with unadorned
   raw strings for both direct access and seamless copy-pasting.
+license: MIT
 ---
 
 # Output Presentation

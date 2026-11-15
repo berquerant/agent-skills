@@ -6,6 +6,7 @@ description: >-
   functions, interface complexity, branching, async constructs, and shell
   idiosyncrasies across a four-tier scale, driving simplification or guided
   user consultation before execution.
+license: MIT
 ---
 
 # Snippet Review

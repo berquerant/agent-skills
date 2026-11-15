@@ -1,10 +1,8 @@
 ---
 name: command-snippet
 description: >-
-  Use this skill when executing complex, chained, or multi-line shell commands,
-  normalizing CLI arguments, or constraining operational scope. Converts inline
-  commands into documented, parameterized snippet files and audits them via
-  snippet-review before execution.
+  Use this skill when executing complex, chained, or multi-line shell commands, normalizing CLI arguments, or constraining operational scope. Converts inline commands into documented, parameterized snippet files and audits them via snippet-review before execution.
+license: MIT
 ---
 
 # Command Snippet

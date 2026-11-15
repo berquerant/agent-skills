@@ -5,6 +5,7 @@ description: >-
   repositories. Inspects repositories, creates isolated worktrees from remote default
   branches, validates changes, commits and pushes through explicit approval gates,
   and opens linked Draft Pull Requests / Merge Requests using platform tools.
+license: MIT
 ---
 
 # Multi-Repo Change

@@ -5,6 +5,7 @@ description: >-
   discussion threads on Pull Requests or Merge Requests. Enforces Conventional
   Comments, constructive tone, explicit action responses, and clear resolution
   ownership without posting without approval.
+license: MIT
 ---
 
 # Review Discussion

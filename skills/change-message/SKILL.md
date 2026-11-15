@@ -5,6 +5,7 @@ description: >-
   message or a pull request / merge request title and description. Analyzes the
   diff and intent, follows repository conventions (defaulting to English and
   Conventional Commits), and produces concise, review-friendly messages.
+license: MIT
 ---
 
 # Change Message

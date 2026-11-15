@@ -5,6 +5,7 @@ description: >-
   between file modifications. Sets dynamic time and non-edit tool call thresholds,
   pauses when thresholds are exceeded or obstacles arise, reports progress and blockers,
   and requests user direction before continuing.
+license: MIT
 ---
 
 # Edit Paced Execution

@@ -2,6 +2,7 @@
 name: agent-retrospective
 description: >-
   Use this skill to inspect and analyze agent interaction logs (transcripts or session histories) across platforms, extracting recurring patterns to propose command snippets, new skills, workflow routine prompts, repository rule updates, and existing skill or reference refinements.
+license: MIT
 ---
 
 # Agent Retrospective

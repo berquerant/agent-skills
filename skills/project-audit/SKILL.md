@@ -5,6 +5,7 @@ description: >-
   public release readiness and exposure risks, evaluate maintainability metrics,
   and grade technical debt with prioritized ratings. For quick, targeted, or
   recent-change diagnostics without full-repo letter grades, prefer doctor.
+license: MIT
 ---
 
 # Project Audit (Health, Security, Public Release Readiness, & Maintainability)

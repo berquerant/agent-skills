@@ -4,6 +4,7 @@ description: >-
   Use this skill when the user wants to refactor code or improve documentation
   structure without changing external behavior. Guides through planning,
   incremental transformations, and verification loops to ensure safety.
+license: MIT
 ---
 
 # Code & Documentation Refactor

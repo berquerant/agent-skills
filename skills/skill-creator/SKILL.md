@@ -5,6 +5,7 @@ description: >-
   overlap with existing skills, guides through requirements collection, generates
   SKILL.md with proper frontmatter and instructions, scaffolds the directory
   structure in the appropriate location, and updates repository skill listings.
+license: MIT
 ---
 
 # Skill Creator

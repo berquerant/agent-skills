@@ -5,6 +5,7 @@ description: >-
   demands iterative plan scrutiny before execution. Audits draft plans for
   obstacles, consults on remedies, manages file archiving, and executes safely
   upon user approval.
+license: MIT
 ---
 
 # Scrutinize → Plan → Execute

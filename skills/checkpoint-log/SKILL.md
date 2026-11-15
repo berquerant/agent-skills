@@ -5,6 +5,7 @@ description: >-
   outcomes to a local file at task milestones, or when resuming interrupted work.
   Enforces explicit user confirmation of the log file path, append-only checkpoint
   entries, and rapid context recovery for both user and agent.
+license: MIT
 ---
 
 # Checkpoint Log

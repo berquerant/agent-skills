@@ -4,6 +4,7 @@ description: >-
   Use this skill when reviewing, auditing, or verifying technical documentation,
   specifications, READMEs, or API guides. Analyzes technical accuracy against code reality,
   structural clarity, completeness, hygiene, and public exposure safety without modifying files.
+license: MIT
 ---
 
 # Technical Documentation Review

@@ -5,6 +5,7 @@ description: >-
   to align with new frontier model capabilities, harness updates, or SDK versions.
   Analyzes model deltas, updates skill-review standards and checks, self-reviews
   the baseline, and coordinates phased skill remediation.
+license: MIT
 ---
 
 # Skill Modernize

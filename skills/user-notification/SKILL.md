@@ -5,6 +5,7 @@ description: >-
   or input is required, or immediately before executing tools or commands that require
   user approval or elevated permissions. Guides the agent to issue timely notifications
   via available environment channels in a standalone preceding step before requesting approval.
+license: MIT
 ---
 
 # User Notification

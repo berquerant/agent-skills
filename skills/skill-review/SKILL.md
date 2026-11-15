@@ -5,6 +5,7 @@ description: >-
   Agent Skills Specification, repository conventions, and frontier model alignment. Runs
   reproducible automated checks, scores six dimensions (scope, modularity, conventions, coupling,
   DRY, self-consistency), and outputs a read-only report.
+license: MIT
 ---
 
 # Skill Review

@@ -1,10 +1,8 @@
 ---
 name: resolve-dependency-prs
 description: >-
-  Use this skill to triage, audit, verify, and merge dependency update or
-  security advisory Pull Requests / Merge Requests on GitHub or GitLab. Enforces
-  cost-aware local batching, legitimacy & security audits, safety halt on doubts,
-  idle-wait switching across repositories, worktree isolation, and CI verification.
+  Use this skill to triage, audit, verify, and merge dependency update or security advisory Pull Requests / Merge Requests on GitHub or GitLab. Enforces cost-aware local batching, legitimacy & security audits, safety halt on doubts, idle-wait switching across repositories, worktree isolation, and CI verification.
+license: MIT
 ---
 
 # Resolve Dependency PRs

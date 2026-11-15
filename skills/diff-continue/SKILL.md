@@ -4,6 +4,7 @@ description: >-
   Use this skill when the user has a work-in-progress git diff and wants the
   agent to continue the same changes — inferring the pattern from what is
   already done and applying it to the remaining files or locations.
+license: MIT
 ---
 
 # Diff Continue

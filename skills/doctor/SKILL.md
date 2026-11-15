@@ -2,6 +2,7 @@
 name: doctor
 description: >-
   Use this skill for focused, mode-selectable (quick/thorough, project/recent changes) health checkups across documentation, maintainability, latent bugs, and security risks. Produces an evidence-backed remediation plan; for full-repo letter-grade baseline audits, prefer project-audit.
+license: MIT
 ---
 
 # Doctor

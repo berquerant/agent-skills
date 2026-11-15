@@ -2,6 +2,7 @@
 name: skill-router
 description: >-
   Use this skill to analyze user requests, workspace context, and project state, then select and route to the optimal agent skill or pipeline. Formulates execution sequences with approval gates before handing off.
+license: MIT
 ---
 
 # Skill Router

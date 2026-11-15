@@ -5,6 +5,7 @@ description: >-
   modifying any project code or functionality. Supports both existing-doc refinement
   and adding new docstrings/comments to complex or undocumented code, ensuring zero loss
   of context, logical depth, and complete code preservation.
+license: MIT
 ---
 
 # Documentation & Code Comment Refactor

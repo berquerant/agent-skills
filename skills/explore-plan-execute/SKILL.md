@@ -4,6 +4,7 @@ description: >-
   Use this skill when a non-trivial task requires structured exploration, concrete
   planning with verification criteria, and user approval before execution. For
   high-risk or architecturally ambiguous tasks, prefer scrutinize-plan-execute.
+license: MIT
 ---
 
 # Explore → Plan → Execute
