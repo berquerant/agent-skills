@@ -46,31 +46,31 @@ Adopt the six cross-cutting operational protocols for all subsequent actions in 
 ### 1. Output Presentation (Dual Formatting)
 - When communicating file paths, workspace targets, or web URLs to the user, co-present a clickable Markdown link followed by an unadorned raw string in parentheses (e.g., `[label](accessible_target) (raw_target)`).
 - Ensure links remain viable regardless of directory shifts and that raw strings can be copied directly without enclosing backticks.
-- Follow [output-presentation](../output-presentation/SKILL.md).
+- Follow [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md).
 
 ### 2. Command Execution & Scripting
 - Before running non-trivial shell commands, write, parameterize, audit, and explain immutable snippet files rather than running ad-hoc inline commands.
 - Never yield intermediate turns between a pre-execution explanation and the tool invocation; invoke execution atomically within the same turn.
-- Follow [command-snippet](../command-snippet/SKILL.md) and [snippet-review](../snippet-review/SKILL.md).
+- Follow [command-snippet](../command-snippet/SKILL.md) (../command-snippet/SKILL.md) and [snippet-review](../snippet-review/SKILL.md) (../snippet-review/SKILL.md).
 
 ### 3. Investigation & Fact Verification
 - Base diagnostics, evaluations, and root-cause analyses on verifiable evidence rather than speculative assumptions.
 - Clarify ambiguous premises (architecture, target versions, out-of-scope boundaries) and pin facts to exact versions.
-- Follow [evidentiary-inquiry](../evidentiary-inquiry/SKILL.md).
+- Follow [evidentiary-inquiry](../evidentiary-inquiry/SKILL.md) (../evidentiary-inquiry/SKILL.md).
 
 ### 4. Task Planning & User Approval Gates
 - Before mutating code or configurations on non-trivial tasks, explore first, create a step-by-step plan with measurable verification criteria, and secure explicit user approval.
-- Follow [explore-plan-execute](../explore-plan-execute/SKILL.md) (or [scrutinize-plan-execute](../scrutinize-plan-execute/SKILL.md) for high-risk or architecturally ambiguous changes).
+- Follow [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md) (or [scrutinize-plan-execute](../scrutinize-plan-execute/SKILL.md) (../scrutinize-plan-execute/SKILL.md) for high-risk or architecturally ambiguous changes).
 
 ### 5. Commits, Pull Requests, & Discussions
 - Adhere to repository conventions and Conventional Commits for all commit messages and PR/MR descriptions.
 - Maintain constructive, actionable dialogues and clear ownership in review discussion threads.
-- Follow [change-message](../change-message/SKILL.md) and [review-discussion](../review-discussion/SKILL.md).
+- Follow [change-message](../change-message/SKILL.md) (../change-message/SKILL.md) and [review-discussion](../review-discussion/SKILL.md) (../review-discussion/SKILL.md).
 
 ### 6. User Notifications
 - Dispatch timely notifications upon task completion, when waiting on user approval gates, or immediately prior to running privileged or sandbox-elevated commands.
 - For elevated commands, issue the notification in a standalone preceding step before requesting user approval.
-- Follow [user-notification](../user-notification/SKILL.md).
+- Follow [user-notification](../user-notification/SKILL.md) (../user-notification/SKILL.md).
 
 Verify: The six core protocols and their referenced skills are recognized and adopted as active behavioral constraints.
 

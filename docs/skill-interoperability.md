@@ -25,7 +25,7 @@ flowchart TD
     end
 
     subgraph Execution ["4. Execution & Pacing"]
-        EXEC["Step Gating & Logging<br/>(step-gate, edit-paced-execution, checkpoint-log, command-snippet)"]
+        EXEC["Setup, Gating & Logging<br/>(agent-skills-setup, step-gate, edit-paced-execution, checkpoint-log, command-snippet)"]
     end
 
     subgraph Remediation ["5. Remediation & Action"]
