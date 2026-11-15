@@ -93,6 +93,8 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │   ├── install.sh               # Copies skills to a target directory
 │   ├── lint.sh                  # Shellcheck and shfmt runner
 │   └── mcp-readme.sh            # Generates mcp/README.md from CLI help output
+├── docs/
+│   └── skill-interoperability.md # Skill workflow architecture & category hand-off diagrams
 ├── mcp/
 │   ├── cmd/agent-skills-mcp/    # Single-binary MCP server entrypoint
 │   └── internal/                # Feature registry, store, and MCP server packages

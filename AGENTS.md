@@ -64,139 +64,54 @@ Skills and agent operations in this repository are strictly self-contained and o
 
 Skills in this repository follow a **loosely coupled, sequential hand-off architecture**. Skills operate independently and do not hard-depend on or invoke each other as mandatory subroutines. Instead, they produce clear outputs and recommend the next appropriate skill upon user approval.
 
+For detailed domain-specific flowcharts and interaction patterns, see [docs/skill-interoperability.md](docs/skill-interoperability.md).
+
 ```mermaid
 flowchart TD
-    subgraph Routing ["Routing & Dispatch"]
-        SRTR["skill-router<br/>(Intent triage & pipeline routing)"]
+    subgraph Dispatch ["1. Dispatch & Routing"]
+        SR["skill-router"]
     end
 
-    subgraph Meta ["Meta & Skill Creation"]
-        SC[skill-creator]
-        SR["skill-review<br/>(Read-only skill audit)"]
-        SM["skill-modernize<br/>(Model-aligned criteria & skill evolution)"]
-        MC[mcp-creator]
+    subgraph Planning ["2. Planning & Isolation"]
+        PLAN["explore-plan-execute<br/>scrutinize-plan-execute<br/>task-dependency-pipeline<br/>git-worktree"]
     end
 
-    subgraph Planning ["Planning & Workflow"]
-        EPE[explore-plan-execute]
-        SPE[scrutinize-plan-execute]
-        SG[step-gate]
-        CPL["checkpoint-log<br/>(Milestone log & recovery)"]
-        EPE_PACE["edit-paced-execution<br/>(Pacing interval & checkpoint)"]
-        GW[git-worktree]
-        MRC[multi-repo-change]
-        CM["change-message<br/>(Commit & PR/MR messages)"]
-        CS["command-snippet<br/>(Command script & parameterization)"]
-        OP["output-presentation<br/>(Dual link & raw copy-paste formatting)"]
-        UN["user-notification<br/>(Alerts, gates & preceding permission notice)"]
-        TDP["task-dependency-pipeline<br/>(DAG modeling & cooperative idle-wait scheduler)"]
+    subgraph Execution ["3. Execution, Pacing & Presentation"]
+        EXEC["step-gate<br/>edit-paced-execution<br/>checkpoint-log<br/>command-snippet<br/>output-presentation<br/>user-notification"]
     end
 
-    subgraph Audit ["Audit & Verification - Read-Only"]
-        PA["project-audit<br/>(Macro health, security, public release, tech debt)"]
-        PS["project-status<br/>(Micro working-tree & drift check)"]
-        CR["code-review<br/>(Meso diff/PR review & security audit)"]
-        RD["review-discussion<br/>(PR/MR comments & thread resolution)"]
-        EI["evidentiary-inquiry<br/>(Premise clarification, source scoping, version-pinned fact verification, logical deductions)"]
-        DOC["doctor<br/>(Mode-selectable checkup: docs, maintainability, bugs, security; diagnoses and plans)"]
-        SNR["snippet-review<br/>(Ad-hoc snippet intelligibility & complexity audit)"]
+    subgraph Audit ["4. Audit & Verification (Read-Only)"]
+        AUD["doctor<br/>evidentiary-inquiry<br/>code-review<br/>project-audit<br/>project-status<br/>snippet-review"]
     end
 
-    subgraph Remediation ["Remediation & Action"]
-        RF[refactor]
-        DR["doc-refactor<br/>(Doc & comment refinement, zero code change)"]
-        DC[diff-continue]
-        RDP["resolve-dependency-prs<br/>(Triage, test & merge deps/security PRs)"]
-        RRDP["resolve-recent-dependency-prs<br/>(Multi-repo discovery & PR triage coordination)"]
+    subgraph Remediation ["5. Remediation & PR Lifecycle"]
+        REM["refactor<br/>doc-refactor<br/>diff-continue<br/>resolve-dependency-prs<br/>resolve-recent-dependency-prs<br/>multi-repo-change<br/>change-message<br/>review-discussion"]
     end
 
-    %% Workflows & Hand-offs
-    SRTR -.->|routes ambiguous/complex intent| EPE
-    SRTR -.->|routes high-risk intent| SPE
-    SRTR -.->|routes health check| DOC
-    SRTR -.->|routes code review| CR
-    SRTR -.->|routes multi-repo dep triage| RRDP
-    SRTR -.->|routes single-repo dep triage| RDP
-    SRTR -.->|routes multi-repo coordination| MRC
-    SRTR -.->|routes snippet review| SNR
-    SRTR -.->|routes task dependency & wait interleaving| TDP
+    subgraph Meta ["6. Meta & Lifecycle"]
+        META["skill-creator<br/>skill-review<br/>skill-modernize<br/>mcp-creator"]
+    end
 
-    EPE -->|sequential hand-off| SG
-    SPE -->|sequential hand-off| SG
-    EPE -.->|proposes DAG scheduling| TDP
-    TDP -->|sequential hand-off| SG
-    EPE -.->|delegates complex risk| SPE
-    EPE -.->|proposes pacing guard| EPE_PACE
-    SPE -.->|proposes pacing guard| EPE_PACE
-    SG -.->|proposes pacing guard| EPE_PACE
-    EPE -.->|proposes milestone logging| CPL
-    SPE -.->|proposes milestone logging| CPL
-    SG -.->|records step milestones| CPL
-    EPE -.->|structured evidence inquiry| EI
-    SPE -.->|structured evidence inquiry| EI
-
-    GW -.->|worktree isolation| EPE
-    GW -.->|worktree isolation| SPE
-    GW -.->|worktree isolation| MRC
-    GW -.->|worktree isolation| RDP
-    EPE -.->|message guidelines| CM
-    MRC -.->|message guidelines| CM
-    EPE -.->|complex command scripts| CS
-    SG -.->|complex command scripts| CS
-    EPE -.->|completion & gate notification| UN
-    SPE -.->|completion & gate notification| UN
-    SG -.->|gate alert & preceding notice| UN
-    CS -.->|audits snippet intelligibility| SNR
-    SNR -.->|suggests simplification| CS
-    CS -.->|path presentation| OP
-    CR -.->|shares review criteria| SNR
-    RRDP -->|sequential hand-off| RDP
-    RDP -.->|message guidelines| CM
-    RDP -.->|planning & approval gate| EPE
-    RDP -.->|remediation gate pattern| SG
-    RDP -.->|cooperative scheduling model| TDP
-    RDP -.->|complex fix hand-off| RF
-    RDP -.->|thorough mode audit| CR
-    RDP -.->|post-merge verification| PS
-    CR -.->|comment guidelines| RD
-    CR -.->|suggests doc improvements| DR
-
-    RF -.->|pure doc/comment refinement| DR
-    EI -->|suggests remediation| RF
-    EI -->|suggests doc remediation| DR
-    EI -->|suggests remediation| SG
-    EI -->|suggests planning| EPE
-    EI -->|suggests scrutiny planning| SPE
-
-    PA -->|suggests remediation| RF
-    PA -->|suggests phased fixes| SG
-    PA -.->|post-remediation verification| PS
-
-    DOC -->|suggests structural remediation| RF
-    DOC -->|suggests doc remediation| DR
-    DOC -->|suggests phased fixes| SG
-    DOC -.->|applies review & security criteria| CR
-    DOC -.->|applies maintainability metrics| PA
-    DOC -.->|fact verification| EI
-    DOC -->|suggests bug & security fix planning| EPE
-
-    CR -.->|shares security checklist| PA
-    RF -.->|consults review criteria| CR
-
-    PS -.->|diff drift verification| DC
-    DC -.->|planning & approval gate| EPE
-
-    SC -->|new skill reviewed by| SR
-    SR -.->|shares skill spec| SC
-    SR -->|suggests phased fixes| SG
-    SR -->|suggests remediation| RF
-    SR -->|suggests doc refinement| DR
-    SM -->|updates criteria & audits via| SR
-    SM -.->|syncs generator rules| SC
-    SM -->|orchestrates phased fixes| SG
-    SM -->|orchestrates structural fixes| RF
-    SM -->|orchestrates doc polish| DR
+    %% High-level hand-offs
+    Dispatch -->|"Routes complex intent"| Planning
+    Dispatch -->|"Routes audit/review intent"| Audit
+    Dispatch -->|"Routes PR/dep triage"| Remediation
+    Audit -->|"Diagnoses suggest planned fix"| Planning
+    Audit -->|"Targeted cleanups"| Remediation
+    Planning -->|"Approved step-by-step plan"| Execution
+    Execution -->|"Executes code mutations"| Remediation
+    Remediation -->|"Verifies post-change state"| Audit
+    Meta -->|"Evaluates and updates skills"| Execution
 ```
+
+| Category | Skills | Workflow Details & Diagrams |
+|---|---|---|
+| **Dispatch & Routing** | `skill-router` | [High-Level Category Architecture](docs/skill-interoperability.md#1-high-level-category-architecture) |
+| **Planning & Isolation** | `explore-plan-execute`, `scrutinize-plan-execute`, `task-dependency-pipeline`, `git-worktree` | [Planning & Step-Gated Execution Workflow](docs/skill-interoperability.md#2-planning--step-gated-execution-workflow) |
+| **Execution & Pacing** | `step-gate`, `edit-paced-execution`, `checkpoint-log`, `command-snippet`, `output-presentation`, `user-notification` | [Planning & Step-Gated Execution Workflow](docs/skill-interoperability.md#2-planning--step-gated-execution-workflow) |
+| **Audit & Inquiry (Read-Only)** | `doctor`, `evidentiary-inquiry`, `code-review`, `project-audit`, `project-status`, `snippet-review` | [Audit, Diagnostics & Remediation Workflow](docs/skill-interoperability.md#3-audit-diagnostics--remediation-workflow) |
+| **Remediation & PR Lifecycle** | `refactor`, `doc-refactor`, `diff-continue`, `resolve-dependency-prs`, `resolve-recent-dependency-prs`, `multi-repo-change`, `change-message`, `review-discussion` | [Multi-Repository & Dependency PR Triage Workflow](docs/skill-interoperability.md#4-multi-repository--dependency-pr-triage-workflow) |
+| **Meta & Lifecycle** | `skill-creator`, `skill-review`, `skill-modernize`, `mcp-creator` | [Skill Meta & Modernization Lifecycle](docs/skill-interoperability.md#5-skill-meta--modernization-lifecycle) |
 
 ### Interoperability Principles
 - **Intent-Driven Dispatch & Pipeline Routing**: For ambiguous, broad, or multi-skill goals, `skill-router` acts as a read-only entrypoint dispatcher to analyze context, map user intent, and present an explicit sequential pipeline for user sign-off before executing any skill.

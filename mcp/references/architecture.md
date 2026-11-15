@@ -43,10 +43,10 @@ flowchart TD
     end
 
     %% Interactions
-    Agent -->|1. Executes skill instructions| Skills
-    Skills -->|2a. High-performance deterministic call (Preferred)| MCPServer
-    Skills -.->|2b. Shell/manual fallback (When MCP unavailable)| Fallbacks
-    MCPServer -->|Tool response| Agent
+    Agent -->|"1. Executes skill instructions"| Skills
+    Skills -->|"2a. High-performance deterministic call - preferred"| MCPServer
+    Skills -.->|"2b. Shell or manual fallback when MCP unavailable"| Fallbacks
+    MCPServer -->|"Tool response"| Agent
 
     %% Mappings
     SK_EPE --- FB_CACHE
@@ -165,7 +165,7 @@ sequenceDiagram
         Feature-->>Safe: Raw Tool Response Struct
         deactivate Feature
 
-        Safe->>Safe: Truncate response if > max_output_size (default 32 KiB)
+        Safe->>Safe: Truncate response if exceeding max_output_size (32 KiB)
         Safe->>Stdio: Formatted MCP CallToolResult
     end
     deactivate Safe
