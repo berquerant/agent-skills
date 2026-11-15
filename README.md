@@ -43,6 +43,7 @@ All skills are maintained under `skills/`.
 | [`output-presentation`](skills/output-presentation/SKILL.md) | Co-presents clickable Markdown links and unadorned raw strings for paths, targets, and URLs. | Dual format (`[label](url) (raw_url)`), link viability guarantee, copy-pasting without enclosing backticks. |
 | [`user-notification`](skills/user-notification/SKILL.md) | Dispatches notifications on completion, approval gates, or before elevated tool execution. | Multi-channel delivery, preceding step protocol for elevated commands, anti-fatigue filtering. |
 | [`agent-retrospective`](skills/agent-retrospective/SKILL.md) | Analyzes agent transcripts to mine recurring patterns, proposing snippets, rules, and skill refinements. | Focus × Scope mode matrix (all/auto/refine/rules × session/recent/custom), 4 diagnostic signals (corrections, friction, deviations, repetitions), read-only proposal report, hand-off to command-snippet/skill-creator/doc-refactor. |
+| [`agent-skills-setup`](skills/agent-skills-setup/SKILL.md) | Bootstraps environment awareness and core operational protocols at the start of a session or task. | Replaces static rule pasting, active capability discovery, cross-cutting guidelines adoption, verification check. |
 
 ## Skill Selection Matrix
 
@@ -79,6 +80,7 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 | Co-present clickable links and raw copy-paste paths & URLs | [`output-presentation`](skills/output-presentation/SKILL.md) | — |
 | Alert user on completion, gates, or elevated tools | [`user-notification`](skills/user-notification/SKILL.md) | — |
 | Agent log retrospective & workflow mining | [`agent-retrospective`](skills/agent-retrospective/SKILL.md) | `command-snippet` / `skill-creator` / `doc-refactor` |
+| Initialize session setup & adopt core operational protocols | [`agent-skills-setup`](skills/agent-skills-setup/SKILL.md) | `explore-plan-execute` / `doctor` |
 
 ## Project Structure
 
@@ -105,6 +107,7 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 ├── skills/
 │   ├── agent-retrospective/
 │   │   └── references/          # Modes, diagnostic signals & proposal template
+│   ├── agent-skills-setup/
 │   ├── change-message/
 │   │   └── references/          # Commit message & PR/MR description guides
 │   ├── checkpoint-log/
@@ -157,8 +160,6 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │   ├── task-dependency-pipeline/
 │   │   └── references/          # DAG modeling & cooperative scheduling guide
 │   └── user-notification/
-├── global/
-│   └── AGENTS.md            # Portable/global agent guidelines for external projects
 ├── AGENTS.md                    # Operational guidelines & context for AI agents
 ├── .gitignore
 ├── .mise.toml                   # Tool configuration and mise tasks
@@ -166,9 +167,25 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 └── README.md
 ```
 
-## Global Agent Guidelines
+## Agent Startup & Session Setup (`agent-skills-setup`)
 
-In addition to modular skills, this repository provides portable, project-agnostic operational guidelines in [`global/AGENTS.md`](global/AGENTS.md). These guidelines define cross-cutting principles (such as unadorned raw string outputs for paths and URLs to ensure seamless copy-pasting) that can be applied to global agent configurations or imported into other repositories.
+Instead of repeatedly copying and pasting static operational rules (e.g. legacy `AGENTS.md`) into your agent's system prompt or startup preambles—which consumes substantial context window tokens and easily diverges across environments—you can instruct the agent with a single-line pointer to run [`agent-skills-setup`](skills/agent-skills-setup/SKILL.md).
+
+### Recommended Startup Prompt Pointer
+
+Add the following directive to your AI agent's startup configuration, system prompt, or custom instructions:
+
+```markdown
+At the start of a session or when engaging in tasks, load and follow the `agent-skills-setup` skill to initialize operational protocols and environment awareness.
+```
+
+This bootstraps cross-cutting operational practices on demand:
+- **Output Presentation**: Co-presenting clickable Markdown links and unadorned raw strings for copy-pasting (`output-presentation`).
+- **Command Execution & Scripting**: Parameterizing, auditing, and explaining immutable snippet files (`command-snippet`, `snippet-review`).
+- **Investigation & Fact Verification**: Evidence-backed inquiry without speculation (`evidentiary-inquiry`).
+- **Task Planning & User Approval**: Plan-first workflow with explicit verification criteria and gates before mutations (`explore-plan-execute`, `scrutinize-plan-execute`).
+- **Commits, PRs, & Discussions**: Conventional commits and constructive review threads (`change-message`, `review-discussion`).
+- **User Notifications**: Timely alerts before privileged actions and upon completion (`user-notification`).
 
 ## Setup & Usage
 

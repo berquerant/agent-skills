@@ -36,6 +36,7 @@ This reference provides the intent classification criteria, recommended entry sk
 | **Agent Log Retrospective & Workflow Mining** | "Reflect on this session", "Mine patterns from logs", "Suggest snippets/skills from history", "Turn repeated actions into snippets" | `agent-retrospective` | `command-snippet` / `skill-creator` / `doc-refactor` |
 | **Output Co-Presentation & Copy-Paste** | "Format output with clickable link and raw string", "Make paths/URLs copy-pasteable and clickable" | `output-presentation` | — |
 | **User Alerts & Approval Gate Notifications** | "Notify me when done", "Alert before elevated permissions or approval gates" | `user-notification` | `explore-plan-execute` / `step-gate` |
+| **Session Setup & Operational Protocols** | "Initialize agent setup", "Load core protocols", "Start agent session", "Setup agent skills" | `agent-skills-setup` | `explore-plan-execute` / `doctor` |
 
 ---
 
