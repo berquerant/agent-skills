@@ -80,7 +80,7 @@ type DeleteResult struct {
 	Hit          bool
 	Deleted      bool
 	Key          string
-	Version      any
+	Version      *int
 	DeletedCount int
 }
 
@@ -134,7 +134,7 @@ type DeleteOutput struct {
 	Hit          bool   `json:"hit"`
 	Deleted      bool   `json:"deleted"`
 	Key          string `json:"key,omitempty"`
-	Version      any    `json:"version,omitempty"`
+	Version      *int   `json:"version,omitempty" jsonschema:"Target version number (integer >= 1, or omitted when all versions deleted)"`
 	DeletedCount int    `json:"deleted_count"`
 	Reason       string `json:"reason,omitempty"`
 	Error        string `json:"error,omitempty"`

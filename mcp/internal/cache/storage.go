@@ -140,7 +140,7 @@ func (s *Storage) readAndDecompress(root *os.Root, relPath, resolvedKey string, 
 }
 
 // Get retrieves and decompresses a cached record by key and optional version.
-func (s *Storage) Get(key string, version any) (GetResult, error) {
+func (s *Storage) Get(key string, version *int) (GetResult, error) {
 	baseKey, keyVer, ok := ParseVersionedKey(key)
 	if !ok {
 		return GetResult{Hit: false, Key: key, Reason: "invalid_key"}, nil
@@ -180,7 +180,7 @@ func (s *Storage) Get(key string, version any) (GetResult, error) {
 }
 
 // Exist checks whether a non-expired cache entry exists for key and version without decompressing payload.
-func (s *Storage) Exist(key string, version any) (bool, error) {
+func (s *Storage) Exist(key string, version *int) (bool, error) {
 	baseKey, keyVer, ok := ParseVersionedKey(key)
 	if !ok {
 		return false, nil

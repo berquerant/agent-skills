@@ -127,25 +127,16 @@ func TestResolveVersionTarget(t *testing.T) {
 	suffixLatest := cache.VersionTarget{Kind: cache.VersionLatest}
 	tests := []struct {
 		name     string
-		explicit any
+		explicit *int
 		suffix   cache.VersionTarget
 		wantOK   bool
 		wantKind cache.VersionKind
 		wantNum  int
 	}{
 		{name: "nil explicit uses suffix", explicit: nil, suffix: suffixLatest, wantOK: true, wantKind: cache.VersionLatest},
-		{name: "empty string uses suffix", explicit: "", suffix: suffixLatest, wantOK: true, wantKind: cache.VersionLatest},
-		{name: "positive int overrides", explicit: 3, suffix: suffixLatest, wantOK: true, wantKind: cache.VersionSpecific, wantNum: 3},
-		{name: "positive int64 overrides", explicit: int64(5), suffix: suffixLatest, wantOK: true, wantKind: cache.VersionSpecific, wantNum: 5},
-		{name: "integral float64 overrides", explicit: float64(2), suffix: suffixLatest, wantOK: true, wantKind: cache.VersionSpecific, wantNum: 2},
-		{name: "numeric string overrides", explicit: "4", suffix: suffixLatest, wantOK: true, wantKind: cache.VersionSpecific, wantNum: 4},
-		{name: "latest string overrides", explicit: "latest", suffix: cache.VersionTarget{Kind: cache.VersionSpecific, Number: 1}, wantOK: true, wantKind: cache.VersionLatest},
-		{name: "zero int rejected", explicit: 0, wantOK: false},
-		{name: "negative int64 rejected", explicit: int64(-1), wantOK: false},
-		{name: "zero float64 rejected", explicit: float64(0), wantOK: false},
-		{name: "fractional float64 rejected", explicit: 1.5, wantOK: false},
-		{name: "zero string rejected", explicit: "0", wantOK: false},
-		{name: "non-numeric string rejected", explicit: "invalid", wantOK: false},
+		{name: "positive int overrides", explicit: new(3), suffix: suffixLatest, wantOK: true, wantKind: cache.VersionSpecific, wantNum: 3},
+		{name: "zero int rejected", explicit: new(0), wantOK: false},
+		{name: "negative int rejected", explicit: new(-1), wantOK: false},
 	}
 
 	for _, tt := range tests {

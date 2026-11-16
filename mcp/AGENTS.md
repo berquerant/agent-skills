@@ -16,6 +16,8 @@ Operational guidelines and architectural conventions for AI agents developing an
   The MCP server is purely local and offline. It must never make autonomous HTTP/HTTPS or network calls. Remote fetching, repository querying, and platform mutations are delegated to host CLI tools (`gh`, `glab`) and cached via `cache_*` tools.
 - **Panic Recovery & Safe Tool Dispatch**:
   All MCP tool handlers must be registered using `feature.AddSafeTool` or `feature.AddSafeToolWithMax` (`internal/feature/safetool.go`), which automatically catches panics, enforces output size limits, and logs tool invocations.
+- **Strictly Typed Tool Schemas (No `any` or Ambiguous Types)**:
+  Tool input (`In`) and output (`Out`) structs must define concrete, explicit Go types. Never use `any` or untyped interface fields in tool payload structs; the MCP Go SDK (`jsonschema-go`) infers `any` as an unconstrained wildcard schema (e.g. `"property": true` or untyped schema lacking `"type"`), which breaks strict client validation in MCP clients such as Cursor.
 
 ```mermaid
 flowchart TD

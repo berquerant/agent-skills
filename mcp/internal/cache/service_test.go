@@ -90,13 +90,13 @@ func TestServiceQueryVersionAndPurge(t *testing.T) {
 		wantReason string
 	}{
 		{name: "get missing key and triple", op: "get", in: cache.QueryInput{}, wantHit: false},
-		{name: "get invalid explicit version 0", op: "get", in: cache.QueryInput{Key: "svc_key", Version: 0}, wantHit: false, wantReason: "invalid_version"},
+		{name: "get invalid explicit version 0", op: "get", in: cache.QueryInput{Key: "svc_key", Version: new(0)}, wantHit: false, wantReason: "invalid_version"},
 		{name: "get hit latest for svc_key", op: "get", in: cache.QueryInput{Key: "svc_key"}, wantHit: true},
 		{name: "exist missing key and triple", op: "exist", in: cache.QueryInput{}, wantHit: false},
 		{name: "exist hit by triple", op: "exist", in: cache.QueryInput{Type: "command", Name: "echo", Dir: "/tmp", Args: []string{"hello"}}, wantHit: true},
 		{name: "get rejects sensitive path in args", op: "get", in: cache.QueryInput{Type: "command", Name: "cat", Dir: "/tmp", Args: []string{"/etc/shadow"}}, wantHit: false, wantReason: "sensitive_path"},
 		{name: "delete missing key and triple", op: "delete", in: cache.QueryInput{}, wantHit: false},
-		{name: "delete specific version 1 of svc_key", op: "delete", in: cache.QueryInput{Key: "svc_key", Version: 1}, wantHit: true},
+		{name: "delete specific version 1 of svc_key", op: "delete", in: cache.QueryInput{Key: "svc_key", Version: new(1)}, wantHit: true},
 	}
 
 	for _, tt := range tests {
