@@ -92,7 +92,7 @@ func TestStorageVersioningAndDelete(t *testing.T) {
 	require.True(t, gotV1.Hit)
 	assert.Equal(t, "v1", gotV1.Data.Stdout)
 
-	gotV2, err := st.Get(key, 2)
+	gotV2, err := st.Get(key, new(2))
 	require.NoError(t, err)
 	require.True(t, gotV2.Hit)
 	assert.Equal(t, "v2", gotV2.Data.Stdout)
@@ -102,7 +102,7 @@ func TestStorageVersioningAndDelete(t *testing.T) {
 	assert.True(t, verRes.Hit)
 	require.Len(t, verRes.Versions, 3)
 
-	delV2, err := st.Delete(key, 2)
+	delV2, err := st.Delete(key, new(2))
 	require.NoError(t, err)
 	assert.True(t, delV2.Deleted)
 	assert.Equal(t, 1, delV2.DeletedCount)
@@ -114,7 +114,8 @@ func TestStorageVersioningAndDelete(t *testing.T) {
 	delLatest, err := st.Delete(key+"@latest", nil)
 	require.NoError(t, err)
 	assert.True(t, delLatest.Deleted)
-	assert.Equal(t, 3, delLatest.Version)
+	require.NotNil(t, delLatest.Version)
+	assert.Equal(t, 3, *delLatest.Version)
 
 	delAll, err := st.Delete(key, nil)
 	require.NoError(t, err)

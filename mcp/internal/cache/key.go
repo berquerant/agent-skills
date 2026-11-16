@@ -83,41 +83,14 @@ func ParseVersionedKey(key string) (string, VersionTarget, bool) {
 
 // ResolveVersionTarget combines an explicit version argument with the version suffix parsed from key.
 // Explicit version takes precedence over keySuffix. Returns false if the explicit version is malformed.
-func ResolveVersionTarget(explicit any, keySuffix VersionTarget) (VersionTarget, bool) {
+func ResolveVersionTarget(explicit *int, keySuffix VersionTarget) (VersionTarget, bool) {
 	if explicit == nil {
 		return keySuffix, true
 	}
-	switch v := explicit.(type) {
-	case int:
-		if v <= 0 {
-			return VersionTarget{}, false
-		}
-		return VersionTarget{Kind: VersionSpecific, Number: v}, true
-	case int64:
-		if v <= 0 {
-			return VersionTarget{}, false
-		}
-		return VersionTarget{Kind: VersionSpecific, Number: int(v)}, true
-	case float64:
-		if v <= 0 || float64(int(v)) != v {
-			return VersionTarget{}, false
-		}
-		return VersionTarget{Kind: VersionSpecific, Number: int(v)}, true
-	case string:
-		if v == "" {
-			return keySuffix, true
-		}
-		if v == "latest" {
-			return VersionTarget{Kind: VersionLatest}, true
-		}
-		n, err := strconv.Atoi(v)
-		if err != nil || n <= 0 {
-			return VersionTarget{}, false
-		}
-		return VersionTarget{Kind: VersionSpecific, Number: n}, true
-	default:
+	if *explicit <= 0 {
 		return VersionTarget{}, false
 	}
+	return VersionTarget{Kind: VersionSpecific, Number: *explicit}, true
 }
 
 // FormatVersionedKey formats baseKey with an @version suffix when target is non-empty.

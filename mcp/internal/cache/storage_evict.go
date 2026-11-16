@@ -8,7 +8,7 @@ import (
 )
 
 // Delete removes cache files for key (all versions, "latest", or a specific integer version).
-func (s *Storage) Delete(key string, version any) (DeleteResult, error) {
+func (s *Storage) Delete(key string, version *int) (DeleteResult, error) {
 	baseKey, keyVer, ok := ParseVersionedKey(key)
 	if !ok {
 		return DeleteResult{Hit: false, Deleted: false, Key: key}, nil
@@ -22,9 +22,9 @@ func (s *Storage) Delete(key string, version any) (DeleteResult, error) {
 	err := s.withLockedRoot(func(root *os.Root) {
 		files := s.findFilesByKey(baseKey)
 		if len(files) == 0 {
-			var verOut any
+			var verOut *int
 			if targetVer.Kind == VersionSpecific {
-				verOut = targetVer.Number
+				verOut = &targetVer.Number
 			}
 			out = DeleteResult{
 				Hit:          false,
@@ -80,7 +80,7 @@ func (s *Storage) deleteLatestVersion(root *os.Root, baseKey string, files []cac
 		Hit:          true,
 		Deleted:      deleted,
 		Key:          FormatVersionedKeyNumber(baseKey, latest.version),
-		Version:      latest.version,
+		Version:      &latest.version,
 		DeletedCount: count,
 	}
 }
@@ -103,7 +103,7 @@ func (s *Storage) deleteSpecificVersion(
 			Hit:          false,
 			Deleted:      false,
 			Key:          targetKeyStr,
-			Version:      targetVer,
+			Version:      &targetVer,
 			DeletedCount: 0,
 		}
 	}
@@ -117,7 +117,7 @@ func (s *Storage) deleteSpecificVersion(
 		Hit:          true,
 		Deleted:      deletedCount > 0,
 		Key:          targetKeyStr,
-		Version:      targetVer,
+		Version:      &targetVer,
 		DeletedCount: deletedCount,
 	}
 }

@@ -38,7 +38,7 @@ func (s *Service) Close() error {
 // QueryInput holds parameters for get, exist, and delete operations.
 type QueryInput struct {
 	Key     string   `json:"key,omitempty" jsonschema:"Cache key (optionally including @<version>)"`
-	Version any      `json:"version,omitempty" jsonschema:"Target version (integer >= 1 or 'latest')"`
+	Version *int     `json:"version,omitempty" jsonschema:"Target version number (integer >= 1)"`
 	Type    string   `json:"type,omitempty" jsonschema:"Invocation type ('command', 'mcp', etc.)"`
 	Name    string   `json:"name,omitempty" jsonschema:"Command or tool name"`
 	Args    []string `json:"args,omitempty" jsonschema:"Ordered list of command or tool arguments"`
