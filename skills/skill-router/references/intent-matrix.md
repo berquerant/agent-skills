@@ -18,6 +18,7 @@ This reference provides the intent classification criteria, recommended entry sk
 | **Behavior-Preserving Refactoring** | "Clean up this module without changing behavior", "DRY this code" | `refactor` | `code-review` → `change-message` |
 | **Documentation & Comment Clarification** | "Improve docstrings", "Clarify comments without touching code" | `doc-refactor` | `project-status` → `change-message` |
 | **Technical Documentation Review** | "Review this documentation", "Review README/docs", "Check doc accuracy", "Audit doc drift" | `doc-review` | `doc-refactor` / `review-discussion` / `change-message` |
+| **Structured Document & Proposal Drafting** | "Write an RFC/ADR/design doc", "Draft a proposal or report", "Structure this explanation" | `structured-writing` | `doc-review` / `doc-refactor` / `change-message` |
 | **Continuing Partial Diffs** | "Apply this WIP pattern to the rest of the codebase" | `diff-continue` | `refactor` → `change-message` |
 | **Parallel Branch / Isolated Work** | "Work in a separate branch/worktree", "Isolate changes" | `git-worktree` | `explore-plan-execute` / `multi-repo-change` |
 | **Multi-Repository Coordination** | "Update across multiple repos", "Coordinate linked PRs" | `multi-repo-change` | `git-worktree` → `change-message` |

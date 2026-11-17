@@ -101,6 +101,7 @@ Present the structured review report using [report-template.md](references/repor
    - Run `git status --short` to verify zero file modifications occurred during the review.
 4. **Recommend Sequential Hand-Off Options**:
    - **For applying text updates, comment additions, or structural rewrites**: Recommend [doc-refactor](../doc-refactor/SKILL.md) (../doc-refactor/SKILL.md).
+   - **For drafting missing documentation, RFCs, or ADRs from scratch**: Recommend [structured-writing](../structured-writing/SKILL.md) (../structured-writing/SKILL.md).
    - **For posting review comments or conducting interactive PR discussions**: Recommend [review-discussion](../review-discussion/SKILL.md) (../review-discussion/SKILL.md).
    - **For fixing underlying code bugs revealed by documentation drift**: Recommend [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md).
    - **For preparing commit messages and PR descriptions**: Recommend [change-message](../change-message/SKILL.md) (../change-message/SKILL.md).
