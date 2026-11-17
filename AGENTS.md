@@ -92,7 +92,7 @@ flowchart TD
     end
 
     subgraph Remediation ["5. Remediation & PR Lifecycle"]
-        REM["refactor<br/>doc-refactor<br/>diff-continue<br/>resolve-dependency-prs<br/>resolve-recent-dependency-prs<br/>multi-repo-change<br/>change-message<br/>review-discussion"]
+        REM["refactor<br/>doc-refactor<br/>structured-writing<br/>diff-continue<br/>resolve-dependency-prs<br/>resolve-recent-dependency-prs<br/>multi-repo-change<br/>change-message<br/>review-discussion"]
     end
 
     subgraph Meta ["6. Meta & Lifecycle"]
@@ -117,7 +117,7 @@ flowchart TD
 | **Planning & Isolation** | `explore-plan-execute`, `scrutinize-plan-execute`, `task-dependency-pipeline`, `git-worktree` | [Planning & Step-Gated Execution Workflow](docs/skill-interoperability.md#2-planning--step-gated-execution-workflow) |
 | **Execution & Pacing** | `agent-skills-setup`, `step-gate`, `edit-paced-execution`, `checkpoint-log`, `command-snippet`, `output-presentation`, `user-notification` | [Planning & Step-Gated Execution Workflow](docs/skill-interoperability.md#2-planning--step-gated-execution-workflow) |
 | **Audit & Inquiry (Read-Only)** | `doctor`, `evidentiary-inquiry`, `code-review`, `doc-review`, `project-audit`, `project-status`, `snippet-review` | [Audit, Diagnostics & Remediation Workflow](docs/skill-interoperability.md#3-audit-diagnostics--remediation-workflow) |
-| **Remediation & PR Lifecycle** | `refactor`, `doc-refactor`, `diff-continue`, `resolve-dependency-prs`, `resolve-recent-dependency-prs`, `multi-repo-change`, `change-message`, `review-discussion` | [Multi-Repository & Dependency PR Triage Workflow](docs/skill-interoperability.md#4-multi-repository--dependency-pr-triage-workflow) |
+| **Remediation & PR Lifecycle** | `refactor`, `doc-refactor`, `structured-writing`, `diff-continue`, `resolve-dependency-prs`, `resolve-recent-dependency-prs`, `multi-repo-change`, `change-message`, `review-discussion` | [Multi-Repository & Dependency PR Triage Workflow](docs/skill-interoperability.md#4-multi-repository--dependency-pr-triage-workflow) |
 | **Meta & Lifecycle** | `skill-creator`, `skill-review`, `skill-modernize`, `mcp-creator`, `agent-retrospective` | [Skill Meta & Modernization Lifecycle](docs/skill-interoperability.md#5-skill-meta--modernization-lifecycle) |
 
 ### Interoperability Principles

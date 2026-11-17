@@ -29,7 +29,7 @@ flowchart TD
     end
 
     subgraph Remediation ["5. Remediation & Action"]
-        REM["Code Modification & PRs<br/>(refactor, doc-refactor, resolve-dependency-prs, multi-repo-change)"]
+        REM["Code & Doc Authoring<br/>(refactor, doc-refactor, structured-writing, resolve-dependency-prs, multi-repo-change)"]
     end
 
     subgraph Meta ["6. Meta & Lifecycle"]
@@ -113,6 +113,7 @@ flowchart TD
     subgraph RemediationLayer ["Targeted Mutation Skills"]
         RF["refactor<br/>(Behavior-preserving code cleanups)"]
         DR["doc-refactor<br/>(Doc refinement, zero code change)"]
+        SW["structured-writing<br/>(New docs, RFCs & proposals)"]
         DC["diff-continue<br/>(Complete work-in-progress diffs)"]
         RD["review-discussion<br/>(Resolve PR/MR review comments)"]
     end
@@ -141,6 +142,7 @@ flowchart TD
     CR -->|"Suggests refactoring"| RF
 
     DCR -->|"Proposes document refinement"| DR
+    DCR -->|"Drafts missing doc from scratch"| SW
     DCR -->|"Suggests comment discussions"| RD
 
     PA -->|"Prioritized debt remediation"| RF
