@@ -92,7 +92,9 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │           └── references/      # 5-axis model delta matrix & 3-phase remediation playbook (repo-local)
 ├── .github/
 │   └── workflows/
+│       ├── actions.lock         # Pinned GitHub Actions lockfile
 │       ├── lint.yml             # CI lint workflow
+│       ├── release.yml          # GoReleaser tag release workflow
 │       └── test.yml             # CI build & test workflow
 ├── bin/
 │   ├── check-skills.sh          # Automated quality and consistency checker across skills
@@ -103,7 +105,8 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │   └── skill-interoperability.md # Skill workflow architecture & category hand-off diagrams
 ├── mcp/
 │   ├── cmd/agent-skills-mcp/    # Single-binary MCP server entrypoint
-│   └── internal/                # Feature registry, store, and MCP server packages
+│   ├── internal/                # Feature registry, store, and MCP server packages
+│   └── references/              # Architecture diagrams and component specifications
 ├── skills/
 │   ├── agent-retrospective/
 │   │   └── references/          # Modes, diagnostic signals & proposal template
@@ -162,7 +165,9 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │   └── user-notification/
 ├── AGENTS.md                    # Operational guidelines & context for AI agents
 ├── .gitignore
+├── .goreleaser.yml              # GoReleaser configuration for MCP server binaries
 ├── .mise.toml                   # Tool configuration and mise tasks
+├── LICENSE                      # MIT License
 ├── renovate.json                # Renovate configuration
 └── README.md
 ```
