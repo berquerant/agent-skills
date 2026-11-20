@@ -95,7 +95,7 @@ flowchart TD
 
     subgraph L4 ["4. Shared Infrastructure & Guardrails (internal/guard, internal/store, internal/pathutil)"]
         Guard["Security Guard<br/>(CheckPathAllowed, CheckNoSecrets)"]
-        Store["Atomic Storage<br/>(AtomicWriteFile, FileLock)"]
+        Store["Atomic Storage<br/>(WriteAtomic, FileLock, LockPool)"]
         PathUtil["Path Utilities<br/>(FormatDualPath)"]
         Containment["Directory Containment<br/>(os.OpenRoot boundary enforcement)"]
         Compression["Safe Compression<br/>(zstd with decoder memory limits)"]
@@ -161,7 +161,7 @@ sequenceDiagram
         Guard-->>Feature: OK
 
         opt State Mutation / Persistence
-            Feature->>Store: AtomicWriteFile / FileLock with os.OpenRoot
+            Feature->>Store: WriteAtomic / FileLock with os.OpenRoot
             Store-->>Feature: Written successfully
         end
 
@@ -284,7 +284,7 @@ classDiagram
    - `guard.CheckNoSecrets`: Scans payloads for high-entropy tokens, private keys, and authorization headers to prevent accidental leakage into persistent state files.
    - **No Real Identifiers or Configurations in Commits**: Real personal names, host-specific paths (e.g. user home directories), and actual environment configurations must never be committed even as examples or test fixtures; synthetic mock data and generic placeholders (`<placeholder>`, `/path/to/...`, `example.com`) are mandatory.
 5. **Atomic File Operations & Process Concurrency (`internal/store`)**:
-   - All state modifications are performed via `store.AtomicWriteFile` (write to temporary sibling file followed by atomic rename).
+   - All state modifications are performed via `store.WriteAtomic` (write to temporary sibling file followed by atomic rename).
    - Cross-process file locks (`store.FileLock`) prevent race conditions between concurrent agent runs.
 6. **Compression Bomb Defense**:
    - Cached payloads compressed via zstd enforce strict maximum decoder memory allocation limits during decompression to mitigate decompression-bomb resource exhaustion.
