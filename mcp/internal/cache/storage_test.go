@@ -9,30 +9,10 @@ import (
 	"time"
 
 	"github.com/berquerant/agent-skills/mcp/internal/cache"
+	"github.com/berquerant/agent-skills/mcp/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-type manualClock struct {
-	mu sync.Mutex
-	t  time.Time
-}
-
-func newManualClock(unixSec int64) *manualClock {
-	return &manualClock{t: time.Unix(unixSec, 0).UTC()}
-}
-
-func (c *manualClock) Now() time.Time {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.t
-}
-
-func (c *manualClock) Advance(d time.Duration) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.t = c.t.Add(d)
-}
 
 func makeEntry(stdout string, createdTS int64, ttl int) cache.CacheEntry {
 	sc := 0
@@ -55,7 +35,7 @@ func makeEntry(stdout string, createdTS int64, ttl int) cache.CacheEntry {
 
 func TestStorageVersioningAndDelete(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "cache")
-	clk := newManualClock(1000)
+	clk := testutil.NewManualClockUnix(1000)
 	st, err := cache.NewStorage(cache.Config{
 		Dir:                         dir,
 		MaxTTL:                      1800,
@@ -125,7 +105,7 @@ func TestStorageVersioningAndDelete(t *testing.T) {
 
 func TestStorageExpirationAndPurge(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "cache")
-	clk := newManualClock(1000)
+	clk := testutil.NewManualClockUnix(1000)
 	st, err := cache.NewStorage(cache.Config{
 		Dir:                         dir,
 		MaxTTL:                      1800,
@@ -162,7 +142,7 @@ func TestStorageExpirationAndPurge(t *testing.T) {
 
 func TestStorageCapacityAndEviction(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "cache")
-	clk := newManualClock(1000)
+	clk := testutil.NewManualClockUnix(1000)
 	st, err := cache.NewStorage(cache.Config{
 		Dir:                         dir,
 		MaxTTL:                      1800,
@@ -203,7 +183,7 @@ func TestStorageCapacityAndEviction(t *testing.T) {
 
 func TestStorageConcurrency(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "cache")
-	clk := newManualClock(2000)
+	clk := testutil.NewManualClockUnix(2000)
 	st, err := cache.NewStorage(cache.Config{
 		Dir:                         dir,
 		MaxTTL:                      1800,

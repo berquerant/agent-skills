@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/berquerant/agent-skills/mcp/internal/cache"
+	"github.com/berquerant/agent-skills/mcp/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -12,7 +13,7 @@ import (
 func newTestService(t *testing.T) *cache.Service {
 	t.Helper()
 	dir := filepath.Join(t.TempDir(), "cache")
-	clk := newManualClock(5000)
+	clk := testutil.NewManualClockUnix(5000)
 	svc, err := cache.NewService(cache.Config{
 		Dir:                         dir,
 		MaxTTL:                      1800,

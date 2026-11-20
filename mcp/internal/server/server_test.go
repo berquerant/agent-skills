@@ -10,16 +10,11 @@ import (
 
 	"github.com/berquerant/agent-skills/mcp/internal/feature"
 	"github.com/berquerant/agent-skills/mcp/internal/server"
+	"github.com/berquerant/agent-skills/mcp/internal/testutil"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-type stubClock struct {
-	t time.Time
-}
-
-func (c stubClock) Now() time.Time { return c.t }
 
 type faultFeature struct{}
 
@@ -77,7 +72,7 @@ func TestServerFeatureToggles(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
+			ctx := t.Context()
 			tmp := t.TempDir()
 
 			baseArgs := []string{
@@ -90,7 +85,7 @@ func TestServerFeatureToggles(t *testing.T) {
 			require.NoError(t, err)
 
 			var stderrBuf bytes.Buffer
-			inst, err := server.New(cfg, nil, stubClock{t: fixedNow}, &stderrBuf)
+			inst, err := server.New(cfg, nil, testutil.NewManualClock(fixedNow), &stderrBuf)
 			require.NoError(t, err)
 			defer func() { _ = inst.Close() }()
 
@@ -98,15 +93,7 @@ func TestServerFeatureToggles(t *testing.T) {
 			assert.Contains(t, summary, "agent-skills-mcp")
 			assert.Contains(t, summary, tt.wantSummarySub)
 
-			serverTransport, clientTransport := mcp.NewInMemoryTransports()
-			go func() {
-				_ = inst.MCPServer.Run(ctx, serverTransport)
-			}()
-
-			client := mcp.NewClient(&mcp.Implementation{Name: "test-client", Version: "1.0.0"}, nil)
-			session, err := client.Connect(ctx, clientTransport, nil)
-			require.NoError(t, err)
-			defer func() { _ = session.Close() }()
+			session := testutil.ConnectInMemory(t, inst.MCPServer)
 
 			listRes, err := session.ListTools(ctx, nil)
 			require.NoError(t, err)
@@ -144,14 +131,11 @@ func verifyCheckpointClock(ctx context.Context, t *testing.T, session *mcp.Clien
 	})
 	require.NoError(t, err)
 	assert.False(t, callRes.IsError)
-	require.NotEmpty(t, callRes.Content)
-	tc, ok := callRes.Content[0].(*mcp.TextContent)
-	require.True(t, ok)
-	assert.Contains(t, tc.Text, "checkpoint-20261115-020000.md")
+	assert.Contains(t, testutil.FirstTextContent(t, callRes), "checkpoint-20261115-020000.md")
 }
 
 func TestSafeToolFaults(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	tmp := t.TempDir()
 
 	reg := feature.NewRegistry()
@@ -170,15 +154,7 @@ func TestSafeToolFaults(t *testing.T) {
 	require.NoError(t, err)
 	defer func() { _ = inst.Close() }()
 
-	serverTransport, clientTransport := mcp.NewInMemoryTransports()
-	go func() {
-		_ = inst.MCPServer.Run(ctx, serverTransport)
-	}()
-
-	client := mcp.NewClient(&mcp.Implementation{Name: "test-client", Version: "1.0.0"}, nil)
-	session, err := client.Connect(ctx, clientTransport, nil)
-	require.NoError(t, err)
-	defer func() { _ = session.Close() }()
+	session := testutil.ConnectInMemory(t, inst.MCPServer)
 
 	tests := []struct {
 		name        string
@@ -204,18 +180,16 @@ func TestSafeToolFaults(t *testing.T) {
 			})
 			require.NoError(t, err)
 			assert.True(t, res.IsError)
-			require.NotEmpty(t, res.Content)
-			tc, ok := res.Content[0].(*mcp.TextContent)
-			require.True(t, ok)
+			text := testutil.FirstTextContent(t, res)
 			for _, sub := range tt.wantContain {
-				assert.Contains(t, tc.Text, sub)
+				assert.Contains(t, text, sub)
 			}
 		})
 	}
 }
 
 func TestServerCacheEndToEnd(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	tmp := t.TempDir()
 	fixedNow := time.Date(2026, 11, 15, 2, 30, 0, 0, time.UTC)
 
@@ -228,19 +202,11 @@ func TestServerCacheEndToEnd(t *testing.T) {
 	require.NoError(t, err)
 
 	var stderrBuf bytes.Buffer
-	inst, err := server.New(cfg, nil, stubClock{t: fixedNow}, &stderrBuf)
+	inst, err := server.New(cfg, nil, testutil.NewManualClock(fixedNow), &stderrBuf)
 	require.NoError(t, err)
 	defer func() { _ = inst.Close() }()
 
-	serverTransport, clientTransport := mcp.NewInMemoryTransports()
-	go func() {
-		_ = inst.MCPServer.Run(ctx, serverTransport)
-	}()
-
-	client := mcp.NewClient(&mcp.Implementation{Name: "test-client", Version: "1.0.0"}, nil)
-	session, err := client.Connect(ctx, clientTransport, nil)
-	require.NoError(t, err)
-	defer func() { _ = session.Close() }()
+	session := testutil.ConnectInMemory(t, inst.MCPServer)
 
 	// Store a 10 KiB payload (> max-output-size=4096) and verify cache_get succeeds via CacheMaxEntrySize
 	largeStdout := strings.Repeat("Z", 10*1024)
@@ -271,10 +237,9 @@ func TestServerCacheEndToEnd(t *testing.T) {
 	})
 	require.NoError(t, err)
 	assert.False(t, getRes.IsError)
-	tc, ok := getRes.Content[0].(*mcp.TextContent)
-	require.True(t, ok)
-	assert.Contains(t, tc.Text, `"hit":true`)
-	assert.Contains(t, tc.Text, largeStdout)
+	getText := testutil.FirstTextContent(t, getRes)
+	assert.Contains(t, getText, `"hit":true`)
+	assert.Contains(t, getText, largeStdout)
 
 	verifyLintAndSnippetTools(ctx, t, session)
 }
@@ -292,10 +257,9 @@ func verifyLintAndSnippetTools(ctx context.Context, t *testing.T, session *mcp.C
 	})
 	require.NoError(t, err)
 	assert.False(t, lintRes.IsError)
-	lintTC, ok := lintRes.Content[0].(*mcp.TextContent)
-	require.True(t, ok)
-	assert.Contains(t, lintTC.Text, `"passed":true`)
-	assert.Contains(t, lintTC.Text, `"skill_name":"skill-review"`)
+	lintText := testutil.FirstTextContent(t, lintRes)
+	assert.Contains(t, lintText, `"passed":true`)
+	assert.Contains(t, lintText, `"skill_name":"skill-review"`)
 
 	lintAllRes, err := session.CallTool(ctx, &mcp.CallToolParams{
 		Name: "lint_all",
@@ -306,9 +270,7 @@ func verifyLintAndSnippetTools(ctx context.Context, t *testing.T, session *mcp.C
 	})
 	require.NoError(t, err)
 	assert.False(t, lintAllRes.IsError)
-	lintAllTC, ok := lintAllRes.Content[0].(*mcp.TextContent)
-	require.True(t, ok)
-	assert.Contains(t, lintAllTC.Text, `"total_skills":1`)
+	assert.Contains(t, testutil.FirstTextContent(t, lintAllRes), `"total_skills":1`)
 
 	snipRes, err := session.CallTool(ctx, &mcp.CallToolParams{
 		Name: "snippet_audit",
@@ -318,9 +280,7 @@ func verifyLintAndSnippetTools(ctx context.Context, t *testing.T, session *mcp.C
 	})
 	require.NoError(t, err)
 	assert.False(t, snipRes.IsError)
-	snipTC, ok := snipRes.Content[0].(*mcp.TextContent)
-	require.True(t, ok)
-	assert.Contains(t, snipTC.Text, `"level":4`)
+	assert.Contains(t, testutil.FirstTextContent(t, snipRes), `"level":4`)
 
 	dagRes, err := session.CallTool(ctx, &mcp.CallToolParams{
 		Name: "dag_create",
@@ -334,7 +294,5 @@ func verifyLintAndSnippetTools(ctx context.Context, t *testing.T, session *mcp.C
 	})
 	require.NoError(t, err)
 	assert.False(t, dagRes.IsError)
-	dagTC, ok := dagRes.Content[0].(*mcp.TextContent)
-	require.True(t, ok)
-	assert.Contains(t, dagTC.Text, `"dag_id":"dag-e2e"`)
+	assert.Contains(t, testutil.FirstTextContent(t, dagRes), `"dag_id":"dag-e2e"`)
 }

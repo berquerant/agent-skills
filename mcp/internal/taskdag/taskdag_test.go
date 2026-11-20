@@ -7,6 +7,7 @@ import (
 
 	"github.com/berquerant/agent-skills/mcp/internal/feature"
 	"github.com/berquerant/agent-skills/mcp/internal/taskdag"
+	"github.com/berquerant/agent-skills/mcp/internal/testutil"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -280,7 +281,6 @@ func TestComputeCriticalPathAndIndependentBranches(t *testing.T) {
 
 func setupTestSession(t *testing.T) (context.Context, *mcp.ClientSession) {
 	t.Helper()
-	ctx := context.Background()
 	tmp := t.TempDir()
 
 	f := taskdag.NewFeatureWithDir(tmp)
@@ -295,16 +295,7 @@ func setupTestSession(t *testing.T) (context.Context, *mcp.ClientSession) {
 	require.NoError(t, f.Register(mcpSrv, env))
 	t.Cleanup(func() { _ = f.Close() })
 
-	serverTransport, clientTransport := mcp.NewInMemoryTransports()
-	go func() {
-		_ = mcpSrv.Run(ctx, serverTransport)
-	}()
-
-	client := mcp.NewClient(&mcp.Implementation{Name: "test-client", Version: "1.0.0"}, nil)
-	session, err := client.Connect(ctx, clientTransport, nil)
-	require.NoError(t, err)
-	t.Cleanup(func() { _ = session.Close() })
-	return ctx, session
+	return t.Context(), testutil.ConnectInMemory(t, mcpSrv)
 }
 
 func TestFeatureToolExecution(t *testing.T) {
