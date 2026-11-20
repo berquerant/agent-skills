@@ -44,7 +44,7 @@ func (f *Feature) Tools() []string {
 	return toolNames
 }
 
-// Register initializes the checkpoint Manager under env.CheckpointRoot and registers the 5 checkpoint tools.
+// Register initializes the checkpoint Manager under env.CheckpointDir and registers the 5 checkpoint tools.
 func (f *Feature) Register(s *mcp.Server, env feature.Env) error {
 	clock := env.Clock
 	if clock == nil {

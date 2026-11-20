@@ -1,7 +1,7 @@
 package pace
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -14,9 +14,9 @@ import (
 )
 
 const (
-	defaultPaceID       = "default"
-	cyclicFailureLimit  = 3
-	paceLockTimeout     = 10 * time.Second
+	defaultPaceID      = "default"
+	cyclicFailureLimit = 3
+	paceLockTimeout    = 10 * time.Second
 )
 
 var safePaceIDRe = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$`)
@@ -24,6 +24,7 @@ var safePaceIDRe = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$`)
 // Tracker manages edit-pacing sessions and process watch entries under stateDir.
 type Tracker struct {
 	stateDir string
+	locks    *store.LockPool
 }
 
 // NewTracker creates a Tracker rooted at stateDir.
@@ -38,11 +39,22 @@ func NewTracker(stateDir string) (*Tracker, error) {
 	if err := os.MkdirAll(absDir, 0o700); err != nil {
 		return nil, fmt.Errorf("create pace state dir: %w", err)
 	}
-	return &Tracker{stateDir: absDir}, nil
+	return &Tracker{
+		stateDir: absDir,
+		locks:    store.NewLockPool(absDir, paceLockTimeout),
+	}, nil
 }
 
-func (t *Tracker) lockFor(name string) *store.FileLock {
-	return store.NewFileLock(filepath.Join(t.stateDir, name+".lock"), paceLockTimeout)
+func sessionKey(paceID string) string {
+	return "session_" + paceID
+}
+
+func (t *Tracker) withSessionLock(paceID string, fn func() error) error {
+	return t.locks.WithLock(sessionKey(paceID), fn)
+}
+
+func (t *Tracker) withSessionRLock(paceID string, fn func() error) error {
+	return t.locks.WithRLock(sessionKey(paceID), fn)
 }
 
 func normalizePaceID(id string) (string, error) {
@@ -160,23 +172,22 @@ func (t *Tracker) Tick(in TickInput, now time.Time) (PaceEvaluation, error) {
 		return PaceEvaluation{}, err
 	}
 
-	lock := t.lockFor("session_" + paceID)
-	if err := lock.Lock(); err != nil {
-		return PaceEvaluation{}, err
-	}
-	defer func() { _ = lock.Unlock() }()
-
-	sess, err := t.loadSessionUnlocked(paceID)
-	if err != nil {
-		return PaceEvaluation{}, err
-	}
-	if err := applyStepToSession(&sess, in, now); err != nil {
-		return PaceEvaluation{}, err
-	}
-	if err := t.saveSessionUnlocked(sess); err != nil {
-		return PaceEvaluation{}, err
-	}
-	return evaluateSession(sess, now), nil
+	var eval PaceEvaluation
+	err = t.withSessionLock(paceID, func() error {
+		sess, err := t.loadSessionUnlocked(paceID)
+		if err != nil {
+			return err
+		}
+		if err := applyStepToSession(&sess, in, now); err != nil {
+			return err
+		}
+		if err := t.saveSessionUnlocked(sess); err != nil {
+			return err
+		}
+		eval = evaluateSession(sess, now)
+		return nil
+	})
+	return eval, err
 }
 
 func applyStepToSession(sess *Session, in TickInput, now time.Time) error {
@@ -212,17 +223,16 @@ func (t *Tracker) Status(in StatusInput, now time.Time) (PaceEvaluation, error) 
 	if err != nil {
 		return PaceEvaluation{}, err
 	}
-	lock := t.lockFor("session_" + paceID)
-	if err := lock.RLock(); err != nil {
-		return PaceEvaluation{}, err
-	}
-	defer func() { _ = lock.Unlock() }()
-
-	sess, err := t.loadSessionUnlocked(paceID)
-	if err != nil {
-		return PaceEvaluation{}, err
-	}
-	return evaluateSession(sess, now), nil
+	var eval PaceEvaluation
+	err = t.withSessionRLock(paceID, func() error {
+		sess, err := t.loadSessionUnlocked(paceID)
+		if err != nil {
+			return err
+		}
+		eval = evaluateSession(sess, now)
+		return nil
+	})
+	return eval, err
 }
 
 // Reset resets the session timer and counters after user direction, optionally updating thresholds.
@@ -235,29 +245,28 @@ func (t *Tracker) Reset(in ResetInput, now time.Time) (PaceEvaluation, error) {
 		return PaceEvaluation{}, err
 	}
 
-	lock := t.lockFor("session_" + paceID)
-	if err := lock.Lock(); err != nil {
-		return PaceEvaluation{}, err
-	}
-	defer func() { _ = lock.Unlock() }()
-
-	sess, err := t.loadSessionUnlocked(paceID)
-	if err != nil {
-		return PaceEvaluation{}, err
-	}
-	if err := updateSessionThresholds(&sess, in); err != nil {
-		return PaceEvaluation{}, err
-	}
-	sess.NonEditCalls = 0
-	sess.ConsecutiveFailures = 0
-	sess.LastEditAt = now.UTC().Format(time.RFC3339)
-	if strings.TrimSpace(in.Note) != "" {
-		sess.LastNote = strings.TrimSpace(in.Note)
-	}
-	if err := t.saveSessionUnlocked(sess); err != nil {
-		return PaceEvaluation{}, err
-	}
-	return evaluateSession(sess, now), nil
+	var eval PaceEvaluation
+	err = t.withSessionLock(paceID, func() error {
+		sess, err := t.loadSessionUnlocked(paceID)
+		if err != nil {
+			return err
+		}
+		if err := updateSessionThresholds(&sess, in); err != nil {
+			return err
+		}
+		sess.NonEditCalls = 0
+		sess.ConsecutiveFailures = 0
+		sess.LastEditAt = now.UTC().Format(time.RFC3339)
+		if strings.TrimSpace(in.Note) != "" {
+			sess.LastNote = strings.TrimSpace(in.Note)
+		}
+		if err := t.saveSessionUnlocked(sess); err != nil {
+			return err
+		}
+		eval = evaluateSession(sess, now)
+		return nil
+	})
+	return eval, err
 }
 
 func updateSessionThresholds(sess *Session, in ResetInput) error {
@@ -290,36 +299,22 @@ func updateSessionThresholds(sess *Session, in ResetInput) error {
 }
 
 func (t *Tracker) saveSession(sess Session) error {
-	lock := t.lockFor("session_" + sess.PaceID)
-	if err := lock.Lock(); err != nil {
-		return err
-	}
-	defer func() { _ = lock.Unlock() }()
-	return t.saveSessionUnlocked(sess)
+	return t.withSessionLock(sess.PaceID, func() error {
+		return t.saveSessionUnlocked(sess)
+	})
 }
 
 func (t *Tracker) saveSessionUnlocked(sess Session) error {
-	raw, err := json.MarshalIndent(sess, "", "  ")
-	if err != nil {
-		return err
-	}
-	target := filepath.Join(t.stateDir, "session_"+sess.PaceID+".json")
-	return store.WriteAtomic(target, raw, 0o600)
+	target := filepath.Join(t.stateDir, sessionKey(sess.PaceID)+".json")
+	return store.WriteJSONAtomic(target, sess, 0o600)
 }
 
 func (t *Tracker) loadSessionUnlocked(paceID string) (Session, error) {
-	root, err := os.OpenRoot(t.stateDir)
+	sess, err := store.ReadJSONRoot[Session](t.stateDir, sessionKey(paceID)+".json")
 	if err != nil {
-		return Session{}, err
-	}
-	defer func() { _ = root.Close() }()
-
-	raw, err := root.ReadFile("session_" + paceID + ".json")
-	if err != nil {
-		return Session{}, fmt.Errorf("pacing session %q not found (call pace_start first): %w", paceID, err)
-	}
-	var sess Session
-	if err := json.Unmarshal(raw, &sess); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return Session{}, fmt.Errorf("pacing session %q not found (call pace_start first): %w", paceID, err)
+		}
 		return Session{}, fmt.Errorf("parse pacing session %q: %w", paceID, err)
 	}
 	return sess, nil

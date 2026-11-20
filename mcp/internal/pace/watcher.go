@@ -2,7 +2,6 @@ package pace
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math"
@@ -50,9 +49,8 @@ func (t *Tracker) Watch(in WatchInput, now time.Time) (WatchOutput, error) {
 	}
 
 	nowStr := now.UTC().Format(time.RFC3339)
-	logSize, _ := statFileSize(in.LogPath)
-	logMod := statFileModTime(in.LogPath)
-	artMod := statFileModTime(in.ArtifactPath)
+	logSize, logMod, _ := statFileMeta(in.LogPath)
+	_, artMod, _ := statFileMeta(in.ArtifactPath)
 
 	entry := WatchEntry{
 		WatchID:          watchID,
@@ -81,22 +79,16 @@ func (t *Tracker) CheckLiveness(in LivenessInput, now time.Time) (LivenessOutput
 		return LivenessOutput{}, fmt.Errorf("invalid watch_id %q", in.WatchID)
 	}
 
-	lock := t.lockFor("watch_" + watchID)
-	if err := lock.Lock(); err != nil {
-		return LivenessOutput{}, err
-	}
-	defer func() { _ = lock.Unlock() }()
-
-	entry, err := t.loadWatchUnlocked(watchID)
-	if err != nil {
-		return LivenessOutput{}, err
-	}
-
-	out := sampleWatchState(&entry, now)
-	if err := t.saveWatchUnlocked(entry); err != nil {
-		return LivenessOutput{}, err
-	}
-	return out, nil
+	var out LivenessOutput
+	err := t.withWatchLock(watchID, func() error {
+		entry, err := t.loadWatchUnlocked(watchID)
+		if err != nil {
+			return err
+		}
+		out = sampleWatchState(&entry, now)
+		return t.saveWatchUnlocked(entry)
+	})
+	return out, err
 }
 
 func sampleWatchState(entry *WatchEntry, now time.Time) LivenessOutput {
@@ -105,9 +97,8 @@ func sampleWatchState(entry *WatchEntry, now time.Time) LivenessOutput {
 
 	logAdvanced := false
 	if entry.LogPath != "" {
-		sz, szOK := statFileSize(entry.LogPath)
-		mod := statFileModTime(entry.LogPath)
-		if (szOK && sz != entry.LastLogSize) || (mod != "" && mod != entry.LastLogMod) {
+		sz, mod, ok := statFileMeta(entry.LogPath)
+		if (ok && sz != entry.LastLogSize) || (mod != "" && mod != entry.LastLogMod) {
 			logAdvanced = true
 			entry.LastLogSize = sz
 			entry.LastLogMod = mod
@@ -115,7 +106,7 @@ func sampleWatchState(entry *WatchEntry, now time.Time) LivenessOutput {
 	}
 	artChanged := false
 	if entry.ArtifactPath != "" {
-		if mod := statFileModTime(entry.ArtifactPath); mod != "" && mod != entry.LastArtifactMod {
+		if _, mod, _ := statFileMeta(entry.ArtifactPath); mod != "" && mod != entry.LastArtifactMod {
 			artChanged = true
 			entry.LastArtifactMod = mod
 		}
@@ -202,26 +193,15 @@ func inspectProcess(pid int) (alive bool, zombie bool, cpuPct float64, rssKB int
 	return false, false, 0, 0
 }
 
-func statFileSize(path string) (int64, bool) {
+func statFileMeta(path string) (int64, string, bool) {
 	if strings.TrimSpace(path) == "" {
-		return 0, false
+		return 0, "", false
 	}
 	info, err := os.Stat(path)
 	if err != nil {
-		return 0, false
+		return 0, "", false
 	}
-	return info.Size(), true
-}
-
-func statFileModTime(path string) string {
-	if strings.TrimSpace(path) == "" {
-		return ""
-	}
-	info, err := os.Stat(path)
-	if err != nil {
-		return ""
-	}
-	return info.ModTime().UTC().Format(time.RFC3339Nano)
+	return info.Size(), info.ModTime().UTC().Format(time.RFC3339Nano), true
 }
 
 func secondsBetween(startRFC3339 string, now time.Time) int {
@@ -232,37 +212,31 @@ func secondsBetween(startRFC3339 string, now time.Time) int {
 	return int(math.Floor(now.Sub(ts).Seconds()))
 }
 
+func watchKey(watchID string) string {
+	return "watch_" + watchID
+}
+
+func (t *Tracker) withWatchLock(watchID string, fn func() error) error {
+	return t.locks.WithLock(watchKey(watchID), fn)
+}
+
 func (t *Tracker) saveWatch(entry WatchEntry) error {
-	lock := t.lockFor("watch_" + entry.WatchID)
-	if err := lock.Lock(); err != nil {
-		return err
-	}
-	defer func() { _ = lock.Unlock() }()
-	return t.saveWatchUnlocked(entry)
+	return t.withWatchLock(entry.WatchID, func() error {
+		return t.saveWatchUnlocked(entry)
+	})
 }
 
 func (t *Tracker) saveWatchUnlocked(entry WatchEntry) error {
-	raw, err := json.MarshalIndent(entry, "", "  ")
-	if err != nil {
-		return err
-	}
-	target := filepath.Join(t.stateDir, "watch_"+entry.WatchID+".json")
-	return store.WriteAtomic(target, raw, 0o600)
+	target := filepath.Join(t.stateDir, watchKey(entry.WatchID)+".json")
+	return store.WriteJSONAtomic(target, entry, 0o600)
 }
 
 func (t *Tracker) loadWatchUnlocked(watchID string) (WatchEntry, error) {
-	root, err := os.OpenRoot(t.stateDir)
+	entry, err := store.ReadJSONRoot[WatchEntry](t.stateDir, watchKey(watchID)+".json")
 	if err != nil {
-		return WatchEntry{}, err
-	}
-	defer func() { _ = root.Close() }()
-
-	raw, err := root.ReadFile("watch_" + watchID + ".json")
-	if err != nil {
-		return WatchEntry{}, fmt.Errorf("watch entry %q not found: %w", watchID, err)
-	}
-	var entry WatchEntry
-	if err := json.Unmarshal(raw, &entry); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return WatchEntry{}, fmt.Errorf("watch entry %q not found: %w", watchID, err)
+		}
 		return WatchEntry{}, fmt.Errorf("parse watch entry %q: %w", watchID, err)
 	}
 	return entry, nil
