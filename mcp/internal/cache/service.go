@@ -82,19 +82,13 @@ type PurgeInput struct {
 
 // Get retrieves a cached entry.
 func (s *Service) Get(in QueryInput) GetOutput {
-	if err := validatePathArgs(in.Dir, in.Args); err != nil {
+	targetKey, kErr := resolveValidatedKey(in.Key, in.Type, in.Name, in.Dir, in.Args, in.Stdin)
+	if kErr != nil {
 		return GetOutput{
 			Hit:     false,
-			Reason:  "sensitive_path",
-			Error:   err.Error(),
-			Message: err.Error(),
-		}
-	}
-	targetKey, ok := ResolveKey(in.Key, in.Type, in.Name, in.Dir, in.Args, in.Stdin)
-	if !ok {
-		return GetOutput{
-			Hit:     false,
-			Message: missingKeyOrParamsMsg,
+			Reason:  kErr.reason,
+			Error:   kErr.errText,
+			Message: kErr.message,
 		}
 	}
 
@@ -185,19 +179,13 @@ func (s *Service) Set(in SetInput) SetOutput {
 
 // Exist checks whether a non-expired cache entry exists.
 func (s *Service) Exist(in QueryInput) ExistOutput {
-	if err := validatePathArgs(in.Dir, in.Args); err != nil {
+	targetKey, kErr := resolveValidatedKey(in.Key, in.Type, in.Name, in.Dir, in.Args, in.Stdin)
+	if kErr != nil {
 		return ExistOutput{
 			Hit:     false,
-			Reason:  "sensitive_path",
-			Error:   err.Error(),
-			Message: err.Error(),
-		}
-	}
-	targetKey, ok := ResolveKey(in.Key, in.Type, in.Name, in.Dir, in.Args, in.Stdin)
-	if !ok {
-		return ExistOutput{
-			Hit:     false,
-			Message: missingKeyOrParamsMsg,
+			Reason:  kErr.reason,
+			Error:   kErr.errText,
+			Message: kErr.message,
 		}
 	}
 
@@ -218,22 +206,15 @@ func (s *Service) Exist(in QueryInput) ExistOutput {
 
 // Delete removes cache entries for a key (all versions or a specific version).
 func (s *Service) Delete(in QueryInput) DeleteOutput {
-	if err := validatePathArgs(in.Dir, in.Args); err != nil {
+	targetKey, kErr := resolveValidatedKey(in.Key, in.Type, in.Name, in.Dir, in.Args, in.Stdin)
+	if kErr != nil {
 		return DeleteOutput{
 			Hit:          false,
 			Deleted:      false,
 			DeletedCount: 0,
-			Reason:       "sensitive_path",
-			Error:        err.Error(),
-			Message:      err.Error(),
-		}
-	}
-	targetKey, ok := ResolveKey(in.Key, in.Type, in.Name, in.Dir, in.Args, in.Stdin)
-	if !ok {
-		return DeleteOutput{
-			Hit:     false,
-			Deleted: false,
-			Message: missingKeyOrParamsMsg,
+			Reason:       kErr.reason,
+			Error:        kErr.errText,
+			Message:      kErr.message,
 		}
 	}
 
@@ -260,21 +241,14 @@ func (s *Service) Delete(in QueryInput) DeleteOutput {
 
 // Version lists all valid, non-expired versions for a key without reading payloads.
 func (s *Service) Version(in VersionInput) VersionOutput {
-	if err := validatePathArgs(in.Dir, in.Args); err != nil {
+	targetKey, kErr := resolveValidatedKey(in.Key, in.Type, in.Name, in.Dir, in.Args, in.Stdin)
+	if kErr != nil {
 		return VersionOutput{
 			Hit:      false,
 			Versions: []VersionInfo{},
-			Reason:   "sensitive_path",
-			Error:    err.Error(),
-			Message:  err.Error(),
-		}
-	}
-	targetKey, ok := ResolveKey(in.Key, in.Type, in.Name, in.Dir, in.Args, in.Stdin)
-	if !ok {
-		return VersionOutput{
-			Hit:      false,
-			Versions: []VersionInfo{},
-			Message:  missingKeyOrParamsMsg,
+			Reason:   kErr.reason,
+			Error:    kErr.errText,
+			Message:  kErr.message,
 		}
 	}
 
@@ -314,6 +288,27 @@ func (s *Service) Purge(in PurgeInput) PurgeOutput {
 		}
 	}
 	return PurgeOutput(purgeRes)
+}
+
+type keyError struct {
+	reason  string
+	errText string
+	message string
+}
+
+func resolveValidatedKey(key, typ, name, dir string, args []string, stdin *string) (string, *keyError) {
+	if err := validatePathArgs(dir, args); err != nil {
+		return "", &keyError{
+			reason:  "sensitive_path",
+			errText: err.Error(),
+			message: err.Error(),
+		}
+	}
+	targetKey, ok := ResolveKey(key, typ, name, dir, args, stdin)
+	if !ok {
+		return "", &keyError{message: missingKeyOrParamsMsg}
+	}
+	return targetKey, nil
 }
 
 func validatePathArgs(dir string, args []string) error {
