@@ -88,7 +88,7 @@ flowchart TD
     end
 
     subgraph Audit ["4. Audit & Verification (Read-Only)"]
-        AUD["doctor<br/>evidentiary-inquiry<br/>code-review<br/>doc-review<br/>project-audit<br/>project-status<br/>snippet-review"]
+        AUD["doctor<br/>evidentiary-inquiry<br/>code-review<br/>doc-review<br/>sandbox-review<br/>project-audit<br/>project-status<br/>snippet-review"]
     end
 
     subgraph Remediation ["5. Remediation & PR Lifecycle"]
@@ -116,13 +116,13 @@ flowchart TD
 | **Dispatch & Routing** | `skill-router` | [High-Level Category Architecture](docs/skill-interoperability.md#1-high-level-category-architecture) |
 | **Planning & Isolation** | `explore-plan-execute`, `scrutinize-plan-execute`, `task-dependency-pipeline`, `git-worktree` | [Planning & Step-Gated Execution Workflow](docs/skill-interoperability.md#2-planning--step-gated-execution-workflow) |
 | **Execution & Pacing** | `agent-skills-setup`, `step-gate`, `edit-paced-execution`, `checkpoint-log`, `command-snippet`, `output-presentation`, `user-notification` | [Planning & Step-Gated Execution Workflow](docs/skill-interoperability.md#2-planning--step-gated-execution-workflow) |
-| **Audit & Inquiry (Read-Only)** | `doctor`, `evidentiary-inquiry`, `code-review`, `doc-review`, `project-audit`, `project-status`, `snippet-review` | [Audit, Diagnostics & Remediation Workflow](docs/skill-interoperability.md#3-audit-diagnostics--remediation-workflow) |
+| **Audit & Inquiry (Read-Only)** | `doctor`, `evidentiary-inquiry`, `code-review`, `doc-review`, `sandbox-review`, `project-audit`, `project-status`, `snippet-review` | [Audit, Diagnostics & Remediation Workflow](docs/skill-interoperability.md#3-audit-diagnostics--remediation-workflow) |
 | **Remediation & PR Lifecycle** | `refactor`, `doc-refactor`, `structured-writing`, `diff-continue`, `resolve-dependency-prs`, `resolve-recent-dependency-prs`, `multi-repo-change`, `change-message`, `review-discussion` | [Multi-Repository & Dependency PR Triage Workflow](docs/skill-interoperability.md#4-multi-repository--dependency-pr-triage-workflow) |
 | **Meta & Lifecycle** | `skill-creator`, `skill-review`, `skill-modernize`, `mcp-creator`, `agent-retrospective` | [Skill Meta & Modernization Lifecycle](docs/skill-interoperability.md#5-skill-meta--modernization-lifecycle) |
 
 ### Interoperability Principles
 - **Intent-Driven Dispatch & Pipeline Routing**: For ambiguous, broad, or multi-skill goals, `skill-router` acts as a read-only entrypoint dispatcher to analyze context, map user intent, and present an explicit sequential pipeline for user sign-off before executing any skill.
-- **Read-Only vs. Mutation Separation**: Audit and investigation skills (`project-audit`, `project-status`, `code-review`, `doc-review`, `skill-review`, `evidentiary-inquiry`, `doctor`, `snippet-review`, `skill-router`, `agent-retrospective`) are strictly read-only and never mutate files. When changes are required, they suggest mutation skills (`refactor`, `doc-refactor`, `step-gate`, `diff-continue`).
+- **Read-Only vs. Mutation Separation**: Audit and investigation skills (`project-audit`, `project-status`, `code-review`, `doc-review`, `sandbox-review`, `skill-review`, `evidentiary-inquiry`, `doctor`, `snippet-review`, `skill-router`, `agent-retrospective`) are strictly read-only and never mutate files. When changes are required, they suggest mutation skills (`refactor`, `doc-refactor`, `step-gate`, `diff-continue`).
 - **Sequential Hand-off (User-in-the-Loop)**: Rather than calling other skills directly in a deep nested chain, skills present findings and recommend the next skill for the user to approve.
 - **Reference Sharing over Duplication**: When audit standards overlap (such as security and public release checklists), skills share references (e.g. `../code-review/references/security-checklist.md`) via relative links instead of duplicating checklist content.
 - **Gate Ownership**: When a skill's guidance or artifact is used inside another workflow, the calling workflow owns the approval gates; avoid introducing duplicate or redundant approval checkpoints.

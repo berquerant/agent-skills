@@ -17,7 +17,7 @@ flowchart TD
     end
 
     subgraph Audit ["2. Audit & Inquiry (Read-Only)"]
-        AUD["Audit & Diagnostics<br/>(doctor, code-review, doc-review, project-audit, evidentiary-inquiry)"]
+        AUD["Audit & Diagnostics<br/>(doctor, code-review, doc-review, sandbox-review, project-audit, evidentiary-inquiry)"]
     end
 
     subgraph Planning ["3. Planning & Scheduling"]
@@ -106,6 +106,7 @@ flowchart TD
         EI["evidentiary-inquiry<br/>(Evidence & version-pinned facts)"]
         CR["code-review<br/>(Diff/PR review & security audit)"]
         DCR["doc-review<br/>(Documentation & specification audit)"]
+        SBR["sandbox-review<br/>(Sandbox & harness policy audit)"]
         PA["project-audit<br/>(Repository baseline & tech debt)"]
         PS["project-status<br/>(Working-tree diff & drift check)"]
     end
@@ -144,6 +145,11 @@ flowchart TD
     DCR -->|"Proposes document refinement"| DR
     DCR -->|"Drafts missing doc from scratch"| SW
     DCR -->|"Suggests comment discussions"| RD
+
+    SBR -->|"Plans policy/config fixes"| EPE
+    SBR -->|"Step-gated policy remediation"| SG
+    SBR -->|"Refines declarative policy docs"| DR
+    SBR -->|"App code & release security audit"| CR
 
     PA -->|"Prioritized debt remediation"| RF
     PA -->|"Phased multi-step fixes"| SG

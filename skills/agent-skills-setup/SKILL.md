@@ -33,7 +33,8 @@ Inspect the current execution environment and available tools:
    - Identify available tools, shell utilities, and registered MCP servers (e.g., the companion `agent-skills-mcp` server when present).
    - Check available notification channels, formatters, and linters supported in the host environment.
 3. **Boundary Identification**:
-   - Note sandbox restrictions, network permissions, and external service access constraints.
+   - Note sandbox restrictions, network permissions, and external service access constraints across the four control domains (network, filesystem, secrets, process/OS) per [harness-security-spec.md](../sandbox-review/references/harness-security-spec.md) (../sandbox-review/references/harness-security-spec.md).
+   - Recognize protected persistence points (`.git/config`, hooks, shell rc, IDE/agent configs) and secret files per [persistence-and-escape-vectors.md](../sandbox-review/references/persistence-and-escape-vectors.md) (../sandbox-review/references/persistence-and-escape-vectors.md) so routine commands never attempt to modify or expose them.
 
 Verify: Workspace boundaries, active repository state, and available toolsets are clearly identified.
 

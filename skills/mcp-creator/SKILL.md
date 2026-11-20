@@ -185,7 +185,7 @@ Verify: The host discovers the server, lists its capabilities (tools/resources/p
 3. Suggest next steps:
    - Add error handling and logging
    - Write tests using `mcp.test_client()`
-   - Run a quality and security audit using [code-review](../code-review/SKILL.md) (../code-review/SKILL.md) or plan larger feature expansions with [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md)
+   - Run a quality and security audit using [code-review](../code-review/SKILL.md) (../code-review/SKILL.md), audit execution/boundary policies with [sandbox-review](../sandbox-review/SKILL.md) (../sandbox-review/SKILL.md), or plan larger feature expansions with [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md)
    - Publish to the MCP Registry if intended for public distribution
 
 > [!TIP]
@@ -202,3 +202,4 @@ Verify: Generated files and host registration are confirmed, and next steps are 
 - **Declare strict input schemas and descriptions**: Provide explicit parameter types and docstrings for every tool so host LLMs can invoke them reliably.
 - **Verify host compatibility before deployment**: Confirm that registered tool and resource names are unique and conform to the transport specification.
 - **Validate and sanitize all inputs by default**: Check resource URIs and tool arguments against allow-lists and canonical base paths to prevent path traversal or unauthorized access.
+- **Apply zero-trust boundary hygiene for secrets and errors**: Keep raw credentials out of tool outputs, validate outbound URLs against SSRF and private IP ranges, and return structured actionable denial messages with safe alternatives per [harness-security-spec.md](../sandbox-review/references/harness-security-spec.md) (../sandbox-review/references/harness-security-spec.md) so prompt injection or misbehaving calls cannot exfiltrate secrets or probe internal networks.
