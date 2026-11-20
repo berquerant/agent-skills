@@ -3,6 +3,7 @@ package guard
 import (
 	"encoding/json"
 	"regexp"
+	"strings"
 )
 
 // RedactedMask is the replacement string used when scrubbing sensitive values from logs.
@@ -32,9 +33,15 @@ var SensitiveKeySubstrings = []string{
 	"connection_string",
 }
 
-var sensitiveKeyRegex = regexp.MustCompile(
-	`(?i)(password|passwd|passphrase|secret|token|api_key|apikey|access_key|private_key|client_secret|auth|credential|session_id|cookie|http_cookie|signature|webhook|database_url|connection_string)`,
-)
+var sensitiveKeyRegex = compileSensitiveKeyRegex(SensitiveKeySubstrings)
+
+func compileSensitiveKeyRegex(substrings []string) *regexp.Regexp {
+	escaped := make([]string, len(substrings))
+	for i, s := range substrings {
+		escaped[i] = regexp.QuoteMeta(s)
+	}
+	return regexp.MustCompile(`(?i)(` + strings.Join(escaped, "|") + `)`)
+}
 
 // IsSensitiveKey reports whether a map key or field name contains a sensitive keyword.
 func IsSensitiveKey(key string) bool {

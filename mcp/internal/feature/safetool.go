@@ -60,7 +60,7 @@ func AddSafeToolWithMax[In, Out any](
 				err = fmt.Errorf("internal panic in tool %s: %v", tool.Name, rec)
 				return
 			}
-			logToolCall(env.Logger, tool.Name, durationMS, in, out, res, err)
+			logToolCall(ctx, env.Logger, tool.Name, durationMS, in, out, res, err)
 		}()
 
 		out, err = handler(ctx, req, in)
@@ -80,6 +80,7 @@ func AddSafeToolWithMax[In, Out any](
 }
 
 func logToolCall[In, Out any](
+	ctx context.Context,
 	logger *slog.Logger,
 	toolName string,
 	durationMS int64,
@@ -92,16 +93,19 @@ func logToolCall[In, Out any](
 		return
 	}
 	isErr := err != nil || (res != nil && res.IsError)
-	logger.Info("tool call",
+	logger.InfoContext(ctx, "tool call",
 		slog.String("tool", toolName),
 		slog.Int64("duration_ms", durationMS),
 		slog.Bool("is_error", isErr),
 	)
+	if !logger.Enabled(ctx, slog.LevelDebug) {
+		return
+	}
 	var errText any
 	if err != nil {
 		errText = guard.RedactSecretsInString(err.Error())
 	}
-	logger.Debug("tool call payload",
+	logger.DebugContext(ctx, "tool call payload",
 		slog.String("tool", toolName),
 		slog.Any("input", guard.SanitizeForLog(in)),
 		slog.Any("output", guard.SanitizeForLog(out)),

@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 
 	"github.com/berquerant/agent-skills/mcp/internal/guard"
@@ -96,15 +97,14 @@ func ParseConfig(args []string, homeDir string) (*Config, error) {
 	}
 
 	// When a flag is explicitly passed on the CLI with a value equal to the default tag
-	// (e.g. --task-dag=true when AGENT_SKILLS_MCP_TASK_DAG=false, or --cache-tool-prefix=""),
-	// structconfig.Merger compares against the default tag and keeps left (env) unless we
-	// apply explicitly changed flags from fs.Changed.
+	// (e.g. --task-dag=true when AGENT_SKILLS_MCP_TASK_DAG=false), structconfig.Merger
+	// compares against the default tag and keeps left (env) unless we apply explicitly
+	// changed flags from fs.Changed.
 	var fromFlags Config
 	if err := sc.FromFlags(&fromFlags, fs); err != nil {
 		return nil, err
 	}
-	applyChangedFeatureFlags(cfg, &fromFlags, fs)
-	applyChangedRuntimeFlags(cfg, &fromFlags, fs)
+	applyChangedFlags(cfg, &fromFlags, fs)
 
 	if err := cfg.finalize(homeDir); err != nil {
 		return nil, err
@@ -112,57 +112,18 @@ func ParseConfig(args []string, homeDir string) (*Config, error) {
 	return cfg, nil
 }
 
-func applyChangedFeatureFlags(dst, fromFlags *Config, fs *pflag.FlagSet) {
-	if fs.Changed("cache") {
-		dst.Cache = fromFlags.Cache
-	}
-	if fs.Changed("task-dag") {
-		dst.TaskDAG = fromFlags.TaskDAG
-	}
-	if fs.Changed("skill-lint") {
-		dst.SkillLint = fromFlags.SkillLint
-	}
-	if fs.Changed("snippet-analyzer") {
-		dst.SnippetAnalyzer = fromFlags.SnippetAnalyzer
-	}
-	if fs.Changed("checkpoint") {
-		dst.Checkpoint = fromFlags.Checkpoint
-	}
-	if fs.Changed("pace-guard") {
-		dst.PaceGuard = fromFlags.PaceGuard
-	}
-	if fs.Changed("pr-triage") {
-		dst.PRTriage = fromFlags.PRTriage
-	}
-}
-
-func applyChangedRuntimeFlags(dst, fromFlags *Config, fs *pflag.FlagSet) {
-	if fs.Changed("state-dir") {
-		dst.StateDir = fromFlags.StateDir
-	}
-	if fs.Changed("cache-dir") {
-		dst.CacheDir = fromFlags.CacheDir
-	}
-	if fs.Changed("checkpoint-root") {
-		dst.CheckpointRoot = fromFlags.CheckpointRoot
-	}
-	if fs.Changed("cache-max-ttl") {
-		dst.CacheMaxTTL = fromFlags.CacheMaxTTL
-	}
-	if fs.Changed("cache-max-entry-size") {
-		dst.CacheMaxEntrySize = fromFlags.CacheMaxEntrySize
-	}
-	if fs.Changed("cache-max-total-size") {
-		dst.CacheMaxTotalSize = fromFlags.CacheMaxTotalSize
-	}
-	if fs.Changed("max-output-size") {
-		dst.MaxOutputSize = fromFlags.MaxOutputSize
-	}
-	if fs.Changed("log-level") {
-		dst.LogLevel = fromFlags.LogLevel
-	}
-	if fs.Changed("log-file") {
-		dst.LogFile = fromFlags.LogFile
+func applyChangedFlags(dst, fromFlags *Config, fs *pflag.FlagSet) {
+	dstVal := reflect.ValueOf(dst).Elem()
+	srcVal := reflect.ValueOf(fromFlags).Elem()
+	typ := dstVal.Type()
+	for i := range typ.NumField() {
+		tag := typ.Field(i).Tag.Get("name")
+		if tag == "" || tag == "-" {
+			continue
+		}
+		if fs.Changed(tag) && dstVal.Field(i).CanSet() {
+			dstVal.Field(i).Set(srcVal.Field(i))
+		}
 	}
 }
 
