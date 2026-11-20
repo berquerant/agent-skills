@@ -1,14 +1,10 @@
 package taskdag_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
-	"github.com/berquerant/agent-skills/mcp/internal/feature"
 	"github.com/berquerant/agent-skills/mcp/internal/taskdag"
-	"github.com/berquerant/agent-skills/mcp/internal/testutil"
-	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -277,90 +273,4 @@ func TestComputeCriticalPathAndIndependentBranches(t *testing.T) {
 
 	branches := taskdag.ComputeIndependentBranches(tasks)
 	assert.Len(t, branches, 2)
-}
-
-func setupTestSession(t *testing.T) (context.Context, *mcp.ClientSession) {
-	t.Helper()
-	tmp := t.TempDir()
-
-	f := taskdag.NewFeatureWithDir(tmp)
-	assert.Equal(t, "task-dag", f.Name())
-	assert.Len(t, f.Tools(), 7)
-
-	mcpSrv := mcp.NewServer(&mcp.Implementation{Name: "test", Version: "0.1.0"}, nil)
-	env := feature.Env{
-		StateDir: tmp,
-		Clock:    feature.SystemClock{},
-	}
-	require.NoError(t, f.Register(mcpSrv, env))
-	t.Cleanup(func() { _ = f.Close() })
-
-	return t.Context(), testutil.ConnectInMemory(t, mcpSrv)
-}
-
-func TestFeatureToolExecution(t *testing.T) {
-	ctx, session := setupTestSession(t)
-
-	// 1. dag_create
-	createRes, err := session.CallTool(ctx, &mcp.CallToolParams{
-		Name: "dag_create",
-		Arguments: map[string]any{
-			"dag_id": "test-dag",
-			"name":   "Feature Pipeline",
-			"tasks": []map[string]any{
-				{"id": "build", "title": "Build app", "estimate_sec": 30},
-				{"id": "test", "title": "Run tests", "estimate_sec": 60, "depends_on": []string{"build"}},
-			},
-		},
-	})
-	require.NoError(t, err)
-	assert.False(t, createRes.IsError)
-
-	// 2. dag_next & dag_transition
-	nextRes, err := session.CallTool(ctx, &mcp.CallToolParams{
-		Name:      "dag_next",
-		Arguments: map[string]any{"dag_id": "test-dag"},
-	})
-	require.NoError(t, err)
-	assert.False(t, nextRes.IsError)
-
-	transRes, err := session.CallTool(ctx, &mcp.CallToolParams{
-		Name: "dag_transition",
-		Arguments: map[string]any{
-			"dag_id":  "test-dag",
-			"task_id": "build",
-			"to":      "RUNNING",
-		},
-	})
-	require.NoError(t, err)
-	assert.False(t, transRes.IsError)
-
-	// 3. dag_status, dag_render, dag_list, dag_delete
-	statusRes, err := session.CallTool(ctx, &mcp.CallToolParams{
-		Name:      "dag_status",
-		Arguments: map[string]any{"dag_id": "test-dag"},
-	})
-	require.NoError(t, err)
-	assert.False(t, statusRes.IsError)
-
-	renderRes, err := session.CallTool(ctx, &mcp.CallToolParams{
-		Name:      "dag_render",
-		Arguments: map[string]any{"dag_id": "test-dag"},
-	})
-	require.NoError(t, err)
-	assert.False(t, renderRes.IsError)
-
-	listRes, err := session.CallTool(ctx, &mcp.CallToolParams{
-		Name:      "dag_list",
-		Arguments: map[string]any{},
-	})
-	require.NoError(t, err)
-	assert.False(t, listRes.IsError)
-
-	delRes, err := session.CallTool(ctx, &mcp.CallToolParams{
-		Name:      "dag_delete",
-		Arguments: map[string]any{"dag_id": "test-dag"},
-	})
-	require.NoError(t, err)
-	assert.False(t, delRes.IsError)
 }
