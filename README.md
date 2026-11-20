@@ -18,6 +18,7 @@ All skills are maintained under `skills/`.
 | [`refactor`](skills/refactor/SKILL.md) | Safely transforms code and docs without changing behavior. | Baseline tests, pragmatic DRY, code-review integration, mandatory lint/test passing, doc synchronization. |
 | [`doc-refactor`](skills/doc-refactor/SKILL.md) | Refines documentation and code comments with zero code mutation. | Information preservation, clarity & logical depth, zero code diff verification, Why-first explanations. |
 | [`doc-review`](skills/doc-review/SKILL.md) | Audits documentation and specifications against code reality, clarity, and safety. | Code-truth alignment, structural clarity, asset hygiene, public exposure safety, read-only audit. |
+| [`sandbox-review`](skills/sandbox-review/SKILL.md) | Audits AI agent sandbox configurations, execution harness policies, and violation logs. | Four control domains, least-privilege offline baseline profiles, persistence/escape vector catalog, violation triage, read-only audit. |
 | [`structured-writing`](skills/structured-writing/SKILL.md) | Drafts new technical documents, proposals, ADRs, and reports from scratch. | Diataxis genre classification, 7 prose/design frameworks (Pyramid, PREP/BLUF, New PASONA, B-C-A/BAB, ADR, STAR), outline self-checks. |
 | [`diff-continue`](skills/diff-continue/SKILL.md) | Continues work-in-progress git diffs across other files. | Pattern extraction, style preservation, scope detection. |
 | [`git-worktree`](skills/git-worktree/SKILL.md) | Manages git worktrees for parallel branch work. | WORKTREE_ROOT organization, subagent parallelism, cleanup on request. |
@@ -64,6 +65,7 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 | Behavior-preserving code cleanup / DRY | [`refactor`](skills/refactor/SKILL.md) | `project-status` → `change-message` |
 | Pure documentation & comment refinement | [`doc-refactor`](skills/doc-refactor/SKILL.md) | `project-status` → `change-message` |
 | Technical documentation & specification review | [`doc-review`](skills/doc-review/SKILL.md) | `doc-refactor` / `review-discussion` / `change-message` |
+| Sandbox / harness policy audit & violation triage | [`sandbox-review`](skills/sandbox-review/SKILL.md) | `explore-plan-execute` / `step-gate` / `doc-refactor` / `code-review` |
 | Drafting new docs, RFCs, ADRs, or structured proposals | [`structured-writing`](skills/structured-writing/SKILL.md) | `doc-review` / `doc-refactor` / `change-message` |
 | Apply in-progress diff pattern to other files | [`diff-continue`](skills/diff-continue/SKILL.md) | `refactor` → `change-message` |
 | Parallel branch work in isolated worktree | [`git-worktree`](skills/git-worktree/SKILL.md) | `explore-plan-execute` / `multi-repo-change` |
@@ -150,6 +152,8 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │   ├── resolve-recent-dependency-prs/
 │   ├── review-discussion/
 │   │   └── references/          # Comment conventions & resolution rules
+│   ├── sandbox-review/
+│   │   └── references/          # Harness security spec, least-privilege profiles & escape vectors
 │   ├── scrutinize-plan-execute/
 │   │   └── references/          # Plan scrutiny & obstacle checklists
 │   ├── skill-creator/

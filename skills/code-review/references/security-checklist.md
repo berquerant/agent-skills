@@ -75,3 +75,13 @@ environment, verify zero exposure across the following categories:
   object deserializers (e.g., Python `pickle`, YAML `load` without safe loader).
 - [ ] **Concurrency & Memory Safety**: Concurrency primitives (mutexes, channels,
   locks) prevent race conditions, deadlocks, and shared-memory corruption.
+
+---
+
+## 3. Agent, Sandbox & Execution Harness Security
+
+When reviewing AI agent configurations, DevContainers, CI runners, MCP servers, or sandbox policies, cross-check against the shared harness references:
+
+- [ ] **Default-Deny & Four Control Domains**: Verify network allowlists with post-DNS IP checks, workspace-scoped filesystem read/write rules, zero-trust secret handling, and process/OS isolation per [harness-security-spec.md](../../sandbox-review/references/harness-security-spec.md) (../../sandbox-review/references/harness-security-spec.md).
+- [ ] **Persistence Points & Escape Vectors**: Confirm unconditional write protection for `.git/config`, hooks, shell rc, IDE/agent definitions, and secret files, plus mitigation of symlink/SSRF/IPC/PTY escape vectors per [persistence-and-escape-vectors.md](../../sandbox-review/references/persistence-and-escape-vectors.md) (../../sandbox-review/references/persistence-and-escape-vectors.md).
+- For dedicated sandbox or harness policy audits, hand off to [sandbox-review](../../sandbox-review/SKILL.md) (../../sandbox-review/SKILL.md).

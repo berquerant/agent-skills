@@ -62,12 +62,15 @@ Moments of inefficiency, tool execution errors, syntax mismatches, or multi-turn
   - Repeated `grep` or file search calls due to broad or unhelpful queries.
 - **Platform Incompatibilities**:
   - macOS vs Linux CLI flag differences (e.g., `sed -i`, `xargs`, `find`, `stat`).
+- **Recurring Sandbox / Harness Denials**:
+  - Repeated boundary blocks on network, filesystem, or IPC operations across turns or sessions.
 
 ### Extraction & Remediation Formulation
 1. Group retries into single incident clusters: `[Root Cause] -> [Trial Actions] -> [Working Solution]`.
 2. Propose documentation additions:
    - For recurring command gotchas: Add to `skills/<name>/references/troubleshooting.md`.
    - For platform differences: Add working examples to `skills/<name>/references/examples.md`.
+   - For recurring sandbox denials: Classify via the violation triage rubric in [persistence-and-escape-vectors.md](../../sandbox-review/references/persistence-and-escape-vectors.md) (../../sandbox-review/references/persistence-and-escape-vectors.md) to propose narrow `(command, path)` noise suppression, safe alternative snippets, or a [sandbox-review](../../sandbox-review/SKILL.md) (../../sandbox-review/SKILL.md) follow-up.
 
 ---
 

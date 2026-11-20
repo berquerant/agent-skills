@@ -10,6 +10,7 @@ Execution snippets are created dynamically during agent workflows to perform ope
 - **Zero Hidden Surprises**: A reviewer should be able to look at the snippet and predict exactly what it will touch, create, or modify.
 - **Cognitive Economy**: Simple tasks must not be wrapped in convoluted control flow, unnecessary abstractions, or obscure syntax.
 - **Self-Documenting Intent**: If non-trivial logic is unavoidable, it must be accompanied by explicit "Why" comments explaining each block.
+- **Boundary & Persistence Safety**: Verify the snippet does not write to protected persistence points (`.git/config`, hooks, shell rc, IDE/agent configs) or secret files (`.env*`, `*.pem`, `*.key`), invoke external app launchers/IPC, or transmit raw credentials over plaintext channels per [persistence-and-escape-vectors.md](../../sandbox-review/references/persistence-and-escape-vectors.md) (../../sandbox-review/references/persistence-and-escape-vectors.md). Any such pattern escalates to Level 4 (Opaque / Critical) until justified or removed.
 
 ---
 
@@ -72,7 +73,7 @@ Assign the snippet to one of four levels based on the dimensions above:
 | **Level 1** | **Transparent** | Immediately obvious to any reviewer at a glance. | Linear command flow, ≤ 10 lines, no custom functions, ≤ 1 simple pipe, clear inputs/outputs. | Explain intent, inputs, and side-effects concisely to the user, then proceed to execute. |
 | **Level 2** | **Moderate** | Clear and intelligible with minimal explanation. | 11–20 lines, 1 helper function or simple loop, 1–2 straightforward branches, explicit comments. | Ensure all blocks have Why-first comments; explain intent and arguments, then proceed. |
 | **Level 3** | **Complex** | Hard to parse quickly; carries cognitive debt or subtle failure modes. | ≥ 21 lines, multiple functions, nested branches, dense regex/awk, subshells, or undocumented parameters. | **Mandatory Simplification Loop**. Attempt to refactor. If impossible, open User Consultation Gate. |
-| **Level 4** | **Opaque / Critical** | Extremely difficult to verify mentally on the fly; high risk of unintended side-effects. | Deep pipelines (≥4), `eval`, background concurrency, nesting depth ≥3, multi-responsibility logic. | **Halt Execution**. Attempt aggressive decomposition. If task inherently requires this, consult user on alternatives. |
+| **Level 4** | **Opaque / Critical** | Extremely difficult to verify mentally on the fly; high risk of unintended side-effects. | Deep pipelines (≥4), `eval`, background concurrency, nesting depth ≥3, multi-responsibility logic, or writes to protected persistence/secret paths or plaintext credential leaks. | **Halt Execution**. Attempt aggressive decomposition. If task inherently requires this, consult user on alternatives. |
 
 ---
 
