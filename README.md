@@ -204,21 +204,27 @@ This bootstraps cross-cutting operational practices on demand:
 
 ### Installing Skills via GitHub CLI (`gh skill`)
 
-You can install skills directly from this repository using the GitHub CLI `gh skill` command:
+You can install skills directly from this repository using the GitHub CLI `gh skill` command. Because skills in this repository share `references/` and workflow hand-off links across sibling skill directories via relative paths (for example, `../code-review/references/security-checklist.md`) and `gh skill install` does not resolve cross-skill dependencies, install **all skills together (`--all`) into the same scope** and update them together:
 
 ```bash
-# Install a specific skill (e.g. doctor)
-gh skill install berquerant/agent-skills doctor
-
-# Install all skills from the repository
+# Recommended: install all skills from the repository into the same directory
 gh skill install berquerant/agent-skills --all
 
-# Install for a specific agent (e.g. github-copilot, claude-code, cursor, antigravity)
-gh skill install berquerant/agent-skills doctor --agent claude-code
+# Install all skills for a specific agent (e.g. github-copilot, claude-code, cursor, antigravity)
+gh skill install berquerant/agent-skills --all --agent claude-code
 
 # Install all skills pinned to a specific version or release tag
 gh skill install berquerant/agent-skills --all --pin <version>
+
+# Update all unpinned skills together to keep cross-skill references aligned
+gh skill update --all
+
+# Update skills that were previously installed with --pin (clears the pin)
+gh skill update --all --unpin
 ```
+
+> [!NOTE]
+> Installing an individual skill alone, mixing `--scope user` and `--scope project`, or updating/pinning skills to mismatched versions can break relative links between skills. If you pin all skills to a release tag with `--pin`, switch versions across all skills together using `gh skill install berquerant/agent-skills --all --pin <new-version> --force` (or clear pins with `gh skill update --all --unpin`).
 
 ### Installing Skills into a Target Directory (Script)
 
