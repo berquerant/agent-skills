@@ -87,7 +87,7 @@ func TestServerFeatureToggles(t *testing.T) {
 			var stderrBuf bytes.Buffer
 			inst, err := server.New(cfg, nil, testutil.NewManualClock(fixedNow), &stderrBuf)
 			require.NoError(t, err)
-			defer func() { _ = inst.Close() }()
+			t.Cleanup(func() { _ = inst.Close() })
 
 			summary := stderrBuf.String()
 			assert.Contains(t, summary, "agent-skills-mcp")
@@ -152,7 +152,7 @@ func TestSafeToolFaults(t *testing.T) {
 	var stderrBuf bytes.Buffer
 	inst, err := server.New(cfg, reg, nil, &stderrBuf)
 	require.NoError(t, err)
-	defer func() { _ = inst.Close() }()
+	t.Cleanup(func() { _ = inst.Close() })
 
 	session := testutil.ConnectInMemory(t, inst.MCPServer)
 
@@ -204,7 +204,7 @@ func TestServerCacheEndToEnd(t *testing.T) {
 	var stderrBuf bytes.Buffer
 	inst, err := server.New(cfg, nil, testutil.NewManualClock(fixedNow), &stderrBuf)
 	require.NoError(t, err)
-	defer func() { _ = inst.Close() }()
+	t.Cleanup(func() { _ = inst.Close() })
 
 	session := testutil.ConnectInMemory(t, inst.MCPServer)
 

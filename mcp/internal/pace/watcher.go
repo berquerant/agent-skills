@@ -237,7 +237,7 @@ func (t *Tracker) loadWatchUnlocked(watchID string) (WatchEntry, error) {
 		if errors.Is(err, os.ErrNotExist) {
 			return WatchEntry{}, fmt.Errorf("watch entry %q not found: %w", watchID, err)
 		}
-		return WatchEntry{}, fmt.Errorf("parse watch entry %q: %w", watchID, err)
+		return WatchEntry{}, fmt.Errorf("load watch entry %q: %w", watchID, err)
 	}
 	return entry, nil
 }

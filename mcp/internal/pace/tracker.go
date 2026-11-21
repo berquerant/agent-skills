@@ -315,7 +315,7 @@ func (t *Tracker) loadSessionUnlocked(paceID string) (Session, error) {
 		if errors.Is(err, os.ErrNotExist) {
 			return Session{}, fmt.Errorf("pacing session %q not found (call pace_start first): %w", paceID, err)
 		}
-		return Session{}, fmt.Errorf("parse pacing session %q: %w", paceID, err)
+		return Session{}, fmt.Errorf("load pacing session %q: %w", paceID, err)
 	}
 	return sess, nil
 }

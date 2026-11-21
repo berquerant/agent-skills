@@ -179,7 +179,7 @@ func (s *Storage) readSnapshotUnlocked(dagID string) (DAG, error) {
 		if errors.Is(err, os.ErrNotExist) {
 			return DAG{}, fmt.Errorf("dag %q not found", dagID)
 		}
-		return DAG{}, fmt.Errorf("decode dag %q: %w", dagID, err)
+		return DAG{}, fmt.Errorf("load dag %q: %w", dagID, err)
 	}
 	return dag, nil
 }

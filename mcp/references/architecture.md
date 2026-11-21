@@ -285,6 +285,6 @@ classDiagram
    - **No Real Identifiers or Configurations in Commits**: Real personal names, host-specific paths (e.g. user home directories), and actual environment configurations must never be committed even as examples or test fixtures; synthetic mock data and generic placeholders (`<placeholder>`, `/path/to/...`, `example.com`) are mandatory.
 5. **Atomic File Operations & Process Concurrency (`internal/store`)**:
    - All state modifications are performed via `store.WriteAtomic` (write to temporary sibling file followed by atomic rename).
-   - Cross-process file locks (`store.FileLock`) prevent race conditions between concurrent agent runs.
+   - Cross-process file locks (`store.FileLock` / `store.LockPool`) prevent race conditions between concurrent agent runs.
 6. **Compression Bomb Defense**:
    - Cached payloads compressed via zstd enforce strict maximum decoder memory allocation limits during decompression to mitigate decompression-bomb resource exhaustion.

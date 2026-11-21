@@ -65,7 +65,7 @@ func TestToolSchemas(t *testing.T) {
 	var stderrBuf bytes.Buffer
 	inst, err := server.New(cfg, nil, nil, &stderrBuf)
 	require.NoError(t, err)
-	defer func() { _ = inst.Close() }()
+	t.Cleanup(func() { _ = inst.Close() })
 
 	session := testutil.ConnectInMemory(t, inst.MCPServer)
 
