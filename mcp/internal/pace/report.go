@@ -2,16 +2,12 @@ package pace
 
 import (
 	"fmt"
-	"math"
 	"strings"
 	"time"
 )
 
 func evaluateSession(sess Session, now time.Time) PaceEvaluation {
-	elapsedSec := 0
-	if lastEdit, err := time.Parse(time.RFC3339, sess.LastEditAt); err == nil && now.After(lastEdit) {
-		elapsedSec = int(math.Floor(now.Sub(lastEdit).Seconds()))
-	}
+	elapsedSec := secondsBetween(sess.LastEditAt, now)
 	remSec := max(0, sess.TimeLimitSec-elapsedSec)
 	remCalls := max(0, sess.CallLimit-sess.NonEditCalls)
 

@@ -25,25 +25,17 @@ func (m *Manager) Resume(in ResumeInput) (ResumeOutput, error) {
 		return ResumeOutput{}, err
 	}
 
-	lock := m.lockFor(relPath)
-	if err := lock.RLock(); err != nil {
-		return ResumeOutput{}, err
-	}
-	defer func() { _ = lock.Unlock() }()
-
-	root, err := os.OpenRoot(m.rootDir)
-	if err != nil {
-		return ResumeOutput{}, err
-	}
-	defer func() { _ = root.Close() }()
-
-	raw, err := root.ReadFile(relPath)
-	if err != nil {
-		return ResumeOutput{}, fmt.Errorf("read checkpoint log %s: %w", absPath, err)
-	}
-
-	header, entries, warnings := ParseLogMarkdown(string(raw))
-	return buildResumeOutput(absPath, header, entries, warnings), nil
+	var out ResumeOutput
+	err = m.withLockedRoot(relPath, true, func(root *os.Root) error {
+		raw, err := root.ReadFile(relPath)
+		if err != nil {
+			return fmt.Errorf("read checkpoint log %s: %w", absPath, err)
+		}
+		header, entries, warnings := ParseLogMarkdown(string(raw))
+		out = buildResumeOutput(absPath, header, entries, warnings)
+		return nil
+	})
+	return out, err
 }
 
 func (m *Manager) resolveResumePath(in ResumeInput) (string, error) {

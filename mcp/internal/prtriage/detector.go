@@ -12,9 +12,10 @@ import (
 	"github.com/berquerant/agent-skills/mcp/internal/guard"
 )
 
-var makefileTargetRe = regexp.MustCompile(`(?m)^([a-zA-Z0-9][a-zA-Z0-9_-]*):(?:\s|$)`)
-var justfileRecipeRe = regexp.MustCompile(`(?m)^([a-zA-Z0-9][a-zA-Z0-9_-]*):(?:\s|$)`)
-var miseTaskSectionRe = regexp.MustCompile(`(?m)^\[tasks\.([a-zA-Z0-9:_-]+)\]`)
+var (
+	recipeTargetRe    = regexp.MustCompile(`(?m)^([a-zA-Z0-9][a-zA-Z0-9_-]*):(?:\s|$)`)
+	miseTaskSectionRe = regexp.MustCompile(`(?m)^\[tasks\.([a-zA-Z0-9:_-]+)\]`)
+)
 
 // DetectTasks scans repoDir for standard task runner definitions and CI workflows.
 func DetectTasks(repoDir string) (DetectTasksOutput, error) {
@@ -36,7 +37,7 @@ func DetectTasks(repoDir string) (DetectTasksOutput, error) {
 	var runners []string
 
 	scanTaskRunners(root, &runners, &tasks)
-	scanWorkflowConfigs(root, &runners, &tasks)
+	scanWorkflowConfigs(root, &runners)
 
 	hasTests := slices.ContainsFunc(tasks, func(t TaskCandidate) bool { return t.Category == "test" })
 	hasLinters := slices.ContainsFunc(tasks, func(t TaskCandidate) bool { return t.Category == "lint" })
@@ -54,8 +55,8 @@ func DetectTasks(repoDir string) (DetectTasksOutput, error) {
 func scanTaskRunners(root *os.Root, runners *[]string, tasks *[]TaskCandidate) {
 	inspectPackageJSON(root, runners, tasks)
 	inspectMiseToml(root, runners, tasks)
-	inspectMakefile(root, runners, tasks)
-	inspectJustfile(root, runners, tasks)
+	inspectRegexTargets(root, "Makefile", "make", "make ", recipeTargetRe, runners, tasks)
+	inspectRegexTargets(root, "justfile", "just", "just ", recipeTargetRe, runners, tasks)
 	inspectGoMod(root, runners, tasks)
 	inspectCargoToml(root, runners, tasks)
 }
@@ -112,51 +113,30 @@ func inspectMiseToml(root *os.Root, runners *[]string, tasks *[]TaskCandidate) {
 	}
 }
 
-func inspectMakefile(root *os.Root, runners *[]string, tasks *[]TaskCandidate) {
-	raw, err := root.ReadFile("Makefile")
+func inspectRegexTargets(
+	root *os.Root,
+	fileName, runner, cmdPrefix string,
+	re *regexp.Regexp,
+	runners *[]string,
+	tasks *[]TaskCandidate,
+) {
+	raw, err := root.ReadFile(fileName)
 	if err != nil {
 		return
 	}
-	*runners = append(*runners, "make")
-	matches := makefileTargetRe.FindAllStringSubmatch(string(raw), -1)
+	*runners = append(*runners, runner)
 	seen := make(map[string]bool)
-	for _, m := range matches {
+	for _, m := range re.FindAllStringSubmatch(string(raw), -1) {
 		target := m[1]
 		if seen[target] {
 			continue
 		}
 		seen[target] = true
-		cat := categorizeTaskName(target)
-		if cat != "" {
+		if cat := categorizeTaskName(target); cat != "" {
 			*tasks = append(*tasks, TaskCandidate{
 				Category: cat,
-				Source:   "Makefile",
-				Command:  "make " + target,
-			})
-		}
-	}
-}
-
-func inspectJustfile(root *os.Root, runners *[]string, tasks *[]TaskCandidate) {
-	raw, err := root.ReadFile("justfile")
-	if err != nil {
-		return
-	}
-	*runners = append(*runners, "just")
-	matches := justfileRecipeRe.FindAllStringSubmatch(string(raw), -1)
-	seen := make(map[string]bool)
-	for _, m := range matches {
-		recipe := m[1]
-		if seen[recipe] {
-			continue
-		}
-		seen[recipe] = true
-		cat := categorizeTaskName(recipe)
-		if cat != "" {
-			*tasks = append(*tasks, TaskCandidate{
-				Category: cat,
-				Source:   "justfile",
-				Command:  "just " + recipe,
+				Source:   fileName,
+				Command:  cmdPrefix + target,
 			})
 		}
 	}
@@ -182,7 +162,7 @@ func inspectCargoToml(root *os.Root, runners *[]string, tasks *[]TaskCandidate) 
 	}
 }
 
-func scanWorkflowConfigs(root *os.Root, runners *[]string, tasks *[]TaskCandidate) {
+func scanWorkflowConfigs(root *os.Root, runners *[]string) {
 	if _, err := root.Stat(".github/workflows"); err == nil {
 		*runners = append(*runners, "github-actions")
 	}

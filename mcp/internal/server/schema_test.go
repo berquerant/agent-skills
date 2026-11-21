@@ -3,14 +3,13 @@ package server_test
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"testing"
 
 	"github.com/berquerant/agent-skills/mcp/internal/feature"
 	"github.com/berquerant/agent-skills/mcp/internal/server"
-	"github.com/modelcontextprotocol/go-sdk/mcp"
+	"github.com/berquerant/agent-skills/mcp/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -52,7 +51,7 @@ func findUntypedProperties(path string, val any) []string {
 // TestToolSchemas verifies that every registered MCP tool provides unambiguous input
 // and output JSON schemas without untyped, empty, or boolean wildcard (any) properties.
 func TestToolSchemas(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	tmp := t.TempDir()
 
 	args := []string{
@@ -66,17 +65,9 @@ func TestToolSchemas(t *testing.T) {
 	var stderrBuf bytes.Buffer
 	inst, err := server.New(cfg, nil, nil, &stderrBuf)
 	require.NoError(t, err)
-	defer func() { _ = inst.Close() }()
+	t.Cleanup(func() { _ = inst.Close() })
 
-	serverTransport, clientTransport := mcp.NewInMemoryTransports()
-	go func() {
-		_ = inst.MCPServer.Run(ctx, serverTransport)
-	}()
-
-	client := mcp.NewClient(&mcp.Implementation{Name: "schema-client", Version: "1.0.0"}, nil)
-	session, err := client.Connect(ctx, clientTransport, nil)
-	require.NoError(t, err)
-	defer func() { _ = session.Close() }()
+	session := testutil.ConnectInMemory(t, inst.MCPServer)
 
 	listRes, err := session.ListTools(ctx, nil)
 	require.NoError(t, err)

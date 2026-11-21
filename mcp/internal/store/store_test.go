@@ -183,3 +183,110 @@ func TestStoreEdgeCases(t *testing.T) {
 		require.NotNil(t, l)
 	})
 }
+
+func TestLockPool(t *testing.T) {
+	dir := t.TempDir()
+	pool := store.NewLockPool(dir, 2*time.Second)
+
+	t.Run("LockFor returns the same instance per key", func(t *testing.T) {
+		a1 := pool.LockFor("alpha")
+		a2 := pool.LockFor("alpha")
+		b1 := pool.LockFor("beta")
+		assert.Same(t, a1, a2)
+		assert.NotSame(t, a1, b1)
+	})
+
+	t.Run("WithLock serializes concurrent updates on the same key", func(t *testing.T) {
+		const workers = 6
+		counter := 0
+		var wg sync.WaitGroup
+		wg.Add(workers)
+		for range workers {
+			go func() {
+				defer wg.Done()
+				err := pool.WithLock("shared-key", func() error {
+					counter++
+					return nil
+				})
+				require.NoError(t, err)
+			}()
+		}
+		wg.Wait()
+		assert.Equal(t, workers, counter)
+	})
+
+	t.Run("WithRLock permits concurrent readers", func(t *testing.T) {
+		const readers = 6
+		var wg sync.WaitGroup
+		wg.Add(readers)
+		for range readers {
+			go func() {
+				defer wg.Done()
+				err := pool.WithRLock("read-key", func() error {
+					time.Sleep(5 * time.Millisecond)
+					return nil
+				})
+				require.NoError(t, err)
+			}()
+		}
+		wg.Wait()
+	})
+
+	t.Run("NewLockPool zero timeout defaults and propagates callback errors", func(t *testing.T) {
+		p := store.NewLockPool(dir, 0)
+		wantErr := fmt.Errorf("boom")
+		assert.ErrorIs(t, p.WithLock("err-key", func() error { return wantErr }), wantErr)
+		assert.ErrorIs(t, p.WithRLock("err-key", func() error { return wantErr }), wantErr)
+	})
+}
+
+func TestJSONHelpers(t *testing.T) {
+	type sample struct {
+		Name  string `json:"name"`
+		Count int    `json:"count"`
+	}
+
+	dir := t.TempDir()
+	require.NoError(t, store.WriteJSONAtomic(filepath.Join(dir, "valid.json"), sample{Name: "ok", Count: 3}, 0o600))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "invalid.json"), []byte("{bad"), 0o600))
+
+	tests := []struct {
+		name    string
+		relPath string
+		want    sample
+		wantErr bool
+	}{
+		{
+			name:    "reads valid json",
+			relPath: "valid.json",
+			want:    sample{Name: "ok", Count: 3},
+		},
+		{
+			name:    "errors on missing file",
+			relPath: "missing.json",
+			wantErr: true,
+		},
+		{
+			name:    "errors on invalid json",
+			relPath: "invalid.json",
+			wantErr: true,
+		},
+		{
+			name:    "rejects parent directory traversal",
+			relPath: "../escape.json",
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := store.ReadJSONRoot[sample](dir, tc.relPath)
+			if tc.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tc.want, got)
+		})
+	}
+}

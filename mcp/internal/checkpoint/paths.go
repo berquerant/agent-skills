@@ -2,9 +2,9 @@
 // tracking, and context recovery for the checkpoint-log skill.
 //
 // File & Path Conventions:
-//   - Logs follow the hierarchical structure: `<root>/<doc_type>/<context>/<project>__<branch>__<timestamp>.md`
-//   - Each file contains a YAML frontmatter header, an objective section, and zero or more
-//     chronological, append-only milestone entries.
+//   - Logs follow the hierarchical structure: `<root>/<project>/<branch>/<context>/<doc_type>-<timestamp>.md`
+//   - Each file contains a Markdown header block (`# Task Checkpoint Log: ...` with metadata bullets)
+//     followed by zero or more chronological, append-only milestone entries.
 //   - Writes are guarded by cross-process file locks to prevent race conditions during parallel execution.
 package checkpoint
 

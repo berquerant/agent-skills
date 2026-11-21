@@ -8,16 +8,11 @@ import (
 	"time"
 
 	"github.com/berquerant/agent-skills/mcp/internal/feature"
+	"github.com/berquerant/agent-skills/mcp/internal/testutil"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-type fixedClock struct {
-	t time.Time
-}
-
-func (c fixedClock) Now() time.Time { return c.t }
 
 type mockFeature struct {
 	name      string
@@ -151,7 +146,7 @@ func TestRegistryRegisterEnabled(t *testing.T) {
 			require.NoError(t, reg.Add(tt.f2))
 
 			srv := mcp.NewServer(&mcp.Implementation{Name: "test", Version: "1"}, nil)
-			active, err := reg.RegisterEnabled(srv, feature.Env{Clock: fixedClock{t: now}}, tt.enabled)
+			active, err := reg.RegisterEnabled(srv, feature.Env{Clock: testutil.NewManualClock(now)}, tt.enabled)
 			if tt.wantErr != "" {
 				require.ErrorContains(t, err, tt.wantErr)
 				assert.Equal(t, tt.wantF1Closed, tt.f1.closed)

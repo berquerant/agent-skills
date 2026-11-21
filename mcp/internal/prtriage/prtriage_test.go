@@ -132,45 +132,71 @@ func TestClassifyFiles_Disqualifications(t *testing.T) {
 }
 
 func TestClassifyFiles_AgentOverrides(t *testing.T) {
-	// Unknown without override
-	outUnknown, err := prtriage.ClassifyFiles(prtriage.ClassifyFilesInput{
-		Files: []string{"go.mod", "custom_dependency.xyz"},
-	})
-	require.NoError(t, err)
-	assert.False(t, outUnknown.Eligible)
-	assert.Len(t, outUnknown.UnknownFiles, 1)
-	assert.Contains(t, outUnknown.Reasons[0], "is unclassified (category unknown)")
-
-	// Resolved via agent manifest override
-	outManifest, err := prtriage.ClassifyFiles(prtriage.ClassifyFilesInput{
-		Files: []string{"go.mod", "custom_dependency.xyz"},
-		Overrides: map[string]string{
-			"custom_dependency.xyz": "manifest",
+	tests := []struct {
+		name          string
+		input         prtriage.ClassifyFilesInput
+		wantEligible  bool
+		wantEcosystem prtriage.Ecosystem
+		wantUnknowns  int
+		wantReasonSub string
+	}{
+		{
+			name: "unknown without override",
+			input: prtriage.ClassifyFilesInput{
+				Files: []string{"go.mod", "custom_dependency.xyz"},
+			},
+			wantEligible:  false,
+			wantUnknowns:  1,
+			wantReasonSub: "is unclassified (category unknown)",
 		},
-	})
-	require.NoError(t, err)
-	assert.True(t, outManifest.Eligible)
-	assert.Equal(t, prtriage.EcosystemMixed, outManifest.Ecosystem)
-
-	// Resolved via agent ignored override
-	outIgnored, err := prtriage.ClassifyFiles(prtriage.ClassifyFilesInput{
-		Files: []string{"go.mod", "custom_dependency.xyz"},
-		Overrides: map[string]string{
-			"custom_dependency.xyz": "ignored",
+		{
+			name: "resolved via agent manifest override",
+			input: prtriage.ClassifyFilesInput{
+				Files: []string{"go.mod", "custom_dependency.xyz"},
+				Overrides: map[string]string{
+					"custom_dependency.xyz": "manifest",
+				},
+			},
+			wantEligible:  true,
+			wantEcosystem: prtriage.EcosystemMixed,
 		},
-	})
-	require.NoError(t, err)
-	assert.True(t, outIgnored.Eligible)
-	assert.Equal(t, prtriage.EcosystemGo, outIgnored.Ecosystem)
+		{
+			name: "resolved via agent ignored override",
+			input: prtriage.ClassifyFilesInput{
+				Files: []string{"go.mod", "custom_dependency.xyz"},
+				Overrides: map[string]string{
+					"custom_dependency.xyz": "ignored",
+				},
+			},
+			wantEligible:  true,
+			wantEcosystem: prtriage.EcosystemGo,
+		},
+		{
+			name: "resolved via extra manifest pattern",
+			input: prtriage.ClassifyFilesInput{
+				Files:                 []string{"go.mod", "dependencies.mycustomlock"},
+				ExtraManifestPatterns: []string{"*.mycustomlock"},
+			},
+			wantEligible:  true,
+			wantEcosystem: prtriage.EcosystemMixed,
+		},
+	}
 
-	// Resolved via extra manifest pattern
-	outPattern, err := prtriage.ClassifyFiles(prtriage.ClassifyFilesInput{
-		Files:                 []string{"go.mod", "dependencies.mycustomlock"},
-		ExtraManifestPatterns: []string{"*.mycustomlock"},
-	})
-	require.NoError(t, err)
-	assert.True(t, outPattern.Eligible)
-	assert.Equal(t, prtriage.EcosystemMixed, outPattern.Ecosystem)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			out, err := prtriage.ClassifyFiles(tt.input)
+			require.NoError(t, err)
+			assert.Equal(t, tt.wantEligible, out.Eligible)
+			assert.Len(t, out.UnknownFiles, tt.wantUnknowns)
+			if tt.wantEcosystem != "" {
+				assert.Equal(t, tt.wantEcosystem, out.Ecosystem)
+			}
+			if tt.wantReasonSub != "" {
+				require.NotEmpty(t, out.Reasons)
+				assert.Contains(t, out.Reasons[0], tt.wantReasonSub)
+			}
+		})
+	}
 }
 
 func TestFilterCandidates(t *testing.T) {
