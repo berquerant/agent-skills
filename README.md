@@ -26,7 +26,7 @@ All skills are maintained under `skills/`.
 | [`project-audit`](skills/project-audit/SKILL.md) | Comprehensive health check, security, public release readiness, and maintainability audit. | Read-only whole-project diagnostics, exposure risk ratings, dynamic commit window, maintainability metrics, hand-off to refactor/step-gate. |
 | [`doctor`](skills/doctor/SKILL.md) | One-shot project checkup across docs/comments, maintainability, latent bugs, and security, ending in a prioritized improvement plan. | Mode selection (project/recent × quick/thorough), evidence-backed findings, reuses code-review/project-audit/evidentiary-inquiry criteria, approval gate, hand-off to refactor/doc-refactor/step-gate. |
 | [`skill-creator`](skills/skill-creator/SKILL.md) | Scaffolds and writes new agent skills. | Frontmatter quality checklist, progressive disclosure, standard directory templates. |
-| [`skill-review`](skills/skill-review/SKILL.md) | Reviews agent skills against the Agent Skills Specification and repository conventions. | Read-only, automated shell checks, six-dimension verdict rules, batch cross-skill summary, hand-off to step-gate/refactor. |
+| [`skill-review`](skills/skill-review/SKILL.md) | Reviews agent skills against the Agent Skills Specification and repository conventions. | Read-only, automated skill-lint checks (A–K), six-dimension verdict rules, batch cross-skill summary, hand-off to step-gate/refactor. |
 | [`skill-modernize`](.agent/skills/skill-modernize/SKILL.md) | Repository-local meta-skill that evolves `skills/` and review criteria to align with new frontier model capabilities, harness updates, or SDK versions. | 5-axis model delta analysis, criteria & checker updates, self-review baseline lock, 3-phase repository remediation. |
 | [`mcp-creator`](skills/mcp-creator/SKILL.md) | Scaffolds and implements Model Context Protocol (MCP) servers. | Python/TS templates, tool/resource/prompt support, host setup guides. |
 | [`scrutinize-plan-execute`](skills/scrutinize-plan-execute/SKILL.md) | Enforces critical obstacle review, user consultation, and archiving checks. | Self-critical risk scrutiny, remedy consultation, iterative refinement, no-default file archiving. |
@@ -101,6 +101,7 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │       ├── release.yml          # GoReleaser tag release workflow
 │       └── test.yml             # CI build & test workflow
 ├── bin/
+│   ├── check-file-lines.sh      # Verifies Go source files stay within per-file line limits
 │   ├── check-skills.sh          # Automated quality and consistency checker across skills
 │   ├── install.sh               # Copies skills to a target directory
 │   ├── lint.sh                  # Shellcheck and shfmt runner
@@ -122,7 +123,9 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │   ├── code-review/
 │   │   └── references/          # Security checklists & OWASP secure coding guide
 │   ├── command-snippet/
+│   │   └── references/          # Approvable patterns & cataloged snippet examples
 │   ├── diff-continue/
+│   │   └── references/          # Pattern-inference & scope heuristics
 │   ├── doc-refactor/
 │   │   └── references/          # Information inventory & zero-code-diff guide
 │   ├── doc-review/
@@ -171,6 +174,7 @@ When deciding which skill to activate, consult this goal-oriented matrix:
 │   ├── task-dependency-pipeline/
 │   │   └── references/          # DAG modeling & cooperative scheduling guide
 │   └── user-notification/
+│       └── references/          # Notification templates & channel guides
 ├── AGENTS.md                    # Operational guidelines & context for AI agents
 ├── .gitignore
 ├── .goreleaser.yml              # GoReleaser configuration for MCP server binaries
@@ -259,7 +263,7 @@ AI agents scanning `.agents/skills` will then discover and activate these skills
 
 ### Companion MCP Server (`agent-skills-mcp`)
 
-[`mcp/`](mcp/README.md) provides a single-binary Go MCP server (`agent-skills-mcp`) that exposes deterministic tools for `cache`, `task-dag`, `skill-lint`, `snippet-analyzer`, `checkpoint`, `pace-guard`, and `pr-triage`, with per-feature flags to enable or disable individual capabilities.
+[`mcp/`](mcp/README.md) provides a single-binary Go MCP server (`agent-skills-mcp`) that exposes deterministic tools for `cache`, `task-dag`, `skill-lint`, `snippet-analyzer`, `snippet-manager`, `checkpoint`, `pace-guard`, and `pr-triage`, with per-feature flags to enable or disable individual capabilities.
 
 You can obtain the `agent-skills-mcp` binary in one of two ways:
 
@@ -288,7 +292,7 @@ Skills remain platform-agnostic and work standalone without the MCP server; see 
 
 ## Development
 
-This repository uses [mise](https://mise.jdx.dev/) to manage development tools (`go`, `golangci-lint`, `shellcheck`, `shfmt`).
+This repository uses [mise](https://mise.jdx.dev/) to manage development tools (`go`, `golangci-lint`, `lizard`, `python`, `scc`, `shellcheck`, `shfmt`).
 
 ```bash
 # Install development tools
@@ -300,6 +304,9 @@ mise run lint
 # Run automated skill review checks across all skills
 mise run check-skills
 
+# Validate skills for publishing via gh skill
+mise run check-skill-publish
+
 # Build, test, and lint the Go MCP module
 mise run mcp:build
 mise run mcp:test
@@ -308,9 +315,9 @@ mise run mcp:lint
 # Regenerate mcp/README.md from CLI flags
 mise run mcp:readme-gen
 
-# Run all checks (lint + check-skills + mcp)
+# Run all checks (lint + check-skills + check-skill-publish + mcp)
 mise run check
 
-# Format shell scripts
+# Format shell scripts and Go code
 mise run fmt
 ```
