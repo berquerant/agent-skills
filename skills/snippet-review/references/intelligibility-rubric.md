@@ -20,13 +20,15 @@ Evaluate candidate snippets across five primary dimensions:
 
 ### Metric 1: Code Scale & Function Granularity
 - **Line Count (SLOC)**: Total non-comment, non-empty code lines.
-  - ≤ 10 lines: Low complexity.
-  - 11–25 lines: Moderate complexity.
-  - ≥ 26 lines: High complexity; consider whether the snippet should be broken down.
+  - ≤ 10 lines: Low complexity (Level 1).
+  - 11–20 lines: Moderate complexity (Level 2).
+  - 21–25 lines: High complexity (Level 3).
+  - ≥ 26 lines: Critical complexity (Level 4); consider whether the snippet should be broken down.
 - **Function / Method Count**:
-  - 0 functions (linear flow): Lowest cognitive overhead.
-  - 1–2 functions: Acceptable if modularizing repeated logic.
-  - ≥ 3 functions: High complexity; resembles a full standalone program rather than a task snippet.
+  - 0 functions (linear flow): Lowest cognitive overhead (Level 1).
+  - 1 function (≤ 15 lines): Moderate complexity (Level 2); acceptable if modularizing repeated logic.
+  - 2 functions (or any function > 15 lines): Complex (Level 3).
+  - ≥ 3 functions: Opaque / Critical (Level 4); resembles a full standalone program rather than a task snippet.
 - **Function Length**:
   - Individual functions exceeding 15 lines add significant cognitive load.
 
@@ -71,9 +73,9 @@ Assign the snippet to one of four levels based on the dimensions above:
 | Level | Rating | Definition | Typical Characteristics | Required Action |
 |---|---|---|---|---|
 | **Level 1** | **Transparent** | Immediately obvious to any reviewer at a glance. | Linear command flow, ≤ 10 lines, no custom functions, ≤ 1 simple pipe, clear inputs/outputs. | Explain intent, inputs, and side-effects concisely to the user, then proceed to execute. |
-| **Level 2** | **Moderate** | Clear and intelligible with minimal explanation. | 11–20 lines, 1 helper function or simple loop, 1–2 straightforward branches, explicit comments. | Ensure all blocks have Why-first comments; explain intent and arguments, then proceed. |
-| **Level 3** | **Complex** | Hard to parse quickly; carries cognitive debt or subtle failure modes. | ≥ 21 lines, multiple functions, nested branches, dense regex/awk, subshells, or undocumented parameters. | **Mandatory Simplification Loop**. Attempt to refactor. If impossible, open User Consultation Gate. |
-| **Level 4** | **Opaque / Critical** | Extremely difficult to verify mentally on the fly; high risk of unintended side-effects. | Deep pipelines (≥4), `eval`, background concurrency, nesting depth ≥3, multi-responsibility logic, or writes to protected persistence/secret paths or plaintext credential leaks. | **Halt Execution**. Attempt aggressive decomposition. If task inherently requires this, consult user on alternatives. |
+| **Level 2** | **Moderate** | Clear and intelligible with minimal explanation. | 11–20 lines, 1 helper function (≤ 15 lines) or simple loop, 1–2 straightforward branches, explicit comments. | Ensure all blocks have Why-first comments; explain intent and arguments, then proceed. |
+| **Level 3** | **Complex** | Hard to parse quickly; carries cognitive debt or subtle failure modes. | 21–25 lines, 2 functions (or function > 15 lines), 2 pipes (3 chained commands), nested branches (depth 2), 3–5 branches, subshells, or ≥ 4 positional parameters. | **Mandatory Simplification Loop**. Attempt to refactor. If impossible, open User Consultation Gate. |
+| **Level 4** | **Opaque / Critical** | Extremely difficult to verify mentally on the fly; high risk of unintended side-effects. | ≥ 26 lines, ≥ 3 functions, deep pipelines (≥ 3 pipes), ≥ 6 branches, `eval`, background concurrency, nesting depth ≥ 3, multi-responsibility logic, or writes to protected persistence/secret paths or plaintext credential leaks. | **Halt Execution**. Attempt aggressive decomposition. If task inherently requires this, consult user on alternatives. |
 
 ---
 

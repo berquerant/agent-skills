@@ -14,7 +14,7 @@ Decomposes complex goals into a Directed Acyclic Graph (DAG) of interdependent t
 
 - Clearly understood goal, requirements, or multi-step plan (e.g., from [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md) or [scrutinize-plan-execute](../scrutinize-plan-execute/SKILL.md) (../scrutinize-plan-execute/SKILL.md)).
 - Execution scope spans multiple tasks, repositories, branches, or steps where some operations involve waiting (remote CI, long builds, cooldowns, approval checkpoints).
-- Access to the companion MCP server (`agent-skills-mcp`) providing the `task-dag` toolset (`dag_create`, `dag_next`, `dag_transition`, `dag_status`, `dag_render`). If the MCP server is unavailable, refer to [dag-scheduling-guide.md](references/dag-scheduling-guide.md) (references/dag-scheduling-guide.md) for manual state machine tracking, topological ordering, and scheduler loop details.
+- Access to the companion MCP server (`agent-skills-mcp`) providing the `task-dag` toolset (`dag_create`, `dag_next`, `dag_transition`, `dag_status`, `dag_render`, `dag_list`, `dag_delete`). If the MCP server is unavailable, refer to [dag-scheduling-guide.md](references/dag-scheduling-guide.md) (references/dag-scheduling-guide.md) for manual state machine tracking, topological ordering, and scheduler loop details.
 
 ---
 
