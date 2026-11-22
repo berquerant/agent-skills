@@ -19,6 +19,7 @@ flowchart TD
         SK_TDP["task-dependency-pipeline"]
         SK_SR["skill-review"]
         SK_SNR["snippet-review"]
+        SK_CS["command-snippet"]
         SK_CPL["checkpoint-log"]
         SK_PACE["edit-paced-execution"]
         SK_RDP["resolve-dependency-prs"]
@@ -37,6 +38,7 @@ flowchart TD
         FB_DAG["dag-scheduling-guide.md"]
         FB_LINT["automated-checks.md"]
         FB_SNIPPET["intelligibility-rubric.md"]
+        FB_CS["approvable-patterns.md"]
         FB_CP["path-conventions.md & log-format.md"]
         FB_PACE["pace-monitoring-guide.md"]
         FB_TRIAGE["filter-criteria.md & failure-archetypes.md"]
@@ -53,6 +55,7 @@ flowchart TD
     SK_TDP --- FB_DAG
     SK_SR --- FB_LINT
     SK_SNR --- FB_SNIPPET
+    SK_CS --- FB_CS
     SK_CPL --- FB_CP
     SK_PACE --- FB_PACE
     SK_RDP --- FB_TRIAGE
@@ -88,6 +91,7 @@ flowchart TD
         F_TaskDAG["task-dag<br/>(dag_*)"]
         F_SkillLint["skill-lint<br/>(lint_*)"]
         F_Snippet["snippet-analyzer<br/>(snippet_audit)"]
+        F_SnippetMgr["snippet-manager<br/>(snippet_check_inline, snippet_create, ...)"]
         F_Checkpoint["checkpoint<br/>(checkpoint_*)"]
         F_Pace["pace-guard<br/>(pace_*)"]
         F_PRTriage["pr-triage<br/>(pr_*)"]
@@ -96,7 +100,7 @@ flowchart TD
     subgraph L4 ["4. Shared Infrastructure & Guardrails (internal/guard, internal/store, internal/pathutil)"]
         Guard["Security Guard<br/>(CheckPathAllowed, CheckNoSecrets)"]
         Store["Atomic Storage<br/>(WriteAtomic, FileLock, LockPool)"]
-        PathUtil["Path Utilities<br/>(FormatDualPath)"]
+        PathUtil["Path Utilities<br/>(FormatDualPath, SanitizeSlug, ResolveProjectAndBranch)"]
         Containment["Directory Containment<br/>(os.OpenRoot boundary enforcement)"]
         Compression["Safe Compression<br/>(zstd with decoder memory limits)"]
     end
@@ -104,6 +108,7 @@ flowchart TD
     subgraph L5 ["5. Operating System & Local Storage"]
         CacheStorage["$XDG_CACHE_HOME/agent-skills-mcp/cache"]
         CheckpointStorage["$XDG_CACHE_HOME/agent-skills-mcp/checkpoints"]
+        SnippetStorage["$XDG_STATE_HOME/agent-skills-mcp/snippets"]
         StateStorage["$XDG_STATE_HOME/agent-skills-mcp"]
         WorkDir["Local Repository / Workspace"]
     end
@@ -124,7 +129,7 @@ flowchart TD
 |---|---|---|
 | **1. Transport & CLI** | `cmd/agent-skills-mcp` | Parses CLI flags/subcommands, isolates `stdout` for JSON-RPC, routes logs to `stderr`, and coordinates graceful process shutdown. |
 | **2. Server Core** | `internal/server`, `internal/feature` | Instantiates MCP server instance, validates storage directories, registers enabled capabilities, and wraps tool handlers in safety guards. |
-| **3. Feature Domain** | `internal/cache`, `internal/taskdag`, `internal/skilllint`, `internal/snippet`, `internal/checkpoint`, `internal/pace`, `internal/prtriage` | Implements discrete domain logic without network calls. Each module exposes zero or more tools conforming to the `feature.Feature` interface. |
+| **3. Feature Domain** | `internal/cache`, `internal/taskdag`, `internal/skilllint`, `internal/snippet`, `internal/snippetmgr`, `internal/checkpoint`, `internal/pace`, `internal/prtriage` | Implements discrete domain logic without network calls. Each module exposes zero or more tools conforming to the `feature.Feature` interface. |
 | **4. Guardrails & Store** | `internal/guard`, `internal/store`, `internal/pathutil` | Blocks access to forbidden system paths, prevents credential leaks, formats output paths per output-presentation, manages atomic file swaps, cross-process and in-process file locks, and directory root containment (`os.OpenRoot`). |
 | **5. Storage** | Standard Library (`os`, `io`) | Local non-volatile state and caches adhering to XDG base directory specifications. |
 
@@ -220,6 +225,17 @@ classDiagram
         +snippet_audit
     }
 
+    class SnippetManagerFeature {
+        +snippet_check_inline
+        +snippet_create
+        +snippet_get
+        +snippet_list
+        +snippet_verify
+        +snippet_record_invocation
+        +snippet_deprecate
+        +snippet_cleanup
+    }
+
     class CheckpointFeature {
         +checkpoint_init
         +checkpoint_append
@@ -248,6 +264,7 @@ classDiagram
     Feature <|.. TaskDAGFeature
     Feature <|.. SkillLintFeature
     Feature <|.. SnippetAnalyzerFeature
+    Feature <|.. SnippetManagerFeature
     Feature <|.. CheckpointFeature
     Feature <|.. PaceGuardFeature
     Feature <|.. PRTriageFeature
@@ -261,6 +278,7 @@ classDiagram
 | `task-dag` | `dag_create`, `dag_next`, `dag_transition`, `dag_status`, `dag_render`, `dag_list`, `dag_delete` | Directed Acyclic Graph state tracking, topological scheduling, and Mermaid rendering. | [`task-dependency-pipeline`](../../skills/task-dependency-pipeline/SKILL.md) |
 | `skill-lint` | `lint_skill`, `lint_all` | Automated Agent Skills Specification conformance checks (checks A through K). | [`skill-review`](../../skills/skill-review/SKILL.md) |
 | `snippet-analyzer` | `snippet_audit` | Structural Python/Shell AST inspection and cognitive complexity scoring. | [`snippet-review`](../../skills/snippet-review/SKILL.md) |
+| `snippet-manager` | `snippet_check_inline`, `snippet_create`, `snippet_get`, `snippet_list`, `snippet_verify`, `snippet_record_invocation`, `snippet_deprecate`, `snippet_cleanup` | Inline-command extraction check, immutable versioned snippet storage (`0500`), SHA-256 verification, invocation logging, and lifecycle cleanup under XDG state. | [`command-snippet`](../../skills/command-snippet/SKILL.md) |
 | `checkpoint` | `checkpoint_init`, `checkpoint_append`, `checkpoint_resume`, `checkpoint_set_status`, `checkpoint_list` | Structured task milestone logging, state resumption, and step verification. | [`checkpoint-log`](../../skills/checkpoint-log/SKILL.md) |
 | `pace-guard` | `pace_start`, `pace_tick`, `pace_status`, `pace_reset`, `pace_watch`, `pace_liveness` | Pacing threshold tracker to prevent non-edit tool loops and silent agent stalls. | [`edit-paced-execution`](../../skills/edit-paced-execution/SKILL.md) |
 | `pr-triage` | `pr_classify_files`, `pr_filter_candidates`, `pr_detect_tasks`, `pr_match_failure` | Dependency PR classification, task detection, and CI failure archetype matching. | [`resolve-dependency-prs`](../../skills/resolve-dependency-prs/SKILL.md) |
