@@ -298,7 +298,8 @@ classDiagram
 3. **Directory Root Containment (`os.OpenRoot`)**:
    - Filesystem inspections and file extractions within workspaces or state directories use Go's `os.OpenRoot` (`*os.Root`) to prevent directory traversal attacks and symlink escapes.
 4. **Credential & Secret Protection (`internal/guard`)**:
-   - `guard.CheckPathAllowed`: Denies inspection or writes targeting sensitive paths (e.g., `~/.ssh`, `~/.aws`, `~/.gnupg`, `/etc`).
+   - All path, key, and secret detection rules are maintained declaratively in `mcp/internal/guard/rules.json` (embedded via `//go:embed`). See [`security-rules.md`](security-rules.md) for rule inclusion criteria and continuous improvement procedures.
+   - `guard.CheckPathAllowed`: Denies inspection or writes targeting sensitive paths (e.g., `~/.ssh`, `~/.aws`, `~/.gnupg`, `~/.config/gh/hosts.yml`, `/etc`).
    - `guard.CheckNoSecrets`: Scans payloads for high-entropy tokens, private keys, and authorization headers to prevent accidental leakage into persistent state files.
    - **No Real Identifiers or Configurations in Commits**: Real personal names, host-specific paths (e.g. user home directories), and actual environment configurations must never be committed even as examples or test fixtures; synthetic mock data and generic placeholders (`<placeholder>`, `/path/to/...`, `example.com`) are mandatory.
 5. **Atomic File Operations & Process Concurrency (`internal/store`)**:

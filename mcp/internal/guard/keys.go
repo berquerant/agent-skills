@@ -9,32 +9,6 @@ import (
 // RedactedMask is the replacement string used when scrubbing sensitive values from logs.
 const RedactedMask = "***REDACTED***"
 
-// SensitiveKeySubstrings lists key/variable name substrings treated as sensitive during log scrubbing.
-// Derived from standard sanitizer rules and Django HiddenSettings (API|TOKEN|KEY|SECRET|PASS|SIGNATURE|HTTP_COOKIE).
-var SensitiveKeySubstrings = []string{
-	"password",
-	"passwd",
-	"passphrase",
-	"secret",
-	"token",
-	"api_key",
-	"apikey",
-	"access_key",
-	"private_key",
-	"client_secret",
-	"auth",
-	"credential",
-	"session_id",
-	"cookie",
-	"http_cookie",
-	"signature",
-	"webhook",
-	"database_url",
-	"connection_string",
-}
-
-var sensitiveKeyRegex = compileSensitiveKeyRegex(SensitiveKeySubstrings)
-
 func compileSensitiveKeyRegex(substrings []string) *regexp.Regexp {
 	escaped := make([]string, len(substrings))
 	for i, s := range substrings {

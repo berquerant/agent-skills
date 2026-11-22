@@ -1,69 +1,15 @@
 // Package guard enforces security boundaries across all MCP server features by rejecting
 // access to sensitive files, system paths, private keys, and high-entropy secret patterns.
 //
-// Rules and patterns are derived from industry-standard tools (Gitleaks, TruffleHog, and
-// git-secrets) to protect user credentials and host operating system configurations.
+// All rule definitions are maintained declaratively in embedded rules.json.
+// See mcp/references/security-rules.md for inclusion criteria and maintenance procedures.
 package guard
 
 import (
 	"fmt"
 	"path/filepath"
-	"regexp"
 	"strings"
 )
-
-// SensitiveFilenames lists exact filenames blocked from reading, caching, or writing.
-// Derived from Gitleaks default rules (gitleaks.toml), TruffleHog, and git-secrets path rules.
-var SensitiveFilenames = map[string]struct{}{
-	".env":                     {},
-	".env.local":               {},
-	".env.development":         {},
-	".env.staging":             {},
-	".env.production":          {},
-	".npmrc":                   {},
-	".pypirc":                  {},
-	".netrc":                   {},
-	".htpasswd":                {},
-	".git-credentials":         {},
-	"id_rsa":                   {},
-	"id_ed25519":               {},
-	"id_ecdsa":                 {},
-	"id_dsa":                   {},
-	"credentials.json":         {},
-	"service-account.json":     {},
-	"terraform.tfstate":        {},
-	"terraform.tfstate.backup": {},
-	"terraform.tfvars":         {},
-	"kubeconfig":               {},
-}
-
-// SensitiveExtensions lists file extensions associated with private keys, certificates, and keystores.
-var SensitiveExtensions = map[string]struct{}{
-	".pem":      {},
-	".key":      {},
-	".p12":      {},
-	".pfx":      {},
-	".jks":      {},
-	".keystore": {},
-	".asc":      {},
-	".ovpn":     {},
-	".kdbx":     {},
-}
-
-type pathRule struct {
-	name    string
-	pattern *regexp.Regexp
-}
-
-var sensitivePathPatterns = []pathRule{
-	{name: "AWS config/credentials", pattern: regexp.MustCompile(`(?i)(^|/)(\.aws/credentials|\.aws/config)$`)},
-	{name: "SSH directory", pattern: regexp.MustCompile(`(?i)(^|/)(\.ssh/[^/]+.*)$`)},
-	{name: "GnuPG directory", pattern: regexp.MustCompile(`(?i)(^|/)(\.gnupg/[^/]+.*)$`)},
-	{name: "Docker config", pattern: regexp.MustCompile(`(?i)(^|/)(\.docker/config\.json)$`)},
-	{name: "Kubeconfig", pattern: regexp.MustCompile(`(?i)(^|/)(\.kube/config)$`)},
-	{name: "Google Cloud config", pattern: regexp.MustCompile(`(?i)(^|/)(\.config/gcloud/[^/]+.*)$`)},
-	{name: "System auth file", pattern: regexp.MustCompile(`(?i)(^|/)etc/(shadow|passwd|sudoers)$`)},
-}
 
 // IsSensitivePath checks whether filePath matches a sensitive filename, extension, or directory pattern.
 // It returns true and the matched rule description if the path is sensitive.

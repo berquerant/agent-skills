@@ -24,6 +24,7 @@ func TestIsSensitivePath(t *testing.T) {
 		{name: "aws credentials path", path: "/Users/dev/.aws/credentials", wantSensitive: true, wantReasonSub: "AWS"},
 		{name: "ssh config path", path: "/Users/dev/.ssh/config", wantSensitive: true, wantReasonSub: "SSH"},
 		{name: "docker config.json", path: "/root/.docker/config.json", wantSensitive: true, wantReasonSub: "Docker"},
+		{name: "github cli hosts.yml", path: "/home/user/.config/gh/hosts.yml", wantSensitive: true, wantReasonSub: "GitHub CLI"},
 		{name: "etc shadow", path: "/etc/shadow", wantSensitive: true, wantReasonSub: "System auth"},
 		{name: "normal markdown file", path: "/tmp/checkpoints/proj/main/ctx/checkpoint-1.md", wantSensitive: false},
 		{name: "normal go source file", path: "mcp/internal/guard/paths.go", wantSensitive: false},
