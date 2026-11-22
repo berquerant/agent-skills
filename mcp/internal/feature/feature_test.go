@@ -183,6 +183,7 @@ func parseConfigTestCases(home string) []parseConfigTestCase {
 				assert.Equal(t, filepath.Join(home, ".local", "state", "agent-skills-mcp"), cfg.StateDir)
 				assert.Equal(t, filepath.Join(home, ".cache", "agent-skills-mcp", "cache"), cfg.CacheDir)
 				assert.Equal(t, filepath.Join(home, ".cache", "agent-skills-mcp", "checkpoints"), cfg.CheckpointRoot)
+				assert.Equal(t, filepath.Join(home, ".local", "state", "agent-skills-mcp", "snippets"), cfg.SnippetRoot)
 				assert.True(t, cfg.CheckpointDefault)
 				assert.Equal(t, 1800, cfg.CacheMaxTTL)
 			},

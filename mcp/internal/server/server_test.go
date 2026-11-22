@@ -50,23 +50,30 @@ func TestServerFeatureToggles(t *testing.T) {
 	}{
 		{
 			name:            "all features enabled by default",
-			wantSummarySub:  "features=[cache,task-dag,skill-lint,snippet-analyzer,checkpoint,pace-guard,pr-triage]",
-			wantTools:       []string{"cache_get", "dag_create", "dag_next", "lint_skill", "lint_all", "snippet_audit", "checkpoint_init", "checkpoint_append", "pace_start", "pace_tick", "pr_classify_files", "pr_filter_candidates"},
+			wantSummarySub:  "features=[cache,task-dag,skill-lint,snippet-analyzer,snippet-manager,checkpoint,pace-guard,pr-triage]",
+			wantTools:       []string{"cache_get", "dag_create", "dag_next", "lint_skill", "lint_all", "snippet_audit", "snippet_check_inline", "snippet_create", "checkpoint_init", "checkpoint_append", "pace_start", "pace_tick", "pr_classify_files", "pr_filter_candidates"},
 			wantAbsentTools: nil,
 		},
 		{
 			name:            "disabling pace-guard and pr-triage omits their tools",
 			extraArgs:       []string{"--pace-guard=false", "--pr-triage=false"},
-			wantSummarySub:  "features=[cache,task-dag,skill-lint,snippet-analyzer,checkpoint]",
-			wantTools:       []string{"cache_get", "cache_set", "dag_create", "lint_skill", "snippet_audit", "checkpoint_init"},
+			wantSummarySub:  "features=[cache,task-dag,skill-lint,snippet-analyzer,snippet-manager,checkpoint]",
+			wantTools:       []string{"cache_get", "cache_set", "dag_create", "lint_skill", "snippet_audit", "snippet_create", "checkpoint_init"},
 			wantAbsentTools: []string{"pace_start", "pace_tick", "pr_classify_files", "pr_filter_candidates"},
 		},
 		{
 			name:            "disabling cache omits cache_* tools",
 			extraArgs:       []string{"--cache=false"},
-			wantSummarySub:  "features=[task-dag,skill-lint,snippet-analyzer,checkpoint,pace-guard,pr-triage]",
-			wantTools:       []string{"dag_create", "lint_skill", "snippet_audit", "checkpoint_init", "pace_start", "pr_classify_files"},
+			wantSummarySub:  "features=[task-dag,skill-lint,snippet-analyzer,snippet-manager,checkpoint,pace-guard,pr-triage]",
+			wantTools:       []string{"dag_create", "lint_skill", "snippet_audit", "snippet_create", "checkpoint_init", "pace_start", "pr_classify_files"},
 			wantAbsentTools: []string{"cache_get", "cache_set", "cache_exist", "cache_delete", "cache_version", "cache_purge"},
+		},
+		{
+			name:            "disabling snippet-manager omits snippet-manager tools while keeping snippet_audit",
+			extraArgs:       []string{"--snippet-manager=false"},
+			wantSummarySub:  "features=[cache,task-dag,skill-lint,snippet-analyzer,checkpoint,pace-guard,pr-triage]",
+			wantTools:       []string{"snippet_audit", "checkpoint_init"},
+			wantAbsentTools: []string{"snippet_check_inline", "snippet_create", "snippet_get", "snippet_list", "snippet_verify", "snippet_record_invocation", "snippet_deprecate", "snippet_cleanup"},
 		},
 	}
 
@@ -79,6 +86,7 @@ func TestServerFeatureToggles(t *testing.T) {
 				"--state-dir=" + tmp + "/state",
 				"--cache-dir=" + tmp + "/cache",
 				"--checkpoint-root=" + tmp + "/checkpoints",
+				"--snippet-root=" + tmp + "/snippets",
 			}
 			args := append(baseArgs, tt.extraArgs...)
 			cfg, err := feature.ParseConfig(args, tmp)
@@ -197,6 +205,7 @@ func TestServerCacheEndToEnd(t *testing.T) {
 		"--state-dir=" + tmp + "/state",
 		"--cache-dir=" + tmp + "/cache",
 		"--checkpoint-root=" + tmp + "/checkpoints",
+		"--snippet-root=" + tmp + "/snippets",
 		"--max-output-size=4096",
 	}, tmp)
 	require.NoError(t, err)

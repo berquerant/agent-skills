@@ -16,12 +16,13 @@ import (
 // EnvPrefix is the prefix for all structconfig-managed environment variables.
 const EnvPrefix = "AGENT_SKILLS_MCP_"
 
-// FeatureNames lists all 7 features in canonical order.
+// FeatureNames lists all 8 features in canonical order.
 var FeatureNames = []string{
 	"cache",
 	"task-dag",
 	"skill-lint",
 	"snippet-analyzer",
+	"snippet-manager",
 	"checkpoint",
 	"pace-guard",
 	"pr-triage",
@@ -35,6 +36,7 @@ type Config struct {
 	TaskDAG         bool `name:"task-dag" default:"true" usage:"enable task-dag feature"`
 	SkillLint       bool `name:"skill-lint" default:"true" usage:"enable skill-lint feature"`
 	SnippetAnalyzer bool `name:"snippet-analyzer" default:"true" usage:"enable snippet-analyzer feature"`
+	SnippetManager  bool `name:"snippet-manager" default:"true" usage:"enable snippet-manager feature"`
 	Checkpoint      bool `name:"checkpoint" default:"true" usage:"enable checkpoint feature"`
 	PaceGuard       bool `name:"pace-guard" default:"true" usage:"enable pace-guard feature"`
 	PRTriage        bool `name:"pr-triage" default:"true" usage:"enable pr-triage feature"`
@@ -42,6 +44,7 @@ type Config struct {
 	StateDir       string `name:"state-dir" default:"" usage:"state directory (default: $XDG_STATE_HOME/agent-skills-mcp)"`
 	CacheDir       string `name:"cache-dir" default:"" usage:"cache directory (default: $XDG_CACHE_HOME/agent-skills-mcp/cache)"`
 	CheckpointRoot string `name:"checkpoint-root" default:"" usage:"checkpoint root directory (default: $XDG_CACHE_HOME/agent-skills-mcp/checkpoints)"`
+	SnippetRoot    string `name:"snippet-root" default:"" usage:"snippet root directory (default: $XDG_STATE_HOME/agent-skills-mcp/snippets)"`
 
 	CacheMaxTTL       int   `name:"cache-max-ttl" default:"1800" usage:"maximum allowed cache TTL in seconds"`
 	CacheMaxEntrySize int64 `name:"cache-max-entry-size" default:"10485760" usage:"maximum uncompressed cache entry size in bytes"`
@@ -152,6 +155,10 @@ func (c *Config) finalize(homeDir string) error {
 		c.CheckpointDefault = true
 	}
 
+	if c.SnippetRoot == "" {
+		c.SnippetRoot = filepath.Join(xdgState, "agent-skills-mcp", "snippets")
+	}
+
 	return c.validateLimits()
 }
 
@@ -167,6 +174,7 @@ func (c *Config) SyncEnabledMap() {
 	c.Enabled["task-dag"] = c.TaskDAG
 	c.Enabled["skill-lint"] = c.SkillLint
 	c.Enabled["snippet-analyzer"] = c.SnippetAnalyzer
+	c.Enabled["snippet-manager"] = c.SnippetManager
 	c.Enabled["checkpoint"] = c.Checkpoint
 	c.Enabled["pace-guard"] = c.PaceGuard
 	c.Enabled["pr-triage"] = c.PRTriage
@@ -185,7 +193,7 @@ func (c *Config) validateLimits() error {
 	if c.MaxOutputSize <= 0 {
 		return fmt.Errorf("--max-output-size must be > 0 (got %d)", c.MaxOutputSize)
 	}
-	for _, p := range []string{c.StateDir, c.CacheDir, c.CheckpointRoot, c.LogFile} {
+	for _, p := range []string{c.StateDir, c.CacheDir, c.CheckpointRoot, c.SnippetRoot, c.LogFile} {
 		if err := guard.CheckPathAllowed(p); err != nil {
 			return err
 		}
@@ -215,6 +223,14 @@ func (c *Config) ValidateDirs() error {
 			return fmt.Errorf("checkpoint-root (%s): %w", c.CheckpointRoot, err)
 		}
 	}
+	if c.Enabled["snippet-manager"] {
+		if c.SnippetRoot == "" {
+			return fmt.Errorf("snippet-root must not be empty when snippet-manager feature is enabled")
+		}
+		if err := ensureWritableDir(c.SnippetRoot); err != nil {
+			return fmt.Errorf("snippet-root (%s): %w", c.SnippetRoot, err)
+		}
+	}
 	return nil
 }
 
@@ -229,6 +245,7 @@ func (c *Config) ToEnv(logger *slog.Logger, clock Clock) Env {
 		StateDir:          c.StateDir,
 		CacheDir:          c.CacheDir,
 		CheckpointDir:     c.CheckpointRoot,
+		SnippetDir:        c.SnippetRoot,
 		MaxOutputSize:     c.MaxOutputSize,
 		CacheMaxTTL:       c.CacheMaxTTL,
 		CacheMaxEntrySize: c.CacheMaxEntrySize,

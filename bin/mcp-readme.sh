@@ -46,7 +46,7 @@ go install github.com/berquerant/agent-skills/mcp/cmd/agent-skills-mcp@mcp/v0.1.
 
 ## Architecture & Tools Reference
 
-For internal system architecture, security guardrails, and the complete catalog of tools registered across all 7 features, see [references/architecture.md](references/architecture.md).
+For internal system architecture, security guardrails, and the complete catalog of tools registered across all 8 features, see [references/architecture.md](references/architecture.md).
 README_EOF
 }
 

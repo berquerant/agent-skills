@@ -46,6 +46,8 @@ e.g. `--snippet-analyzer` -> `AGENT_SKILLS_MCP_SNIPPET_ANALYZER`
       --pr-triage[=true|false]          enable pr-triage feature (default true)
       --skill-lint[=true|false]         enable skill-lint feature (default true)
       --snippet-analyzer[=true|false]   enable snippet-analyzer feature (default true)
+      --snippet-manager[=true|false]    enable snippet-manager feature (default true)
+      --snippet-root string             snippet root directory (default: $XDG_STATE_HOME/agent-skills-mcp/snippets)
       --state-dir string                state directory (default: $XDG_STATE_HOME/agent-skills-mcp)
       --task-dag[=true|false]           enable task-dag feature (default true)
 ```
@@ -79,4 +81,4 @@ go install github.com/berquerant/agent-skills/mcp/cmd/agent-skills-mcp@mcp/v0.1.
 
 ## Architecture & Tools Reference
 
-For internal system architecture, security guardrails, and the complete catalog of tools registered across all 7 features, see [references/architecture.md](references/architecture.md).
+For internal system architecture, security guardrails, and the complete catalog of tools registered across all 8 features, see [references/architecture.md](references/architecture.md).
