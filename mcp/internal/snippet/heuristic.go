@@ -17,11 +17,28 @@ var (
 	heurTrapRegex       = regexp.MustCompile(`(^|[;&|()\s])trap\s+`)
 )
 
-func countSLOCAndComments(code string) (int, int, int) {
+type lineCounts struct {
+	sloc     int
+	comments int
+	total    int
+}
+
+type shellAnalyzeInput struct {
+	code   string
+	lang   string
+	counts lineCounts
+}
+
+type analysisResult struct {
+	metrics Metrics
+	hazards []Hazard
+}
+
+func countSLOCAndComments(code string) lineCounts {
 	normalized := strings.ReplaceAll(code, "\r\n", "\n")
 	trimmed := strings.TrimRight(normalized, "\n")
 	if strings.TrimSpace(trimmed) == "" {
-		return 0, 0, 0
+		return lineCounts{}
 	}
 	lines := strings.Split(trimmed, "\n")
 	sloc := 0
@@ -37,17 +54,21 @@ func countSLOCAndComments(code string) (int, int, int) {
 		}
 		sloc++
 	}
-	return sloc, comments, len(lines)
+	return lineCounts{
+		sloc:     sloc,
+		comments: comments,
+		total:    len(lines),
+	}
 }
 
-func analyzeHeuristic(code string, sloc, commentLines, totalLines int) (Metrics, []Hazard) {
+func analyzeHeuristic(in shellAnalyzeInput) analysisResult {
 	m := Metrics{
-		TotalLines:   totalLines,
-		SLOC:         sloc,
-		CommentLines: commentLines,
+		TotalLines:   in.counts.total,
+		SLOC:         in.counts.sloc,
+		CommentLines: in.counts.comments,
 	}
 	var hazards []Hazard
-	normalized := strings.ReplaceAll(code, "\r\n", "\n")
+	normalized := strings.ReplaceAll(in.code, "\r\n", "\n")
 	lines := strings.Split(strings.TrimRight(normalized, "\n"), "\n")
 	depth := 0
 
@@ -57,14 +78,17 @@ func analyzeHeuristic(code string, sloc, commentLines, totalLines int) (Metrics,
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
-		depth = updateHeuristicDepth(&m, line, depth)
+		depth = m.updateHeuristicDepth(line, depth)
 		scanHeuristicMetrics(&m, line)
 		hazards = append(hazards, scanHeuristicHazards(line, lineNum)...)
 	}
-	return m, hazards
+	return analysisResult{
+		metrics: m,
+		hazards: hazards,
+	}
 }
 
-func updateHeuristicDepth(m *Metrics, line string, depth int) int {
+func (m *Metrics) updateHeuristicDepth(line string, depth int) int {
 	if strings.HasPrefix(line, "if ") || strings.HasPrefix(line, "for ") || strings.HasPrefix(line, "while ") || strings.HasPrefix(line, "case ") {
 		depth++
 		if depth > m.MaxNestingDepth {

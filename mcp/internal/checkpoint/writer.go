@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/berquerant/agent-skills/mcp/internal/guard"
+	"github.com/berquerant/agent-skills/mcp/internal/pathutil"
 	"github.com/berquerant/agent-skills/mcp/internal/store"
 )
 
@@ -40,19 +41,25 @@ func NewManager(rootDir string) (*Manager, error) {
 	}, nil
 }
 
-func (m *Manager) withLockedRoot(relPath string, shared bool, fn func(root *os.Root) error) error {
-	run := func() error {
-		root, err := os.OpenRoot(m.rootDir)
-		if err != nil {
-			return err
-		}
-		defer func() { _ = root.Close() }()
-		return fn(root)
+func (m *Manager) withLockedRoot(relPath string, fn func(root *os.Root) error) error {
+	return m.locks.WithLock(relPath, func() error {
+		return m.withRoot(fn)
+	})
+}
+
+func (m *Manager) withRLockedRoot(relPath string, fn func(root *os.Root) error) error {
+	return m.locks.WithRLock(relPath, func() error {
+		return m.withRoot(fn)
+	})
+}
+
+func (m *Manager) withRoot(fn func(root *os.Root) error) error {
+	root, err := os.OpenRoot(m.rootDir)
+	if err != nil {
+		return err
 	}
-	if shared {
-		return m.locks.WithRLock(relPath, run)
-	}
-	return m.locks.WithLock(relPath, run)
+	defer func() { _ = root.Close() }()
+	return fn(root)
 }
 
 // Init resolves the generation path and, unless in.ProposeOnly is true, creates the checkpoint log header.
@@ -67,26 +74,36 @@ func (m *Manager) Init(in InitInput, now time.Time) (InitOutput, error) {
 	if err != nil {
 		return InitOutput{}, err
 	}
-	ctxSlug, err := SanitizeSlug(in.Context)
+	ctxSlug, err := pathutil.SanitizeSlug(in.Context)
 	if err != nil {
 		return InitOutput{}, fmt.Errorf("invalid context: %w", err)
 	}
-	projSlug, branchSlug, err := ResolveProjectAndBranch(in.Project, in.Branch, in.WorkDir)
+	pb, err := pathutil.ResolveProjectBranch(pathutil.ProjectBranchInput{
+		Project: in.Project,
+		Branch:  in.Branch,
+		WorkDir: in.WorkDir,
+	})
 	if err != nil {
 		return InitOutput{}, err
 	}
 
-	latestGen, _ := FindLatestGeneration(m.rootDir, projSlug, branchSlug, ctxSlug, docType)
+	latestGen, _ := FindLatestGeneration(GenerationQuery{
+		RootDir: m.rootDir,
+		Project: pb.Project,
+		Branch:  pb.Branch,
+		Context: ctxSlug,
+		DocType: docType,
+	})
 	tsSlug := now.UTC().Format("20060102-150405")
-	relPath := filepath.Join(projSlug, branchSlug, ctxSlug, fmt.Sprintf("%s-%s.md", docType, tsSlug))
+	relPath := filepath.Join(pb.Project, pb.Branch, ctxSlug, fmt.Sprintf("%s-%s.md", docType, tsSlug))
 	absPath := filepath.Join(m.rootDir, relPath)
 
 	out := InitOutput{
 		OK:               true,
 		Path:             absPath,
-		DualPath:         FormatDualPath(absPath),
-		Project:          projSlug,
-		Branch:           branchSlug,
+		DualPath:         pathutil.FormatDualPath(absPath),
+		Project:          pb.Project,
+		Branch:           pb.Branch,
 		Context:          ctxSlug,
 		DocType:          string(docType),
 		ProposeOnly:      in.ProposeOnly,
@@ -96,33 +113,51 @@ func (m *Manager) Init(in InitInput, now time.Time) (InitOutput, error) {
 		return out, nil
 	}
 
-	if err := m.writeHeaderFile(relPath, absPath, projSlug, branchSlug, ctxSlug, in, now); err != nil {
+	if err := m.writeHeaderFile(headerWriteParams{
+		relPath:    relPath,
+		absPath:    absPath,
+		projSlug:   pb.Project,
+		branchSlug: pb.Branch,
+		ctxSlug:    ctxSlug,
+		in:         in,
+		now:        now,
+	}); err != nil {
 		return InitOutput{}, err
 	}
 	out.Created = true
 	return out, nil
 }
 
-func (m *Manager) writeHeaderFile(relPath, absPath, projSlug, branchSlug, ctxSlug string, in InitInput, now time.Time) error {
-	return m.withLockedRoot(relPath, false, func(root *os.Root) error {
-		if err := os.MkdirAll(filepath.Dir(absPath), 0o700); err != nil {
+type headerWriteParams struct {
+	relPath    string
+	absPath    string
+	projSlug   string
+	branchSlug string
+	ctxSlug    string
+	in         InitInput
+	now        time.Time
+}
+
+func (m *Manager) writeHeaderFile(p headerWriteParams) error {
+	return m.withLockedRoot(p.relPath, func(root *os.Root) error {
+		if err := os.MkdirAll(filepath.Dir(p.absPath), 0o700); err != nil {
 			return fmt.Errorf("create context dir: %w", err)
 		}
-		if _, err := root.Stat(relPath); err == nil {
-			return fmt.Errorf("checkpoint generation file already exists: %s", absPath)
+		if _, err := root.Stat(p.relPath); err == nil {
+			return fmt.Errorf("checkpoint generation file already exists: %s", p.absPath)
 		}
 
 		var b strings.Builder
-		_, _ = fmt.Fprintf(&b, "# Task Checkpoint Log: %s\n\n", sanitizeSingleLine(in.Title))
-		_, _ = fmt.Fprintf(&b, "- **Created**: %s\n", now.UTC().Format("2006-01-02 15:04:05"))
-		_, _ = fmt.Fprintf(&b, "- **Log Path**: %s\n", FormatDualPath(absPath))
-		_, _ = fmt.Fprintf(&b, "- **Project**: `%s`\n", projSlug)
-		_, _ = fmt.Fprintf(&b, "- **Branch**: `%s`\n", branchSlug)
-		_, _ = fmt.Fprintf(&b, "- **Context**: `%s`\n", ctxSlug)
-		_, _ = fmt.Fprintf(&b, "- **Objective**: %s\n", sanitizeSingleLine(in.Objective))
+		_, _ = fmt.Fprintf(&b, "# Task Checkpoint Log: %s\n\n", sanitizeSingleLine(p.in.Title))
+		_, _ = fmt.Fprintf(&b, "- **Created**: %s\n", p.now.UTC().Format("2006-01-02 15:04:05"))
+		_, _ = fmt.Fprintf(&b, "- **Log Path**: %s\n", pathutil.FormatDualPath(p.absPath))
+		_, _ = fmt.Fprintf(&b, "- **Project**: `%s`\n", p.projSlug)
+		_, _ = fmt.Fprintf(&b, "- **Branch**: `%s`\n", p.branchSlug)
+		_, _ = fmt.Fprintf(&b, "- **Context**: `%s`\n", p.ctxSlug)
+		_, _ = fmt.Fprintf(&b, "- **Objective**: %s\n", sanitizeSingleLine(p.in.Objective))
 		_, _ = fmt.Fprintf(&b, "- **Status**: %s\n\n---\n", LogStatusInProgress)
 
-		return store.WriteAtomic(absPath, []byte(b.String()), 0o600)
+		return store.WriteAtomic(p.absPath, []byte(b.String()), 0o600)
 	})
 }
 
@@ -131,23 +166,23 @@ func (m *Manager) Append(in AppendInput, now time.Time) (AppendOutput, error) {
 	if err := validateAppendInput(in); err != nil {
 		return AppendOutput{}, err
 	}
-	relPath, absPath, err := ResolveRelativeWithinRoot(m.rootDir, in.Path)
+	resolved, err := ResolveRelativeWithinRoot(m.rootDir, in.Path)
 	if err != nil {
 		return AppendOutput{}, err
 	}
 
 	var out AppendOutput
-	err = m.withLockedRoot(relPath, false, func(root *os.Root) error {
-		existingBytes, err := root.ReadFile(relPath)
+	err = m.withLockedRoot(resolved.Rel, func(root *os.Root) error {
+		existingBytes, err := root.ReadFile(resolved.Rel)
 		if err != nil {
 			return fmt.Errorf("read existing checkpoint log: %w", err)
 		}
 
 		stepNum := in.Step
 		if stepNum <= 0 {
-			_, entries, _ := ParseLogMarkdown(string(existingBytes))
-			stepNum = len(entries) + 1
-			for _, e := range entries {
+			parsed := ParseLogMarkdown(string(existingBytes))
+			stepNum = len(parsed.Entries) + 1
+			for _, e := range parsed.Entries {
 				if e.Step >= stepNum {
 					stepNum = e.Step + 1
 				}
@@ -155,12 +190,16 @@ func (m *Manager) Append(in AppendInput, now time.Time) (AppendOutput, error) {
 		}
 
 		tsStr := now.UTC().Format("2006-01-02 15:04:05")
-		block := formatStepEntryMarkdown(stepNum, tsStr, in)
+		block := formatStepEntryMarkdown(stepEntryParams{
+			step:  stepNum,
+			tsStr: tsStr,
+			in:    in,
+		})
 		if len(block) > maxEntryBytes {
 			return fmt.Errorf("checkpoint entry size (%d bytes) exceeds maximum (%d bytes)", len(block), maxEntryBytes)
 		}
 
-		f, err := root.OpenFile(relPath, os.O_WRONLY|os.O_APPEND, 0o600)
+		f, err := root.OpenFile(resolved.Rel, os.O_WRONLY|os.O_APPEND, 0o600)
 		if err != nil {
 			return fmt.Errorf("open checkpoint log for append: %w", err)
 		}
@@ -175,8 +214,8 @@ func (m *Manager) Append(in AppendInput, now time.Time) (AppendOutput, error) {
 
 		out = AppendOutput{
 			OK:        true,
-			Path:      absPath,
-			DualPath:  FormatDualPath(absPath),
+			Path:      resolved.Abs,
+			DualPath:  pathutil.FormatDualPath(resolved.Abs),
 			Step:      stepNum,
 			Timestamp: tsStr,
 			Status:    in.Status,
@@ -203,25 +242,36 @@ func validateAppendInput(in AppendInput) error {
 	return checkNoSecrets(allTexts...)
 }
 
-func formatStepEntryMarkdown(step int, tsStr string, in AppendInput) string {
+type stepEntryParams struct {
+	step  int
+	tsStr string
+	in    AppendInput
+}
+
+type bulletSection struct {
+	heading string
+	items   []string
+}
+
+func formatStepEntryMarkdown(p stepEntryParams) string {
 	var b strings.Builder
-	_, _ = fmt.Fprintf(&b, "\n## [%s] Step %d: %s\n\n", tsStr, step, sanitizeSingleLine(in.Title))
-	_, _ = fmt.Fprintf(&b, "- **Status**: %s\n", in.Status)
-	writeBulletSection(&b, "Executed Actions", in.Actions)
-	writeBulletSection(&b, "Verification & Findings", in.Findings)
-	writeBulletSection(&b, "Decisions & Rationale", in.Decisions)
-	writeBulletSection(&b, "Next Step", in.NextSteps)
+	_, _ = fmt.Fprintf(&b, "\n## [%s] Step %d: %s\n\n", p.tsStr, p.step, sanitizeSingleLine(p.in.Title))
+	_, _ = fmt.Fprintf(&b, "- **Status**: %s\n", p.in.Status)
+	writeBulletSection(&b, bulletSection{heading: "Executed Actions", items: p.in.Actions})
+	writeBulletSection(&b, bulletSection{heading: "Verification & Findings", items: p.in.Findings})
+	writeBulletSection(&b, bulletSection{heading: "Decisions & Rationale", items: p.in.Decisions})
+	writeBulletSection(&b, bulletSection{heading: "Next Step", items: p.in.NextSteps})
 	b.WriteString("\n---\n")
 	return b.String()
 }
 
-func writeBulletSection(b *strings.Builder, heading string, items []string) {
-	_, _ = fmt.Fprintf(b, "- **%s**:\n", heading)
-	if len(items) == 0 {
+func writeBulletSection(b *strings.Builder, sec bulletSection) {
+	_, _ = fmt.Fprintf(b, "- **%s**:\n", sec.heading)
+	if len(sec.items) == 0 {
 		b.WriteString("  - (none)\n")
 		return
 	}
-	for _, item := range items {
+	for _, item := range sec.items {
 		_, _ = fmt.Fprintf(b, "  - %s\n", sanitizeSingleLine(item))
 	}
 }
@@ -240,28 +290,28 @@ func (m *Manager) SetStatus(in SetStatusInput) (SetStatusOutput, error) {
 	default:
 		return SetStatusOutput{}, fmt.Errorf("invalid log status %q (expected IN_PROGRESS, COMPLETED, or ABORTED)", in.Status)
 	}
-	relPath, absPath, err := ResolveRelativeWithinRoot(m.rootDir, in.Path)
+	resolved, err := ResolveRelativeWithinRoot(m.rootDir, in.Path)
 	if err != nil {
 		return SetStatusOutput{}, err
 	}
 
 	var out SetStatusOutput
-	err = m.withLockedRoot(relPath, false, func(root *os.Root) error {
-		raw, err := root.ReadFile(relPath)
+	err = m.withLockedRoot(resolved.Rel, func(root *os.Root) error {
+		raw, err := root.ReadFile(resolved.Rel)
 		if err != nil {
 			return fmt.Errorf("read checkpoint log: %w", err)
 		}
 		updated, replaced := replaceHeaderStatusLine(string(raw), in.Status)
 		if !replaced {
-			return fmt.Errorf("header Status line not found in %s", absPath)
+			return fmt.Errorf("header Status line not found in %s", resolved.Abs)
 		}
-		if err := store.WriteAtomic(absPath, []byte(updated), 0o600); err != nil {
+		if err := store.WriteAtomic(resolved.Abs, []byte(updated), 0o600); err != nil {
 			return err
 		}
 		out = SetStatusOutput{
 			OK:       true,
-			Path:     absPath,
-			DualPath: FormatDualPath(absPath),
+			Path:     resolved.Abs,
+			DualPath: pathutil.FormatDualPath(resolved.Abs),
 			Status:   in.Status,
 		}
 		return nil

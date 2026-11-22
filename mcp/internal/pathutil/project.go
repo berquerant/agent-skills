@@ -94,19 +94,6 @@ func ResolveProjectBranch(in ProjectBranchInput) (ProjectBranch, error) {
 	return ProjectBranch{Project: projSlug, Branch: branchSlug}, nil
 }
 
-// ResolveProjectAndBranch is a compatibility wrapper around ResolveProjectBranch.
-func ResolveProjectAndBranch(project, branch, workDir string) (string, string, error) {
-	pb, err := ResolveProjectBranch(ProjectBranchInput{
-		Project: project,
-		Branch:  branch,
-		WorkDir: workDir,
-	})
-	if err != nil {
-		return "", "", err
-	}
-	return pb.Project, pb.Branch, nil
-}
-
 func runGit(dir string, args ...string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), gitCmdTimeout)
 	defer cancel()

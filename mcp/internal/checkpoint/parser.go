@@ -10,29 +10,38 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/berquerant/agent-skills/mcp/internal/pathutil"
 )
 
 var stepHeadingRe = regexp.MustCompile(`^##\s+\[([^\]]+)\]\s+Step\s+([0-9]+):\s+(.+)$`)
 
+// ParsedLog holds the parsed header block, milestone entries, and non-fatal parse warnings.
+type ParsedLog struct {
+	Header   Header
+	Entries  []StepEntry
+	Warnings []string
+}
+
 // Resume resolves a checkpoint log (by explicit path or latest generation for context) and parses its recovery state.
 func (m *Manager) Resume(in ResumeInput) (ResumeOutput, error) {
-	absPath, err := m.resolveResumePath(in)
+	targetPath, err := m.resolveResumePath(in)
 	if err != nil {
 		return ResumeOutput{}, err
 	}
-	relPath, absPath, err := ResolveRelativeWithinRoot(m.rootDir, absPath)
+	resolved, err := ResolveRelativeWithinRoot(m.rootDir, targetPath)
 	if err != nil {
 		return ResumeOutput{}, err
 	}
 
 	var out ResumeOutput
-	err = m.withLockedRoot(relPath, true, func(root *os.Root) error {
-		raw, err := root.ReadFile(relPath)
+	err = m.withRLockedRoot(resolved.Rel, func(root *os.Root) error {
+		raw, err := root.ReadFile(resolved.Rel)
 		if err != nil {
-			return fmt.Errorf("read checkpoint log %s: %w", absPath, err)
+			return fmt.Errorf("read checkpoint log %s: %w", resolved.Abs, err)
 		}
-		header, entries, warnings := ParseLogMarkdown(string(raw))
-		out = buildResumeOutput(absPath, header, entries, warnings)
+		parsed := ParseLogMarkdown(string(raw))
+		out = buildResumeOutput(resolved.Abs, parsed)
 		return nil
 	})
 	return out, err
@@ -49,33 +58,43 @@ func (m *Manager) resolveResumePath(in ResumeInput) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	ctxSlug, err := SanitizeSlug(in.Context)
+	ctxSlug, err := pathutil.SanitizeSlug(in.Context)
 	if err != nil {
 		return "", err
 	}
-	projSlug, branchSlug, err := ResolveProjectAndBranch(in.Project, in.Branch, in.WorkDir)
+	pb, err := pathutil.ResolveProjectBranch(pathutil.ProjectBranchInput{
+		Project: in.Project,
+		Branch:  in.Branch,
+		WorkDir: in.WorkDir,
+	})
 	if err != nil {
 		return "", err
 	}
-	latest, err := FindLatestGeneration(m.rootDir, projSlug, branchSlug, ctxSlug, docType)
+	latest, err := FindLatestGeneration(GenerationQuery{
+		RootDir: m.rootDir,
+		Project: pb.Project,
+		Branch:  pb.Branch,
+		Context: ctxSlug,
+		DocType: docType,
+	})
 	if err != nil {
 		return "", err
 	}
 	if latest == "" {
-		return "", fmt.Errorf("no %s log found for %s/%s/%s", docType, projSlug, branchSlug, ctxSlug)
+		return "", fmt.Errorf("no %s log found for %s/%s/%s", docType, pb.Project, pb.Branch, ctxSlug)
 	}
 	return latest, nil
 }
 
-func buildResumeOutput(absPath string, header Header, entries []StepEntry, warnings []string) ResumeOutput {
+func buildResumeOutput(absPath string, parsed ParsedLog) ResumeOutput {
 	completed := []string{}
 	unresolved := []StepEntry{}
 	var lastCompleted *StepEntry
 	var latestEntry *StepEntry
 	nextSteps := []string{}
 
-	for i := range entries {
-		e := entries[i]
+	for i := range parsed.Entries {
+		e := parsed.Entries[i]
 		latestEntry = &e
 		switch e.Status {
 		case StepStatusCompleted:
@@ -89,6 +108,7 @@ func buildResumeOutput(absPath string, header Header, entries []StepEntry, warni
 	if latestEntry != nil && len(latestEntry.NextSteps) > 0 {
 		nextSteps = latestEntry.NextSteps
 	}
+	warnings := parsed.Warnings
 	if warnings == nil {
 		warnings = []string{}
 	}
@@ -96,9 +116,9 @@ func buildResumeOutput(absPath string, header Header, entries []StepEntry, warni
 	return ResumeOutput{
 		OK:               true,
 		Path:             absPath,
-		DualPath:         FormatDualPath(absPath),
-		Header:           header,
-		TotalSteps:       len(entries),
+		DualPath:         pathutil.FormatDualPath(absPath),
+		Header:           parsed.Header,
+		TotalSteps:       len(parsed.Entries),
 		CompletedSteps:   completed,
 		UnresolvedSteps:  unresolved,
 		LastCompleted:    lastCompleted,
@@ -109,15 +129,25 @@ func buildResumeOutput(absPath string, header Header, entries []StepEntry, warni
 }
 
 // ParseLogMarkdown parses the header block and milestone entries from a checkpoint log Markdown document.
-func ParseLogMarkdown(content string) (Header, []StepEntry, []string) {
+func ParseLogMarkdown(content string) ParsedLog {
 	lines := strings.Split(strings.ReplaceAll(content, "\r\n", "\n"), "\n")
-	header, bodyStart, warnings := parseHeaderSection(lines)
-	entries, stepWarnings := parseStepEntries(lines[bodyStart:])
-	warnings = append(warnings, stepWarnings...)
-	return header, entries, warnings
+	hdrSec := parseHeaderSection(lines)
+	entries, stepWarnings := parseStepEntries(lines[hdrSec.bodyStart:])
+	warnings := append(hdrSec.warnings, stepWarnings...)
+	return ParsedLog{
+		Header:   hdrSec.header,
+		Entries:  entries,
+		Warnings: warnings,
+	}
 }
 
-func parseHeaderSection(lines []string) (Header, int, []string) {
+type parsedHeaderSection struct {
+	header    Header
+	bodyStart int
+	warnings  []string
+}
+
+func parseHeaderSection(lines []string) parsedHeaderSection {
 	var h Header
 	var warnings []string
 	idx := 0
@@ -135,7 +165,11 @@ func parseHeaderSection(lines []string) (Header, int, []string) {
 	if h.Title == "" {
 		warnings = append(warnings, "missing '# Task Checkpoint Log:' header title")
 	}
-	return h, idx, warnings
+	return parsedHeaderSection{
+		header:    h,
+		bodyStart: idx,
+		warnings:  warnings,
+	}
 }
 
 func parseHeaderBullet(h *Header, line string) {
@@ -194,44 +228,55 @@ func parseStepEntries(lines []string) ([]StepEntry, []string) {
 		if curr == nil || trimmed == "" || trimmed == "---" {
 			continue
 		}
-		section = parseStepLine(curr, raw, trimmed, section)
+		section = parseStepLine(curr, stepLineInput{raw: raw, trimmed: trimmed, section: section})
 	}
 	flush()
 	return entries, warnings
 }
 
-func parseStepLine(curr *StepEntry, raw, trimmed, section string) string {
-	switch {
-	case strings.HasPrefix(trimmed, "- **Status**:"):
-		curr.Status = StepStatus(trimHeaderVal(trimmed, "- **Status**:"))
-		return ""
-	case strings.HasPrefix(trimmed, "- **Executed Actions**:"):
-		return "actions"
-	case strings.HasPrefix(trimmed, "- **Verification & Findings**:"):
-		return "findings"
-	case strings.HasPrefix(trimmed, "- **Decisions & Rationale**:"):
-		return "decisions"
-	case strings.HasPrefix(trimmed, "- **Next Step**:"):
-		return "next"
-	case strings.HasPrefix(raw, "  - ") || strings.HasPrefix(raw, "\t- "):
-		item := strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(raw), "-"))
-		if item != "(none)" && item != "" {
-			appendSectionItem(curr, section, item)
-		}
-	}
-	return section
+type stepLineInput struct {
+	raw     string
+	trimmed string
+	section string
 }
 
-func appendSectionItem(curr *StepEntry, section, item string) {
-	switch section {
+type sectionItem struct {
+	section string
+	text    string
+}
+
+func parseStepLine(curr *StepEntry, in stepLineInput) string {
+	switch {
+	case strings.HasPrefix(in.trimmed, "- **Status**:"):
+		curr.Status = StepStatus(trimHeaderVal(in.trimmed, "- **Status**:"))
+		return ""
+	case strings.HasPrefix(in.trimmed, "- **Executed Actions**:"):
+		return "actions"
+	case strings.HasPrefix(in.trimmed, "- **Verification & Findings**:"):
+		return "findings"
+	case strings.HasPrefix(in.trimmed, "- **Decisions & Rationale**:"):
+		return "decisions"
+	case strings.HasPrefix(in.trimmed, "- **Next Step**:"):
+		return "next"
+	case strings.HasPrefix(in.raw, "  - ") || strings.HasPrefix(in.raw, "\t- "):
+		item := strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(in.raw), "-"))
+		if item != "(none)" && item != "" {
+			appendSectionItem(curr, sectionItem{section: in.section, text: item})
+		}
+	}
+	return in.section
+}
+
+func appendSectionItem(curr *StepEntry, item sectionItem) {
+	switch item.section {
 	case "actions":
-		curr.Actions = append(curr.Actions, item)
+		curr.Actions = append(curr.Actions, item.text)
 	case "findings":
-		curr.Findings = append(curr.Findings, item)
+		curr.Findings = append(curr.Findings, item.text)
 	case "decisions":
-		curr.Decisions = append(curr.Decisions, item)
+		curr.Decisions = append(curr.Decisions, item.text)
 	case "next":
-		curr.NextSteps = append(curr.NextSteps, item)
+		curr.NextSteps = append(curr.NextSteps, item.text)
 	}
 }
 
@@ -251,7 +296,7 @@ func (m *Manager) List(in ListInput) (ListOutput, error) {
 		if walkErr != nil || d.IsDir() || !strings.HasSuffix(d.Name(), ".md") || strings.HasPrefix(d.Name(), ".tmp_") {
 			return nil
 		}
-		summary, ok := m.inspectLogSummary(root, relPath, d, in)
+		summary, ok := m.inspectLogSummary(logInspectContext{root: root, relPath: relPath, entry: d}, in)
 		if ok {
 			logs = append(logs, summary)
 		}
@@ -264,32 +309,38 @@ func (m *Manager) List(in ListInput) (ListOutput, error) {
 	return ListOutput{OK: true, Logs: logs}, nil
 }
 
-func (m *Manager) inspectLogSummary(root *os.Root, relPath string, d fs.DirEntry, in ListInput) (LogSummary, bool) {
-	if in.DocType != "" && !strings.HasPrefix(d.Name(), string(in.DocType)+"-") {
+type logInspectContext struct {
+	root    *os.Root
+	relPath string
+	entry   fs.DirEntry
+}
+
+func (m *Manager) inspectLogSummary(ctx logInspectContext, in ListInput) (LogSummary, bool) {
+	if in.DocType != "" && !strings.HasPrefix(ctx.entry.Name(), string(in.DocType)+"-") {
 		return LogSummary{}, false
 	}
-	raw, err := root.ReadFile(relPath)
+	raw, err := ctx.root.ReadFile(ctx.relPath)
 	if err != nil {
 		return LogSummary{}, false
 	}
-	header, entries, _ := ParseLogMarkdown(string(raw))
-	if !matchesListFilter(header, in) {
+	parsed := ParseLogMarkdown(string(raw))
+	if !matchesListFilter(parsed.Header, in) {
 		return LogSummary{}, false
 	}
-	absPath := filepath.Join(m.rootDir, filepath.FromSlash(relPath))
-	updatedAt := header.Created
-	if info, statErr := d.Info(); statErr == nil {
+	absPath := filepath.Join(m.rootDir, filepath.FromSlash(ctx.relPath))
+	updatedAt := parsed.Header.Created
+	if info, statErr := ctx.entry.Info(); statErr == nil {
 		updatedAt = info.ModTime().UTC().Format(time.RFC3339)
 	}
 	return LogSummary{
 		Path:      absPath,
-		DualPath:  FormatDualPath(absPath),
-		Project:   header.Project,
-		Branch:    header.Branch,
-		Context:   header.Context,
-		Title:     header.Title,
-		Status:    header.Status,
-		StepCount: len(entries),
+		DualPath:  pathutil.FormatDualPath(absPath),
+		Project:   parsed.Header.Project,
+		Branch:    parsed.Header.Branch,
+		Context:   parsed.Header.Context,
+		Title:     parsed.Header.Title,
+		Status:    parsed.Header.Status,
+		StepCount: len(parsed.Entries),
 		UpdatedAt: updatedAt,
 	}, true
 }
@@ -308,6 +359,6 @@ func matchesSlugFilter(actual, filter string) bool {
 	if actual == trimmed {
 		return true
 	}
-	slug, err := SanitizeSlug(trimmed)
+	slug, err := pathutil.SanitizeSlug(trimmed)
 	return err == nil && actual == slug
 }

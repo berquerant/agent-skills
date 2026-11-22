@@ -53,52 +53,59 @@ func TestSanitizeSlug(t *testing.T) {
 	}
 }
 
-func TestResolveProjectAndBranch(t *testing.T) {
+func TestResolveProjectBranch(t *testing.T) {
 	t.Run("explicit project and branch are sanitized", func(t *testing.T) {
-		proj, br, err := pathutil.ResolveProjectAndBranch("my/repo", "feat/snippet-mgr", "")
+		pb, err := pathutil.ResolveProjectBranch(pathutil.ProjectBranchInput{
+			Project: "my/repo",
+			Branch:  "feat/snippet-mgr",
+		})
 		require.NoError(t, err)
-		assert.Equal(t, "my-repo", proj)
-		assert.Equal(t, "feat-snippet-mgr", br)
+		assert.Equal(t, "my-repo", pb.Project)
+		assert.Equal(t, "feat-snippet-mgr", pb.Branch)
 	})
 
 	t.Run("rejects sensitive workDir", func(t *testing.T) {
-		_, _, err := pathutil.ResolveProjectAndBranch("proj", "main", "/home/user/.ssh/keys")
+		_, err := pathutil.ResolveProjectBranch(pathutil.ProjectBranchInput{
+			Project: "proj",
+			Branch:  "main",
+			WorkDir: "/home/user/.ssh/keys",
+		})
 		require.ErrorContains(t, err, "sensitive path")
 	})
 
 	t.Run("auto-derives project and branch from git repository", func(t *testing.T) {
 		repoDir := filepath.Join(t.TempDir(), "sample-repo")
-		runGitCmd(t, "", "init", "-b", "feat/test-branch", repoDir)
+		runGitCmd(t, repoDir, "init", "-b", "feat/test-branch", repoDir)
 		runGitCmd(t, repoDir, "config", "user.email", "test@example.com")
 		runGitCmd(t, repoDir, "config", "user.name", "Test User")
 		runGitCmd(t, repoDir, "commit", "--allow-empty", "-m", "initial")
 
-		proj, br, err := pathutil.ResolveProjectAndBranch("", "", repoDir)
+		pb, err := pathutil.ResolveProjectBranch(pathutil.ProjectBranchInput{WorkDir: repoDir})
 		require.NoError(t, err)
-		assert.Equal(t, "sample-repo", proj)
-		assert.Equal(t, "feat-test-branch", br)
+		assert.Equal(t, "sample-repo", pb.Project)
+		assert.Equal(t, "feat-test-branch", pb.Branch)
 	})
 
 	t.Run("falls back to short HEAD SHA on detached HEAD", func(t *testing.T) {
 		repoDir := filepath.Join(t.TempDir(), "detached-repo")
-		runGitCmd(t, "", "init", "-b", "main", repoDir)
+		runGitCmd(t, repoDir, "init", "-b", "main", repoDir)
 		runGitCmd(t, repoDir, "config", "user.email", "test@example.com")
 		runGitCmd(t, repoDir, "config", "user.name", "Test User")
 		runGitCmd(t, repoDir, "commit", "--allow-empty", "-m", "initial")
 		runGitCmd(t, repoDir, "checkout", "--detach", "HEAD")
 
-		proj, br, err := pathutil.ResolveProjectAndBranch("", "", repoDir)
+		pb, err := pathutil.ResolveProjectBranch(pathutil.ProjectBranchInput{WorkDir: repoDir})
 		require.NoError(t, err)
-		assert.Equal(t, "detached-repo", proj)
-		assert.NotEmpty(t, br)
-		assert.NotEqual(t, "main", br)
+		assert.Equal(t, "detached-repo", pb.Project)
+		assert.NotEmpty(t, pb.Branch)
+		assert.NotEqual(t, "main", pb.Branch)
 	})
 }
 
 func runGitCmd(t *testing.T, dir string, args ...string) {
 	t.Helper()
 	cmd := exec.Command("git", args...)
-	if dir != "" {
+	if dir != "" && args[0] != "init" {
 		cmd.Dir = dir
 	}
 	out, err := cmd.CombinedOutput()

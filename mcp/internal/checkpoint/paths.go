@@ -16,13 +16,7 @@ import (
 	"strings"
 
 	"github.com/berquerant/agent-skills/mcp/internal/guard"
-	"github.com/berquerant/agent-skills/mcp/internal/pathutil"
 )
-
-// SanitizeSlug replaces characters outside [a-zA-Z0-9_-] with '-' and trims leading/trailing hyphens.
-func SanitizeSlug(raw string) (string, error) {
-	return pathutil.SanitizeSlug(raw)
-}
 
 // NormalizeDocType validates and normalizes a DocType, defaulting to DocTypeCheckpoint.
 func NormalizeDocType(dt DocType) (DocType, error) {
@@ -38,29 +32,24 @@ func NormalizeDocType(dt DocType) (DocType, error) {
 	}
 }
 
-// FormatDualPath formats an absolute file path according to the output-presentation convention:
-// [<basename>](file://<abs_path>) (<abs_path>).
-func FormatDualPath(absPath string) string {
-	return pathutil.FormatDualPath(absPath)
-}
-
-// ResolveProjectAndBranch resolves project and branch from explicit inputs or git in workDir.
-func ResolveProjectAndBranch(project, branch, workDir string) (string, string, error) {
-	return pathutil.ResolveProjectAndBranch(project, branch, workDir)
+// ResolvedPath holds both the root-relative path and the clean absolute path of a checkpoint log file.
+type ResolvedPath struct {
+	Rel string
+	Abs string
 }
 
 // ResolveRelativeWithinRoot resolves targetPath (absolute or root-relative) to a clean relative path
 // inside rootDir, rejecting any path that escapes rootDir or matches sensitive path rules.
-func ResolveRelativeWithinRoot(rootDir, targetPath string) (string, string, error) {
+func ResolveRelativeWithinRoot(rootDir, targetPath string) (ResolvedPath, error) {
 	if strings.TrimSpace(targetPath) == "" {
-		return "", "", fmt.Errorf("path is required")
+		return ResolvedPath{}, fmt.Errorf("path is required")
 	}
 	if err := guard.CheckPathAllowed(targetPath); err != nil {
-		return "", "", err
+		return ResolvedPath{}, err
 	}
 	absRoot, err := filepath.Abs(rootDir)
 	if err != nil {
-		return "", "", fmt.Errorf("resolve checkpoint root: %w", err)
+		return ResolvedPath{}, fmt.Errorf("resolve checkpoint root: %w", err)
 	}
 	var candidate string
 	if filepath.IsAbs(targetPath) {
@@ -71,19 +60,28 @@ func ResolveRelativeWithinRoot(rootDir, targetPath string) (string, string, erro
 
 	rel, err := filepath.Rel(absRoot, candidate)
 	if err != nil || rel == "." || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
-		return "", "", fmt.Errorf("path %q is outside checkpoint root %q", targetPath, absRoot)
+		return ResolvedPath{}, fmt.Errorf("path %q is outside checkpoint root %q", targetPath, absRoot)
 	}
 	if !strings.HasSuffix(rel, ".md") {
-		return "", "", fmt.Errorf("checkpoint file path must end with .md: %q", targetPath)
+		return ResolvedPath{}, fmt.Errorf("checkpoint file path must end with .md: %q", targetPath)
 	}
-	return rel, candidate, nil
+	return ResolvedPath{Rel: rel, Abs: candidate}, nil
+}
+
+// GenerationQuery specifies the target context directory and document type for generation discovery.
+type GenerationQuery struct {
+	RootDir string
+	Project string
+	Branch  string
+	Context string
+	DocType DocType
 }
 
 // FindLatestGeneration returns the absolute path of the newest <docType>-*.md file in the context directory,
 // or "" if none exists.
-func FindLatestGeneration(rootDir, projSlug, branchSlug, ctxSlug string, docType DocType) (string, error) {
-	relDir := filepath.Join(projSlug, branchSlug, ctxSlug)
-	root, err := os.OpenRoot(rootDir)
+func FindLatestGeneration(q GenerationQuery) (string, error) {
+	relDir := filepath.Join(q.Project, q.Branch, q.Context)
+	root, err := os.OpenRoot(q.RootDir)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return "", nil
@@ -92,7 +90,7 @@ func FindLatestGeneration(rootDir, projSlug, branchSlug, ctxSlug string, docType
 	}
 	defer func() { _ = root.Close() }()
 
-	dirPath := filepath.Join(rootDir, relDir)
+	dirPath := filepath.Join(q.RootDir, relDir)
 	entries, err := os.ReadDir(dirPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -101,7 +99,7 @@ func FindLatestGeneration(rootDir, projSlug, branchSlug, ctxSlug string, docType
 		return "", err
 	}
 
-	prefix := string(docType) + "-"
+	prefix := string(q.DocType) + "-"
 	var matches []string
 	for _, e := range entries {
 		name := e.Name()

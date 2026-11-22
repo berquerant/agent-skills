@@ -38,7 +38,7 @@ type pythonASTResponse struct {
 	Hazards []Hazard `json:"hazards"`
 }
 
-func analyzePythonAST(code string) (Metrics, []Hazard, error) {
+func analyzePythonAST(code string) (analysisResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), pythonParseTimeout)
 	defer cancel()
 
@@ -57,20 +57,23 @@ func analyzePythonAST(code string) (Metrics, []Hazard, error) {
 	if err := cmd.Run(); err != nil {
 		errDetail := strings.TrimSpace(stderr.String())
 		if errDetail != "" {
-			return Metrics{}, nil, fmt.Errorf("python3 ast runner failed: %w: %s", err, errDetail)
+			return analysisResult{}, fmt.Errorf("python3 ast runner failed: %w: %s", err, errDetail)
 		}
-		return Metrics{}, nil, fmt.Errorf("python3 ast runner failed: %w", err)
+		return analysisResult{}, fmt.Errorf("python3 ast runner failed: %w", err)
 	}
 
 	var resp pythonASTResponse
 	if err := json.Unmarshal(stdout.Bytes(), &resp); err != nil {
-		return Metrics{}, nil, fmt.Errorf("decode python ast output: %w", err)
+		return analysisResult{}, fmt.Errorf("decode python ast output: %w", err)
 	}
 	if !resp.OK {
-		return Metrics{}, nil, fmt.Errorf("%s", resp.Error)
+		return analysisResult{}, fmt.Errorf("%s", resp.Error)
 	}
 
-	return resp.Metrics, resp.Hazards, nil
+	return analysisResult{
+		metrics: resp.Metrics,
+		hazards: resp.Hazards,
+	}, nil
 }
 
 func isPythonLanguage(lang string) bool {

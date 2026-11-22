@@ -15,23 +15,26 @@ type astCollector struct {
 	hazards []Hazard
 }
 
-func analyzeAST(code, lang string, sloc, commentLines, totalLines int) (Metrics, []Hazard, error) {
-	variant := resolveLangVariant(lang)
+func analyzeAST(in shellAnalyzeInput) (analysisResult, error) {
+	variant := resolveLangVariant(in.lang)
 	parser := syntax.NewParser(syntax.KeepComments(true), syntax.Variant(variant))
-	file, err := parser.Parse(strings.NewReader(code), "snippet")
+	file, err := parser.Parse(strings.NewReader(in.code), "snippet")
 	if err != nil {
-		return Metrics{}, nil, err
+		return analysisResult{}, err
 	}
 
 	c := &astCollector{
 		metrics: Metrics{
-			TotalLines:   totalLines,
-			SLOC:         sloc,
-			CommentLines: commentLines,
+			TotalLines:   in.counts.total,
+			SLOC:         in.counts.sloc,
+			CommentLines: in.counts.comments,
 		},
 	}
 	c.walkFile(file, 0)
-	return c.metrics, c.hazards, nil
+	return analysisResult{
+		metrics: c.metrics,
+		hazards: c.hazards,
+	}, nil
 }
 
 func resolveLangVariant(lang string) syntax.LangVariant {
@@ -90,7 +93,11 @@ func (c *astCollector) inspectNode(n syntax.Node, depth int) bool {
 	case *syntax.CallExpr:
 		c.inspectCallExpr(x)
 	case *syntax.ProcSubst:
-		c.addHazard(HazardProcessSubstitution, int(x.Pos().Line()), "process substitution <(...) or >(...)", false)
+		c.addHazard(Hazard{
+			Kind:   HazardProcessSubstitution,
+			Line:   int(x.Pos().Line()),
+			Detail: "process substitution <(...) or >(...)",
+		})
 	case *syntax.ParamExp:
 		c.inspectParamExp(x)
 	}
@@ -168,7 +175,12 @@ func (c *astCollector) inspectBinaryCmd(b *syntax.BinaryCmd, depth int) bool {
 			c.metrics.MaxPipelineLength = pipeLen
 		}
 		if isShellName(rhsCmd) {
-			c.addHazard(HazardPipeToShell, int(b.Pos().Line()), fmt.Sprintf("pipeline into shell (%s)", rhsCmd), true)
+			c.addHazard(Hazard{
+				Kind:    HazardPipeToShell,
+				Line:    int(b.Pos().Line()),
+				Detail:  fmt.Sprintf("pipeline into shell (%s)", rhsCmd),
+				HighSev: true,
+			})
 		}
 	}
 	c.walkFile(b.X, depth)
@@ -220,6 +232,12 @@ func extractShellTarget(stmt *syntax.Stmt) string {
 	return ""
 }
 
+type callContext struct {
+	cmd  string
+	args []string
+	line int
+}
+
 func (c *astCollector) inspectCallExpr(call *syntax.CallExpr) {
 	if len(call.Args) == 0 {
 		return
@@ -228,26 +246,29 @@ func (c *astCollector) inspectCallExpr(call *syntax.CallExpr) {
 	for _, w := range call.Args {
 		words = append(words, wordToString(w))
 	}
-	cmd := filepath.Base(words[0])
-	line := int(call.Pos().Line())
+	ctx := callContext{
+		cmd:  filepath.Base(words[0]),
+		args: words[1:],
+		line: int(call.Pos().Line()),
+	}
 
-	switch cmd {
+	switch ctx.cmd {
 	case "eval":
-		c.addHazard(HazardEval, line, "dynamic evaluation via eval", true)
+		c.addHazard(Hazard{Kind: HazardEval, Line: ctx.line, Detail: "dynamic evaluation via eval", HighSev: true})
 	case "source", ".":
-		c.addHazard(HazardSource, line, fmt.Sprintf("external script sourcing via %s", cmd), false)
+		c.addHazard(Hazard{Kind: HazardSource, Line: ctx.line, Detail: fmt.Sprintf("external script sourcing via %s", ctx.cmd)})
 	case "trap":
 		c.metrics.TrapCount++
 	case "wait", "parallel":
 		c.metrics.BackgroundCount++
 	case "xargs":
-		if hasXargsParallelFlag(words[1:]) {
+		if hasXargsParallelFlag(ctx.args) {
 			c.metrics.BackgroundCount++
 		}
 	case "awk", "sed", "perl", "jq":
-		c.checkDenseTextEngine(cmd, words[1:], line)
+		c.checkDenseTextEngine(ctx)
 	default:
-		c.checkInlineInterpreter(cmd, words[1:], line)
+		c.checkInlineInterpreter(ctx)
 	}
 }
 
@@ -265,25 +286,33 @@ const (
 	inlinePayloadMinChars   = 50
 )
 
-func (c *astCollector) checkDenseTextEngine(cmd string, args []string, line int) {
-	for _, arg := range args {
+func (c *astCollector) checkDenseTextEngine(ctx callContext) {
+	for _, arg := range ctx.args {
 		if len(arg) >= denseTextEngineMinChars {
-			c.addHazard(HazardDenseTextEngine, line, fmt.Sprintf("dense %s expression (%d chars)", cmd, len(arg)), false)
+			c.addHazard(Hazard{
+				Kind:   HazardDenseTextEngine,
+				Line:   ctx.line,
+				Detail: fmt.Sprintf("dense %s expression (%d chars)", ctx.cmd, len(arg)),
+			})
 			return
 		}
 	}
 }
 
-func (c *astCollector) checkInlineInterpreter(cmd string, args []string, line int) {
+func (c *astCollector) checkInlineInterpreter(ctx callContext) {
 	interpreters := []string{"python", "python3", "node", "ruby", "bash", "sh", "zsh"}
-	if !slices.Contains(interpreters, cmd) {
+	if !slices.Contains(interpreters, ctx.cmd) {
 		return
 	}
-	for i := 0; i < len(args)-1; i++ {
-		if args[i] == "-c" || args[i] == "-e" {
-			payload := args[i+1]
+	for i := 0; i < len(ctx.args)-1; i++ {
+		if ctx.args[i] == "-c" || ctx.args[i] == "-e" {
+			payload := ctx.args[i+1]
 			if isComplexInlinePayload(payload) {
-				c.addHazard(HazardInlineInterpreter, line, fmt.Sprintf("inline %s %s script (%d chars)", cmd, args[i], len(payload)), false)
+				c.addHazard(Hazard{
+					Kind:   HazardInlineInterpreter,
+					Line:   ctx.line,
+					Detail: fmt.Sprintf("inline %s %s script (%d chars)", ctx.cmd, ctx.args[i], len(payload)),
+				})
 				return
 			}
 		}
@@ -317,7 +346,11 @@ func (c *astCollector) inspectParamExp(pe *syntax.ParamExp) {
 		c.metrics.MaxPositionalArg = n
 	}
 	if pe.Repl != nil || pe.Excl || isObscureExpansion(pe.Exp) {
-		c.addHazard(HazardObscureParamExpansion, int(pe.Pos().Line()), fmt.Sprintf("complex parameter expansion ${%s...}", pe.Param.Value), false)
+		c.addHazard(Hazard{
+			Kind:   HazardObscureParamExpansion,
+			Line:   int(pe.Pos().Line()),
+			Detail: fmt.Sprintf("complex parameter expansion ${%s...}", pe.Param.Value),
+		})
 	}
 }
 
@@ -335,13 +368,8 @@ func isObscureExpansion(exp *syntax.Expansion) bool {
 	}
 }
 
-func (c *astCollector) addHazard(kind HazardKind, line int, detail string, highSev bool) {
-	c.hazards = append(c.hazards, Hazard{
-		Kind:    kind,
-		Line:    line,
-		Detail:  detail,
-		HighSev: highSev,
-	})
+func (c *astCollector) addHazard(h Hazard) {
+	c.hazards = append(c.hazards, h)
 }
 
 func wordToString(w *syntax.Word) string {

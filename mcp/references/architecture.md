@@ -100,7 +100,7 @@ flowchart TD
     subgraph L4 ["4. Shared Infrastructure & Guardrails (internal/guard, internal/store, internal/pathutil)"]
         Guard["Security Guard<br/>(CheckPathAllowed, CheckNoSecrets)"]
         Store["Atomic Storage<br/>(WriteAtomic, FileLock, LockPool)"]
-        PathUtil["Path Utilities<br/>(FormatDualPath, SanitizeSlug, ResolveProjectAndBranch)"]
+        PathUtil["Path Utilities<br/>(FormatDualPath, SanitizeSlug, ResolveProjectBranch)"]
         Containment["Directory Containment<br/>(os.OpenRoot boundary enforcement)"]
         Compression["Safe Compression<br/>(zstd with decoder memory limits)"]
     end
