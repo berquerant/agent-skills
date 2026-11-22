@@ -17,6 +17,7 @@ import (
 	"github.com/berquerant/agent-skills/mcp/internal/prtriage"
 	"github.com/berquerant/agent-skills/mcp/internal/skilllint"
 	"github.com/berquerant/agent-skills/mcp/internal/snippet"
+	"github.com/berquerant/agent-skills/mcp/internal/snippetmgr"
 	"github.com/berquerant/agent-skills/mcp/internal/taskdag"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -162,6 +163,7 @@ func ensureRegistry(reg *feature.Registry) (*feature.Registry, error) {
 		"task-dag":         taskdag.NewFeature(),
 		"skill-lint":       skilllint.NewFeature(),
 		"snippet-analyzer": snippet.NewFeature(),
+		"snippet-manager":  snippetmgr.NewFeature(),
 		"checkpoint":       checkpoint.NewFeature(),
 		"pace-guard":       pace.NewFeature(),
 		"pr-triage":        prtriage.NewFeature(),

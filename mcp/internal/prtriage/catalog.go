@@ -131,7 +131,7 @@ var buildConfigBasenames = map[string]bool{
 	"compose.yaml": true, "compose.yml": true,
 	"docker-compose.yml": true, "docker-compose.yaml": true,
 	".dockerignore": true,
-	"Makefile": true, "makefile": true, "GNUmakefile": true,
+	"Makefile":      true, "makefile": true, "GNUmakefile": true,
 	"Taskfile.yml": true, "Taskfile.yaml": true,
 	"justfile": true, "Justfile": true,
 	"mise.toml": true, ".tool-versions": true, "Earthfile": true,

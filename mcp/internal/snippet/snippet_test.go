@@ -24,7 +24,7 @@ func TestAnalyzeRubricLevels(t *testing.T) {
 	}{
 		{
 			name:           "Level 1: simple linear commands with <= 1 pipe and <= 10 SLOC",
-			code:           "# list go files\nset -euo pipefail\ngit status --short\nls -la | head -n 5\n",
+			code:           "# list go files\nset -euo pipefail\ntarget=\"${1:?target required}\"\ngit status --short\nls -la | head -n 5\n",
 			wantLevel:      1,
 			wantRating:     "Transparent",
 			wantStatus:     "approved",

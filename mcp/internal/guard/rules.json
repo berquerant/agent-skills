@@ -1,0 +1,136 @@
+{
+  "sensitive_filenames": [
+    ".env",
+    ".env.local",
+    ".env.development",
+    ".env.staging",
+    ".env.production",
+    ".npmrc",
+    ".pypirc",
+    ".netrc",
+    ".htpasswd",
+    ".git-credentials",
+    "id_rsa",
+    "id_ed25519",
+    "id_ecdsa",
+    "id_dsa",
+    "credentials.json",
+    "service-account.json",
+    "terraform.tfstate",
+    "terraform.tfstate.backup",
+    "terraform.tfvars",
+    "kubeconfig"
+  ],
+  "sensitive_extensions": [
+    ".pem",
+    ".key",
+    ".p12",
+    ".pfx",
+    ".jks",
+    ".keystore",
+    ".asc",
+    ".ovpn",
+    ".kdbx"
+  ],
+  "sensitive_path_patterns": [
+    {
+      "name": "AWS config/credentials",
+      "pattern": "(?i)(^|/)(\\.aws/credentials|\\.aws/config)$"
+    },
+    {
+      "name": "SSH directory",
+      "pattern": "(?i)(^|/)(\\.ssh/[^/]+.*)$"
+    },
+    {
+      "name": "GnuPG directory",
+      "pattern": "(?i)(^|/)(\\.gnupg/[^/]+.*)$"
+    },
+    {
+      "name": "Docker config",
+      "pattern": "(?i)(^|/)(\\.docker/config\\.json)$"
+    },
+    {
+      "name": "Kubeconfig",
+      "pattern": "(?i)(^|/)(\\.kube/config)$"
+    },
+    {
+      "name": "Google Cloud config",
+      "pattern": "(?i)(^|/)(\\.config/gcloud/[^/]+.*)$"
+    },
+    {
+      "name": "GitHub CLI hosts config",
+      "pattern": "(?i)(^|/)(\\.config/gh/hosts\\.yml)$"
+    },
+    {
+      "name": "System auth file",
+      "pattern": "(?i)(^|/)etc/(shadow|passwd|sudoers)$"
+    }
+  ],
+  "sensitive_key_substrings": [
+    "password",
+    "passwd",
+    "passphrase",
+    "secret",
+    "token",
+    "api_key",
+    "apikey",
+    "access_key",
+    "private_key",
+    "client_secret",
+    "auth",
+    "credential",
+    "session_id",
+    "cookie",
+    "http_cookie",
+    "signature",
+    "webhook",
+    "database_url",
+    "connection_string"
+  ],
+  "secret_value_patterns": [
+    {
+      "name": "AWS Access Key",
+      "pattern": "\\b(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}\\b"
+    },
+    {
+      "name": "GitHub Token",
+      "pattern": "\\b(gh[pousr]_[A-Za-z0-9_]{20,255}|github_pat_[A-Za-z0-9_]{20,255})\\b"
+    },
+    {
+      "name": "GitLab Token",
+      "pattern": "\\bglpat-[A-Za-z0-9_\\-=]{20,}\\b"
+    },
+    {
+      "name": "Slack Token",
+      "pattern": "\\bxox[baprs]-[0-9]{10,13}-[0-9]{10,13}-[a-zA-Z0-9]{24,32}\\b"
+    },
+    {
+      "name": "OpenAI API Key",
+      "pattern": "\\bsk-(proj|svcacct)-[A-Za-z0-9_-]{20,}\\b"
+    },
+    {
+      "name": "Anthropic API Key",
+      "pattern": "\\bsk-ant-api03-[A-Za-z0-9_-]{20,}\\b"
+    },
+    {
+      "name": "GCP API Key",
+      "pattern": "\\bAIza[0-9A-Za-z\\-_]{35}\\b"
+    },
+    {
+      "name": "Stripe Key",
+      "pattern": "\\b(sk|rk)_live_[0-9a-zA-Z]{24,99}\\b"
+    },
+    {
+      "name": "Private Key Block",
+      "pattern": "-----BEGIN (RSA |EC |DSA |OPENSSH |PGP |ENCRYPTED )?PRIVATE KEY-----"
+    },
+    {
+      "name": "JSON Web Token",
+      "pattern": "\\beyJ[A-Za-z0-9_-]{10,}\\.eyJ[A-Za-z0-9_-]{10,}\\.[A-Za-z0-9_-]{10,}\\b"
+    },
+    {
+      "name": "URI with Credentials",
+      "pattern": "\\b[a-zA-Z][a-zA-Z0-9+.-]*://[^/\\s:@]+:[^/\\s:@]+@[^/\\s]+\\b"
+    }
+  ]
+}

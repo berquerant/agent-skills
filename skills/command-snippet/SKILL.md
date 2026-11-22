@@ -7,65 +7,43 @@ license: MIT
 
 # Command Snippet
 
-Use this skill to convert long, chained, or complex shell commands—or commands
-requiring approval-friendly argument normalization—into dedicated, documented,
-and parameterized snippet files before execution.
-Directly running long inline commands reduces readability and makes inspecting,
-debugging, and verifying execution difficult for users.
+Use this skill to convert long, chained, or complex shell commands—or commands requiring approval-friendly argument normalization—into dedicated, documented, and parameterized snippet files before execution. Directly running long inline commands reduces readability and makes inspecting, debugging, and verifying execution difficult for users.
 
-This workflow coordinates [snippet-review](../snippet-review/SKILL.md) (../snippet-review/SKILL.md) to audit
-the cognitive intelligibility of every generated snippet and mandate explaining its
-intent and side-effects to the user before execution, formatting all script, argument,
-and affected file paths per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md).
+This workflow coordinates [snippet-review](../snippet-review/SKILL.md) (../snippet-review/SKILL.md) to audit the cognitive intelligibility of every generated snippet and mandate explaining its intent and side-effects to the user before execution, formatting all script, argument, and affected file paths per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md).
+
+---
+
+## Prerequisites
+
+- An intended shell or interpreter command ready for evaluation and execution.
+- Optional: Access to the companion MCP server (`agent-skills-mcp`) providing the `snippet-manager` tools (`snippet_check_inline`, `snippet_create`, `snippet_get`, `snippet_list`, `snippet_verify`, `snippet_record_invocation`, `snippet_deprecate`, `snippet_cleanup`). When available, prefer these MCP tools for structural naming validation, write-once immutable `0500` storage, automatic versioning, SHA-256 and `inode` verification, and invocation tracking; otherwise follow the manual fallback procedures in each step.
 
 ---
 
 ## Step 1: Detect Long, Complex, or Inline Interpreter Commands
 
-Inspect the intended command against the avoidance thresholds:
+When `agent-skills-mcp` is available, invoke `snippet_check_inline` with the intended `command` (and optional `language`) to evaluate structural thresholds (character length, line count, chained command count) and AST complexity deterministically, and also check the command against the approval-friction patterns below (infix variable arguments, trailing target files, broad CLI scope). If `should_extract` is `true` or an approval-friction pattern applies, halt inline execution and proceed to Step 2.
 
-- **Chained commands**: 4 or more commands chained with operators such as `;`,
-  `&&`, `||`, or `|`.
-- **Character length**: 120 characters or longer. This count evaluates the entire
-  command line, including all flags, options, and quoted payload strings.
+If the MCP server is unavailable, inspect the intended command manually against all avoidance thresholds:
+
+- **Chained commands**: 4 or more commands chained with operators such as `;`, `&&`, `||`, or `|`.
+- **Character length**: 120 characters or longer, counting the entire command line including flags, options, and quoted payload strings.
 - **Line count**: 3 or more lines (multi-line commands).
-- **Inline interpreter scripts (`-c`, `-e`, inline code payloads)**:
-  Any command invoking a language interpreter or shell (`python`, `python3`,
-  `node`, `ruby`, `perl`, `bash -c`, `sh -c`, `awk`, `sed`, etc.) that embeds an
-  inline script string matching ANY of the following conditions:
-  - **Payload length**: The inline script string itself is **50 characters or longer**.
+- **Inline interpreter scripts (`-c`, `-e`, inline code payloads)**: Any command invoking a language interpreter or shell (`python`, `python3`, `node`, `ruby`, `perl`, `bash -c`, `sh -c`, `awk`, `sed`, etc.) whose inline script string matches ANY of:
+  - **Payload length**: 50 characters or longer.
   - **Multiple statements**: Contains multiple statements (separated by `;` or newlines).
   - **Module imports**: Contains `import ...`, `from ... import`, or `require(...)`.
   - **Control flow**: Uses loops (`for`, `while`), comprehensions, or conditionals (`if`, `elif`, `else`).
   - **Escaped quotes / string nesting**: Requires escaped quotes (`\"`, `\'`) or complex string nesting.
-- **Infix variable arguments & approval friction**:
-  Commands that embed dynamic context variables in the middle of command lines
-  (e.g., `git -C <dir> status`), which disrupt prefix-based approval rules or
-  obscure the critical action verb during human review.
-- **Trailing target arguments & persistent read approval friction**:
-  Commands where the target resource is placed at the end of the command line preceded
-  by variable flags and patterns (e.g., `grep [options...] <pattern> <file>`). While
-  reading the specific target file is safe once authorized, prefix matching cannot bind
-  approval to trailing arguments. Approving `grep` globally grants dangerous blanket
-  read access to the entire filesystem, while changing flags (`-i`, `-C 5`) invalidates
-  prefix rules and triggers repetitive approval friction. Currying the target file
-  into a dedicated search snippet establishes a stable prefix for persistent read
-  approval while strictly confining read scope.
-- **Overly broad command scope & persistent approval friction**:
-  Commands invoking omnipotent CLI tools with wide capability blast radiuses
-  (e.g., `gh`, `aws`, `gcloud`, `kubectl`), where approving raw commands imposes
-  high cognitive review friction or where continuous/session-long approval requires
-  restricting the tool to narrow, benign subcommands or exact targets.
+- **Infix variable arguments & approval friction**: Commands that embed dynamic context variables in the middle of command lines (e.g., `git -C <dir> status`), disrupting prefix-based approval rules or obscuring the action verb.
+- **Trailing target arguments & persistent read approval friction**: Commands where the target resource sits at the end preceded by variable flags and patterns (e.g., `grep [options...] <pattern> <file>`). Approving `grep` globally grants blanket filesystem read access while flag changes break prefix rules; currying the target file into a dedicated snippet establishes a stable prefix for persistent read approval confined to that file.
+- **Overly broad command scope & persistent approval friction**: Commands invoking omnipotent CLI tools (`gh`, `aws`, `gcloud`, `kubectl`) where raw approval imposes high review friction and continuous approval requires restricting the tool to narrow subcommands or exact targets.
 
-If the command meets any of these criteria, **do not execute it inline**. Halt
-inline execution and proceed to create a snippet file with the appropriate extension
-(e.g., `.sh`, `.py`, `.js`).
+If the command meets any of these criteria, **do not execute it inline**. Halt inline execution and proceed to create a snippet file with the appropriate extension (e.g., `.sh`, `.py`, `.js`).
 
-- **Risk-Proportional Lightweight Path for Read-Only Local Inspection**:
-  When a command is strictly **read-only, local, and side-effect-free** (e.g., local `find`/`grep`/`awk` inspection pipelines that do not mutate files, access external networks, or require elevated sandbox permissions), prefer splitting it into simple $<120$-character commands first; escalate to full snippet creation and `snippet-review` when the inspection logic must be reused, exceeds simple command splitting, or requires persistent read approval on a specific file without triggering repetitive approval gates.
+- **Risk-Proportional Lightweight Path for Read-Only Local Inspection**: When a command is strictly **read-only, local, and side-effect-free** (e.g., local `find`/`grep`/`awk` pipelines without file mutations, network access, or elevated permissions), prefer splitting it into simple $<120$-character commands first; escalate to full snippet creation and `snippet-review` when logic must be reused, exceeds simple splitting, or needs persistent read approval on a specific file.
 
-Verify: You have checked the command against all avoidance thresholds and confirmed
-that it requires snippet creation.
+Verify: You have checked the command against all avoidance thresholds and confirmed that it requires snippet creation.
 
 ---
 
@@ -73,16 +51,12 @@ that it requires snippet creation.
 
 Evaluate how the snippet will be used:
 
-1. **Reusability Assessment**:
-   - Determine whether the snippet will be reused for subsequent tasks in the
-     current context or is strictly a one-time execution.
+1. **Reusability Assessment**: Determine whether the snippet will be reused for subsequent tasks in the current context (`reusable`) or is strictly a one-time execution (`one-off`).
 2. **Target File Location**:
-   - For one-off snippets: Place them in an appropriate scratch or temporary directory.
-   - For reusable snippets: Place them in a designated project script location or
-     structured utility path.
+   - **With `agent-skills-mcp` (Preferred)**: Let `snippet_create` manage storage automatically under `$XDG_STATE_HOME/agent-skills-mcp/snippets/<project>/<branch>/<scope>/<name>_v<N>.<ext>` (pass `scope: "one-off"` or `scope: "reusable"`).
+   - **Manual fallback**: Place one-off snippets in an appropriate scratch or temporary directory, and reusable snippets in a designated project script location or structured utility path.
 
-Verify: The reusability status is determined and an appropriate file path is
-selected.
+Verify: The reusability status is determined and an appropriate file path is selected.
 
 ---
 
@@ -90,14 +64,8 @@ selected.
 
 Design the snippet's interface:
 
-1. **Accept CLI Arguments**:
-   - If the snippet is marked for reuse, structure it to accept command-line
-     arguments (e.g., `$1`, `$2`, or command-line flags) rather than hardcoding
-     context-specific values.
-2. **Avoid Environment Variables for Input**:
-   - Do **not** use environment variables to pass arguments or configuration to
-     the snippet. Environment variables are implicit and difficult for users to
-     track in terminal history. Always prefer explicit CLI arguments.
+1. **Accept CLI Arguments**: If the snippet is marked for reuse, structure it to accept command-line arguments (e.g., `$1`, `$2`, or flags) rather than hardcoding context-specific values.
+2. **Avoid Environment Variables for Input**: Do **not** use environment variables to pass arguments or configuration to the snippet; always prefer explicit CLI arguments so invocations remain self-contained in terminal history.
 3. **Safe Command Execution over `eval`**:
    - Do **not** use `eval` or raw string concatenation to assemble and execute dynamic commands inside snippets.
    - Use safe parameterization patterns:
@@ -157,7 +125,7 @@ purpose, arguments, usage, and prerequisites.
 
 ## Step 5: Audit Intelligibility & Explain Intent to User
 
-Before executing any snippet, evaluate its cognitive intelligibility and ensure the user understands its operation:
+Before executing any snippet, evaluate its cognitive intelligibility and ensure the user understands its operation (when `agent-skills-mcp` is available, `snippet_create` in Step 6 performs `snippet_audit` and generates the Pre-Execution Notice skeleton atomically, so skip calling `snippet_audit` separately unless auditing an existing file):
 
 1. **Intelligibility Audit & Immutability**:
    - Audit the snippet using [snippet-review](../snippet-review/SKILL.md) (../snippet-review/SKILL.md) against its four-tier rubric (Transparent, Moderate, Complex, Opaque).
@@ -198,18 +166,21 @@ Verify: The snippet's intelligibility is audited, any high complexity is simplif
 ## Step 6: Save, Execute, and Verify
 
 1. **Save Snippet File as Immutable**:
-   - Write the script to the determined path.
-   - Once saved, treat the file as **strictly immutable**. Never apply in-place edits. If a fix is needed during verification, create a new file (e.g., `_v2`).
+   - **With `agent-skills-mcp` (Preferred)**: Invoke `snippet_create` with a self-descriptive `name` (chosen per Step 3), `code`, `language`, `scope`, and `purpose`. It validates structural naming (`[a-z0-9_-]`, no manual `_vN` suffix), shebang/header/hardening, secret hygiene, and `snippet_audit` atomically, writes the file as write-protected executable (`0500`) with automatic `_vN` versioning, deprecates prior active versions (`0400`), and returns the formatted `pre_execution_notice` skeleton and `direct_invocation_hint`.
+     - If `saved: false` (`action_required: "simplify_or_consult"`), simplify the code and retry `snippet_create`, or open the User Consultation Gate from Step 5 before passing `allow_complex: true`.
+     - Before re-executing an existing snippet, optionally run `snippet_verify` to confirm active status, `0500` permissions, and SHA-256 / `inode` integrity.
+   - **Manual fallback**: Write the script to the determined path with execute permissions (`+x`) set upon saving. Once saved, treat the file as **strictly immutable**. Never apply in-place edits. If a fix is needed during verification, create a new file (e.g., `_v2`).
 2. **Execute via Direct Script Binary (No Interpreter Prefix or Chmod Compound)**:
    - **Direct Script-Binary Invocation**:
-     Execute the snippet directly using its script path (e.g., `<script-path> [args...]` or `./<script-name> [args...]`).
+     Execute the snippet directly through the host shell using its script path (e.g., `<script-path> [args...]` or `./<script-name> [args...]`). Even when managed by `agent-skills-mcp`, execution always happens via the host shell so approval engines bind permissions to the immutable script path (`argv[0]`).
    - **Prohibit Generic Interpreter Prefixes**:
      Do **not** prepend generic runtime interpreters (`bash` or `python3`) to the command line. Doing so places the interpreter as `argv[0]`, prompting users to grant execution permissions to `bash` or `python3` itself (a dangerous blanket permission hazard) rather than authorizing the specific immutable script file.
    - **Prohibit Compound Chmod Lines**:
      Do **not** use compound commands such as `chmod +x ... && exec ...`. Ensure execute permissions are set upon saving the file so the execution turn remains a single, unchained command line that whitelists the script path directly without repetitive approval friction.
-3. **Verify Outcome**:
+3. **Verify Outcome & Record Invocation**:
    - Check the command exit code and output against expectations.
-   - Stop and inspect if the script fails. If failure remediation requires code changes, create a new versioned snippet file (`_v2`) and restart Step 5.
+   - When `agent-skills-mcp` is available, call `snippet_record_invocation` with `name`, `version`, `args`, `exit_code`, and optional `duration_ms`/`note` to persist an audit trail in the snippet ledger.
+   - Stop and inspect if the script fails. If failure remediation requires code changes, create a new versioned snippet (`snippet_create` auto-increments to `_v2`, or manually save `_v2`) and restart Step 5.
 
 Verify: The snippet executed cleanly and satisfied the intended operation without `chmod` compound commands or in-place file modifications.
 
@@ -219,11 +190,12 @@ Verify: The snippet executed cleanly and satisfied the intended operation withou
 
 Based on the reusability decision from Step 2:
 
-- **One-off Snippets**: Clean up temporary files if they are no longer needed,
-  or leave them in the scratch directory if the user needs them for inspection.
-  When multiple versions were created (`_v1`, `_v2`), remove or deprecate superseded versions (`.deprecated`) to prevent accidental execution.
-- **Reusable Snippets**: Confirm that the final snippet version is cleanly formatted, documented,
-  and ready for future invocations.
+- **With `agent-skills-mcp` (Preferred)**:
+  - Use `snippet_list` / `snippet_get` to inspect active or superseded versions.
+  - Use `snippet_deprecate` to strip execute permissions (`0400`) from versions no longer needed, and `snippet_cleanup` (previewing with `dry_run: true` when appropriate) to remove deprecated files and completed `one-off` snippets (`include_active_one_off: true`) while preserving metadata and invocation history.
+- **Manual fallback**:
+  - **One-off Snippets**: Clean up temporary files if they are no longer needed, or leave them in the scratch directory if the user needs them for inspection. When multiple versions were created (`_v1`, `_v2`), remove or deprecate superseded versions (`.deprecated`) to prevent accidental execution.
+  - **Reusable Snippets**: Confirm that the final snippet version is cleanly formatted, documented, and ready for future invocations.
 
 Verify: Unneeded temporary files and superseded snippet versions are disposed of, and reusable scripts are preserved in their designated locations.
 

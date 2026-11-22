@@ -29,9 +29,11 @@ var levelRules = []scoreRule{
 		driver: func(m Metrics, _ []Hazard) string { return fmt.Sprintf("functions=%d (>= 3)", m.FunctionCount) },
 	},
 	{
-		level:  4,
-		match:  func(m Metrics, _ []Hazard) bool { return m.MaxNestingDepth >= 3 },
-		driver: func(m Metrics, _ []Hazard) string { return fmt.Sprintf("max_nesting_depth=%d (>= 3)", m.MaxNestingDepth) },
+		level: 4,
+		match: func(m Metrics, _ []Hazard) bool { return m.MaxNestingDepth >= 3 },
+		driver: func(m Metrics, _ []Hazard) string {
+			return fmt.Sprintf("max_nesting_depth=%d (>= 3)", m.MaxNestingDepth)
+		},
 	},
 	{
 		level:  4,
@@ -39,14 +41,18 @@ var levelRules = []scoreRule{
 		driver: func(m Metrics, _ []Hazard) string { return fmt.Sprintf("branch_count=%d (>= 6)", m.BranchCount) },
 	},
 	{
-		level:  4,
-		match:  func(m Metrics, _ []Hazard) bool { return m.MaxPipelineLength >= 3 },
-		driver: func(m Metrics, _ []Hazard) string { return fmt.Sprintf("max_pipeline_length=%d (>= 3 pipes)", m.MaxPipelineLength) },
+		level: 4,
+		match: func(m Metrics, _ []Hazard) bool { return m.MaxPipelineLength >= 3 },
+		driver: func(m Metrics, _ []Hazard) string {
+			return fmt.Sprintf("max_pipeline_length=%d (>= 3 pipes)", m.MaxPipelineLength)
+		},
 	},
 	{
-		level:  4,
-		match:  func(m Metrics, _ []Hazard) bool { return m.BackgroundCount > 0 || m.TrapCount > 0 },
-		driver: func(m Metrics, _ []Hazard) string { return fmt.Sprintf("async/concurrency constructs (background=%d, traps=%d)", m.BackgroundCount, m.TrapCount) },
+		level: 4,
+		match: func(m Metrics, _ []Hazard) bool { return m.BackgroundCount > 0 || m.TrapCount > 0 },
+		driver: func(m Metrics, _ []Hazard) string {
+			return fmt.Sprintf("async/concurrency constructs (background=%d, traps=%d)", m.BackgroundCount, m.TrapCount)
+		},
 	},
 	{
 		level: 4,
@@ -61,9 +67,11 @@ var levelRules = []scoreRule{
 		driver: func(m Metrics, _ []Hazard) string { return fmt.Sprintf("SLOC=%d (21-25)", m.SLOC) },
 	},
 	{
-		level:  3,
-		match:  func(m Metrics, _ []Hazard) bool { return m.FunctionCount == 2 || m.MaxFunctionLines > 15 },
-		driver: func(m Metrics, _ []Hazard) string { return fmt.Sprintf("functions=%d (max_lines=%d)", m.FunctionCount, m.MaxFunctionLines) },
+		level: 3,
+		match: func(m Metrics, _ []Hazard) bool { return m.FunctionCount == 2 || m.MaxFunctionLines > 15 },
+		driver: func(m Metrics, _ []Hazard) string {
+			return fmt.Sprintf("functions=%d (max_lines=%d)", m.FunctionCount, m.MaxFunctionLines)
+		},
 	},
 	{
 		level:  3,
@@ -86,9 +94,11 @@ var levelRules = []scoreRule{
 		driver: func(m Metrics, _ []Hazard) string { return fmt.Sprintf("subshell_count=%d", m.SubshellCount) },
 	},
 	{
-		level:  3,
-		match:  func(m Metrics, _ []Hazard) bool { return m.MaxPositionalArg >= 4 },
-		driver: func(m Metrics, _ []Hazard) string { return fmt.Sprintf("max_positional_arg=$%d (>= 4)", m.MaxPositionalArg) },
+		level: 3,
+		match: func(m Metrics, _ []Hazard) bool { return m.MaxPositionalArg >= 4 },
+		driver: func(m Metrics, _ []Hazard) string {
+			return fmt.Sprintf("max_positional_arg=$%d (>= 4)", m.MaxPositionalArg)
+		},
 	},
 	{
 		level: 3,
@@ -119,39 +129,64 @@ var levelRules = []scoreRule{
 	},
 }
 
+// NormalizeLanguage normalizes and validates a snippet language identifier, defaulting to "bash".
+func NormalizeLanguage(raw string) (string, error) {
+	lang := strings.ToLower(strings.TrimSpace(raw))
+	if lang == "" {
+		return "bash", nil
+	}
+	switch lang {
+	case "bash", "sh", "zsh", "mksh":
+		return lang, nil
+	case "posix":
+		return "sh", nil
+	case "python", "python3", "py":
+		return "python", nil
+	default:
+		return "", fmt.Errorf("unsupported language %q (supported: bash, sh, zsh, mksh, python)", lang)
+	}
+}
+
 // Analyze evaluates snippet source code and returns a deterministic 4-tier AuditReport.
 // For Python snippets, AST parsing uses Python's built-in ast module and fails immediately on syntax errors without heuristic fallback.
 func Analyze(code, language string) AuditReport {
-	lang := strings.ToLower(strings.TrimSpace(language))
-	if lang == "" {
-		lang = "bash"
-	}
-	if !isSupportedLanguage(lang) {
-		return failedReport(lang, fmt.Sprintf("unsupported language %q (supported: bash, sh, zsh, mksh, python)", lang))
+	lang, err := NormalizeLanguage(language)
+	if err != nil {
+		return failedReport(strings.ToLower(strings.TrimSpace(language)), err.Error())
 	}
 
 	if isPythonLanguage(lang) {
 		return analyzePythonSnippet(code)
 	}
 
-	sloc, commentLines, totalLines := countSLOCAndComments(code)
-	metrics, hazards, parseErr := analyzeAST(code, lang, sloc, commentLines, totalLines)
+	counts := countSLOCAndComments(code)
+	in := shellAnalyzeInput{code: code, lang: lang, counts: counts}
+	res, parseErr := analyzeAST(in)
 	conf := ConfidenceAST
 	parseErrStr := ""
 	if parseErr != nil {
 		conf = ConfidenceHeuristic
 		parseErrStr = parseErr.Error()
-		metrics, hazards = analyzeHeuristic(code, sloc, commentLines, totalLines)
+		res = analyzeHeuristic(in)
 	}
-	return buildReport(lang, conf, parseErrStr, metrics, hazards)
+	return buildReport(reportParams{
+		lang:     lang,
+		conf:     conf,
+		parseErr: parseErrStr,
+		res:      res,
+	})
 }
 
 func analyzePythonSnippet(code string) AuditReport {
-	metrics, hazards, err := analyzePythonAST(code)
+	res, err := analyzePythonAST(code)
 	if err != nil {
 		return failedReport("python", err.Error())
 	}
-	return buildReport("python", ConfidenceAST, "", metrics, hazards)
+	return buildReport(reportParams{
+		lang: "python",
+		conf: ConfidenceAST,
+		res:  res,
+	})
 }
 
 func failedReport(lang, parseErr string) AuditReport {
@@ -165,9 +200,17 @@ func failedReport(lang, parseErr string) AuditReport {
 	}
 }
 
-func buildReport(lang string, conf Confidence, parseErrStr string, metrics Metrics, hazards []Hazard) AuditReport {
-	level, drivers := scoreMetricsAndHazards(metrics, hazards)
+type reportParams struct {
+	lang     string
+	conf     Confidence
+	parseErr string
+	res      analysisResult
+}
+
+func buildReport(p reportParams) AuditReport {
+	level, drivers := scoreMetricsAndHazards(p.res.metrics, p.res.hazards)
 	rating, status := ratingAndStatusForLevel(level)
+	hazards := p.res.hazards
 	if hazards == nil {
 		hazards = []Hazard{}
 	}
@@ -180,10 +223,10 @@ func buildReport(lang string, conf Confidence, parseErrStr string, metrics Metri
 		Level:      level,
 		Rating:     rating,
 		Status:     status,
-		Language:   lang,
-		Confidence: conf,
-		ParseError: parseErrStr,
-		Metrics:    metrics,
+		Language:   p.lang,
+		Confidence: p.conf,
+		ParseError: p.parseErr,
+		Metrics:    p.res.metrics,
 		Hazards:    hazards,
 		Drivers:    drivers,
 	}

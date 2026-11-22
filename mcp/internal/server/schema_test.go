@@ -58,6 +58,7 @@ func TestToolSchemas(t *testing.T) {
 		"--state-dir=" + tmp + "/state",
 		"--cache-dir=" + tmp + "/cache",
 		"--checkpoint-root=" + tmp + "/checkpoints",
+		"--snippet-root=" + tmp + "/snippets",
 	}
 	cfg, err := feature.ParseConfig(args, tmp)
 	require.NoError(t, err)
