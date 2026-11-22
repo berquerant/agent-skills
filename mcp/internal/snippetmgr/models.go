@@ -28,18 +28,20 @@ const (
 
 // CheckInlineInput defines parameters for snippet_check_inline.
 type CheckInlineInput struct {
-	Command string `json:"command" jsonschema:"Inline shell command string to evaluate against command-snippet extraction thresholds"`
+	Command  string `json:"command" jsonschema:"Inline shell or interpreter command string to evaluate against command-snippet extraction thresholds"`
+	Language string `json:"language,omitempty" jsonschema:"Language for AST complexity analysis ('bash', 'sh', 'zsh', 'mksh', 'python'; default 'bash')"`
 }
 
 // CheckInlineOutput reports whether an inline command should be extracted into a snippet file.
 type CheckInlineOutput struct {
-	ShouldExtract     bool     `json:"should_extract"`
-	Reasons           []string `json:"reasons"`
-	CharCount         int      `json:"char_count"`
-	LineCount         int      `json:"line_count"`
-	ChainedCommands   int      `json:"chained_commands"`
-	SuggestedLanguage string   `json:"suggested_language"`
-	LightweightHint   string   `json:"lightweight_hint,omitempty"`
+	ShouldExtract     bool                `json:"should_extract"`
+	Reasons           []string            `json:"reasons"`
+	CharCount         int                 `json:"char_count"`
+	LineCount         int                 `json:"line_count"`
+	ChainedCommands   int                 `json:"chained_commands"`
+	SuggestedLanguage string              `json:"suggested_language"`
+	Audit             snippet.AuditReport `json:"audit"`
+	LightweightHint   string              `json:"lightweight_hint,omitempty"`
 }
 
 // VersionRecord captures immutable metadata for a single saved snippet version.

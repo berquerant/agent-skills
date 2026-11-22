@@ -85,15 +85,18 @@ import sys
 print(json.dumps(sys.argv[1:]))
 `
 
-func TestCheckInline(t *testing.T) {
-	tests := []struct {
-		name           string
-		cmd            string
-		wantExtract    bool
-		wantReasonSub  string
-		wantLang       string
-		wantHintSubstr string
-	}{
+type checkInlineTestCase struct {
+	name           string
+	cmd            string
+	lang           string
+	wantExtract    bool
+	wantReasonSub  string
+	wantLang       string
+	wantHintSubstr string
+}
+
+func checkInlineTestCases() []checkInlineTestCase {
+	return []checkInlineTestCase{
 		{
 			name:        "short simple command does not require extraction",
 			cmd:         "git status -sb",
@@ -123,10 +126,32 @@ func TestCheckInline(t *testing.T) {
 			wantLang:      "bash",
 		},
 		{
-			name:          "inline python3 -c with import triggers extraction and suggests python",
+			name:          "inline python3 -c with import triggers extraction via snippet.Analyze and suggests python",
 			cmd:           `python3 -c "import json; print(json.dumps({'ok': True}))"`,
 			wantExtract:   true,
-			wantReasonSub: "inline interpreter python3 -c",
+			wantReasonSub: "inline_interpreter",
+			wantLang:      "python",
+		},
+		{
+			name:          "short complex &&/|| branching triggers extraction via snippet.Analyze",
+			cmd:           "a && b && c || d",
+			wantExtract:   true,
+			wantReasonSub: "branch_count=3",
+			wantLang:      "bash",
+		},
+		{
+			name:          "short eval command triggers extraction via snippet.Analyze",
+			cmd:           `eval "$CMD"`,
+			wantExtract:   true,
+			wantReasonSub: "complexity Level 4",
+			wantLang:      "bash",
+		},
+		{
+			name:          "python code delegates complexity check to Python AST analyzer",
+			cmd:           `res = eval("1+2")`,
+			lang:          "python",
+			wantExtract:   true,
+			wantReasonSub: "complexity Level 4",
 			wantLang:      "python",
 		},
 		{
@@ -151,12 +176,15 @@ func TestCheckInline(t *testing.T) {
 			wantLang:      "bash",
 		},
 	}
+}
 
-	for _, tt := range tests {
+func TestCheckInline(t *testing.T) {
+	for _, tt := range checkInlineTestCases() {
 		t.Run(tt.name, func(t *testing.T) {
-			out := snippetmgr.CheckInline(snippetmgr.CheckInlineInput{Command: tt.cmd})
+			out := snippetmgr.CheckInline(snippetmgr.CheckInlineInput{Command: tt.cmd, Language: tt.lang})
 			assert.Equal(t, tt.wantExtract, out.ShouldExtract)
 			assert.Equal(t, tt.wantLang, out.SuggestedLanguage)
+			assert.True(t, out.Audit.OK)
 			if tt.wantReasonSub != "" {
 				assert.Contains(t, strings.Join(out.Reasons, " | "), tt.wantReasonSub)
 			}

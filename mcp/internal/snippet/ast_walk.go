@@ -277,12 +277,31 @@ func (c *astCollector) checkInlineInterpreter(cmd string, args []string, line in
 	for i := 0; i < len(args)-1; i++ {
 		if args[i] == "-c" || args[i] == "-e" {
 			payload := args[i+1]
-			if len(payload) >= 50 || strings.Contains(payload, ";") || strings.Contains(payload, "\n") || strings.Contains(payload, "import ") {
+			if isComplexInlinePayload(payload) {
 				c.addHazard(HazardInlineInterpreter, line, fmt.Sprintf("inline %s %s script (%d chars)", cmd, args[i], len(payload)), false)
 				return
 			}
 		}
 	}
+}
+
+func isComplexInlinePayload(payload string) bool {
+	if len(payload) >= 50 ||
+		strings.Contains(payload, ";") ||
+		strings.Contains(payload, "\n") ||
+		strings.Contains(payload, "import ") ||
+		strings.Contains(payload, "require(") ||
+		strings.Contains(payload, `\"`) ||
+		strings.Contains(payload, `\'`) {
+		return true
+	}
+	padded := " " + payload + " "
+	for _, kw := range []string{" for ", " while ", " if ", " elif ", " else "} {
+		if strings.Contains(padded, kw) {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *astCollector) inspectParamExp(pe *syntax.ParamExp) {
