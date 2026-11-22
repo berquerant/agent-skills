@@ -28,7 +28,7 @@ Do NOT guess task or target names (e.g. guessing `ui-lint` when the defined task
 ### 2.1 Task Discovery Checklist
 - **`Taskfile.yml` / `Taskfile.yaml`**: Run `./task --list` or `task --list` (or inspect `Taskfile.yml` directly) to confirm the exact task name syntax (e.g. colon-separated vs hyphen-separated namespaces).
 - **`package.json`**: Inspect `scripts` object via `npm run` (shows available scripts) or `jq '.scripts' package.json` before running `npm run <script>` or `pnpm run <script>`.
-- **`Makefile`**: Inspect target rules via `make -qp | awk -F':' '/^[a-zA-Z0-9][^$#\/\t=]*:([^=]|$)/ {split($1,A,/ /);print A[1]}' | sort -u` or search targets directly in `Makefile`.
+- **`Makefile`**: Inspect target rules via `grep -E '^[a-zA-Z0-9_.-]+:' Makefile` or search targets directly in `Makefile`.
 - **`mise.toml`**: Run `mise tasks` to list configured task names.
 - **`justfile`**: Run `just --list` to inspect defined recipes.
 

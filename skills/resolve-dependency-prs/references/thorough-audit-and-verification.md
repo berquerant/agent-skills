@@ -1,12 +1,12 @@
 # Thorough Audit, Holistic Review, and Verification Protocol
 
-Operational guide for the `thorough` execution mode in [`resolve-dependency-prs`](../SKILL.md). Extends routine triage with in-depth micro/macro code reviews and exhaustive verification.
+Operational guide for the `thorough` execution mode in [resolve-dependency-prs](../SKILL.md) (../SKILL.md). Extends routine triage with in-depth micro/macro code reviews and exhaustive verification.
 
 ---
 
 ## 1. Micro Code-Review (Per-Candidate Inspection)
 
-In `thorough` mode, each eligible candidate PR/MR undergoes a detailed code review adhering to criteria shared with [`code-review`](../../code-review/SKILL.md):
+In `thorough` mode, each eligible candidate PR/MR undergoes a detailed code review adhering to criteria shared with [code-review](../../code-review/SKILL.md) (../../code-review/SKILL.md):
 
 ### 1.1 Changelog & Breaking Change Audit
 - **Breaking API Changes**: Inspect upstream changelogs, release notes, and migration guides to identify removed, renamed, or modified functions/interfaces used by the repository.

@@ -1,6 +1,6 @@
 # Commit Message Guide
 
-Default format: [Conventional Commits](conventional-commits-spec.md).
+Default format: [Conventional Commits](conventional-commits-spec.md) (conventional-commits-spec.md).
 Use the repository's own convention instead if one is detected.
 
 ## Structure

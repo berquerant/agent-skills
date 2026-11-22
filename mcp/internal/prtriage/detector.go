@@ -15,6 +15,7 @@ import (
 var (
 	recipeTargetRe    = regexp.MustCompile(`(?m)^([a-zA-Z0-9][a-zA-Z0-9_-]*):(?:\s|$)`)
 	miseTaskSectionRe = regexp.MustCompile(`(?m)^\[tasks\.([a-zA-Z0-9:_-]+)\]`)
+	taskfileTargetRe  = regexp.MustCompile(`(?m)^\s{2}([a-zA-Z0-9][a-zA-Z0-9:_-]*):(?:\s|$)`)
 )
 
 // DetectTasks scans repoDir for standard task runner definitions and CI workflows.
@@ -55,10 +56,45 @@ func DetectTasks(repoDir string) (DetectTasksOutput, error) {
 func scanTaskRunners(root *os.Root, runners *[]string, tasks *[]TaskCandidate) {
 	inspectPackageJSON(root, runners, tasks)
 	inspectMiseToml(root, runners, tasks)
+	inspectTaskfile(root, runners, tasks)
 	inspectRegexTargets(root, "Makefile", "make", "make ", recipeTargetRe, runners, tasks)
+	inspectRegexTargets(root, "GNUmakefile", "make", "make ", recipeTargetRe, runners, tasks)
 	inspectRegexTargets(root, "justfile", "just", "just ", recipeTargetRe, runners, tasks)
+	inspectRegexTargets(root, "Justfile", "just", "just ", recipeTargetRe, runners, tasks)
 	inspectGoMod(root, runners, tasks)
 	inspectCargoToml(root, runners, tasks)
+}
+
+func inspectTaskfile(root *os.Root, runners *[]string, tasks *[]TaskCandidate) {
+	for _, name := range []string{"Taskfile.yml", "Taskfile.yaml"} {
+		raw, err := root.ReadFile(name)
+		if err != nil {
+			continue
+		}
+		*runners = append(*runners, "task")
+		content := string(raw)
+		if _, after, ok := strings.Cut(content, "\ntasks:"); ok {
+			content = after
+		} else if !strings.HasPrefix(content, "tasks:") {
+			return
+		}
+		seen := make(map[string]bool)
+		for _, m := range taskfileTargetRe.FindAllStringSubmatch(content, -1) {
+			target := m[1]
+			if seen[target] {
+				continue
+			}
+			seen[target] = true
+			if cat := categorizeTaskName(target); cat != "" {
+				*tasks = append(*tasks, TaskCandidate{
+					Category: cat,
+					Source:   name,
+					Command:  "task " + target,
+				})
+			}
+		}
+		return
+	}
 }
 
 func inspectPackageJSON(root *os.Root, runners *[]string, tasks *[]TaskCandidate) {

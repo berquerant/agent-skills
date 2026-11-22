@@ -51,7 +51,7 @@ For **each** subtask, define the following three elements:
 
 Present the plan in this format:
 
-```
+```markdown
 ## Execution Plan
 
 ### Step 1: <title>

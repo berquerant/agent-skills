@@ -71,10 +71,7 @@ Verify: Explicit user approval of the plan is received before proceeding.
 
 1. For each target repository, create an isolated worktree under a designated base directory (e.g. `${XDG_CACHE_HOME:-$HOME/.cache}/multi-repo-change/worktrees/<host>/<repo>/<branch-slug>`). For general worktree lifecycle practices and options, consult the sibling [git-worktree](../git-worktree/SKILL.md) (../git-worktree/SKILL.md) skill:
    ```bash
-   git -C <repo-path> worktree add \
-     <worktree-path> \
-     -b <branch-name> \
-     origin/<default-branch>
+   git -C <repo-path> worktree add <worktree-path> -b <branch-name> origin/<default-branch>
    ```
 2. Apply the approved changes within each worktree. Follow repository-specific conventions (e.g., code style, formatting, lockfile updates).
 3. Execute the planned verification commands (lint, unit tests, type checks) within each worktree.

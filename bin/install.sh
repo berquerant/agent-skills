@@ -116,6 +116,13 @@ main() {
     target="${HOME}${target#"~"}"
   fi
 
+  # Trim leading/trailing whitespace and trailing slashes (preserving "/")
+  target="${target#"${target%%[![:space:]]*}"}"
+  target="${target%"${target##*[![:space:]]}"}"
+  while [[ "$target" != "/" && "$target" == */ ]]; do
+    target="${target%/}"
+  done
+
   if [[ -z "$target" ]]; then
     log "Error: Target directory is not specified."
     exit 1

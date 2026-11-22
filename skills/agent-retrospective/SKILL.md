@@ -117,8 +117,8 @@ Verify: No files or configurations are mutated without explicit user approval of
 
 ## Guidelines
 
-- **Strictly Read-Only Analysis**: Do not create or edit snippet files, rule files, or skill definitions during this retrospective. Diagnose and propose first; let the user select what to execute.
-- **Evidence-Backed Recommendations**: Never speculate. Every recommendation must cite at least one turn index, command error output, or user correction event from the logs.
+- **Keep analysis strictly read-only**: Diagnose patterns and propose changes first without creating or editing snippet, rule, or skill files, so the user can review and select what to execute.
+- **Ground every recommendation in log evidence**: Cite at least one turn index, command error output, or user correction event from the inspected logs so proposals remain verifiable rather than speculative.
 - **Privacy & Sanitization by Default**: Treat all transcripts as potentially containing sensitive information. Redact secrets, tokens, internal paths, and project-specific identifiers before presenting proposals.
 - **Universal & Platform-Agnostic**: Support log analysis regardless of whether the agent runs in Antigravity, Claude Code, Cursor, Codex, or generic CLI harnesses.
 - **Cost & Token Awareness**: When running in `recent` mode over large log sets, use targeted search (grep, pattern scanning) rather than reading thousands of raw log lines entirely into the primary conversation context.

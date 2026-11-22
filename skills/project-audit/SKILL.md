@@ -42,15 +42,8 @@ To detect recently committed secrets or sensitive internal details, inspect the 
 - All commits within the **last 1 hour** (`git log --since="1 hour ago"`).
 
 ```sh
-# Calculate commit count in the last 1 hour vs last 20 commits
-COUNT_1H=$(git log --since="1 hour ago" --oneline 2>/dev/null | wc -l | tr -d ' ')
-if [ "$COUNT_1H" -gt 20 ]; then
-  COMMIT_TARGET_ARG="--since=\"1 hour ago\""
-  echo "Using last 1 hour window ($COUNT_1H commits)"
-else
-  COMMIT_TARGET_ARG="-n 20"
-  echo "Using last 20 commits window"
-fi
+# Compare recent 1-hour commit count vs. 20; pick the larger window (--since="1 hour ago" or -n 20)
+git log --since="1 hour ago" --oneline | wc -l
 ```
 
 Verify: The audit mode and commit history window are explicitly established before running checks.
@@ -163,7 +156,7 @@ Produce a structured markdown audit report using the following template:
 ---
 
 ### Prioritized Remediation Plan
-1. **P0 (Immediate / Blocking)**: <Actionable item with file:line reference>
+1. **P0 (Immediate / Blocking)**: <Actionable item with [file.ext#Lxx](<accessible-target>) (path/to/file.ext:xx)>
 2. **P1 (High Priority)**: <Actionable item>
 3. **P2 (Improvement / Tech Debt)**: <Actionable item>
 ```

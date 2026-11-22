@@ -12,7 +12,7 @@ When planning or executing modifications involving git history, remote repositor
 - **Commit Author**: Determine the intended commit author name and email for commits created on the base/target branch. If not specified by the user, explicitly ask if referencing the global user git configuration is permitted. Never commit under an arbitrary, assumed, or unverified author.
 - **Git SSH Configuration**: Check if remote operations require SSH authentication. Pre-confirm any specific SSH command, key, or parameter settings with the user.
 - **PR / MR Assignee**: Pre-confirm who the assignee should be for any PR or MR to be opened.
-- **Message Formatting**: Draft commit messages and PR/MR titles and descriptions following [`change-message`](../../change-message/SKILL.md) (Conventional Commits and English by default), presenting drafts to the user for approval.
+- **Message Formatting**: Draft commit messages and PR/MR titles and descriptions following [change-message](../../change-message/SKILL.md) (../../change-message/SKILL.md) (Conventional Commits and English by default), presenting drafts to the user for approval.
 
 ---
 
@@ -21,7 +21,7 @@ When planning or executing modifications involving git history, remote repositor
 When modifying files in a git repository:
 
 - **Isolated Worktree**: Always fetch the latest remote changes and create a new branch from the remote default branch in an isolated worktree before editing files.
-- **Consult `git-worktree`**: Follow the procedures in [`git-worktree`](../../git-worktree/SKILL.md) for path resolution and lifecycle management.
+- **Consult `git-worktree`**: Follow the procedures in [git-worktree](../../git-worktree/SKILL.md) (../../git-worktree/SKILL.md) for path resolution and lifecycle management.
 - **Keep Primary Tree Clean**: Perform all modifications, builds, and test runs within the designated worktree directory.
 
 ---
@@ -44,5 +44,5 @@ To avoid chat context pollution and token bloat:
 When running shell commands during exploration or execution:
 
 - **Threshold Guards**: Avoid executing long, chained, or complex inline commands that are difficult for users to inspect (≥4 chained operators, ≥120 characters, ≥3 lines, or complex inline interpreter payloads).
-- **Convert to Snippets**: Follow [`command-snippet`](../../command-snippet/SKILL.md) to save command logic into dedicated, documented snippet files with explicit CLI arguments (avoiding environment variables for input).
-- **Audit Intelligibility**: Ensure snippets are audited via [`snippet-review`](../../snippet-review/SKILL.md) and present the mandatory Pre-Execution Notice before execution.
+- **Convert to Snippets**: Follow [command-snippet](../../command-snippet/SKILL.md) (../../command-snippet/SKILL.md) to save command logic into dedicated, documented snippet files with explicit CLI arguments (avoiding environment variables for input).
+- **Audit Intelligibility**: Ensure snippets are audited via [snippet-review](../../snippet-review/SKILL.md) (../../snippet-review/SKILL.md) and present the mandatory Pre-Execution Notice before execution.

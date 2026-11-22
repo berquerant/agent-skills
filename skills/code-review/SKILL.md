@@ -71,7 +71,7 @@ Structure the review feedback by severity levels:
 - 💡 **Positive Notes**: Well-structured code or good patterns worth acknowledging.
 
 Format each finding with:
-1. **Where (Location)**: Relative file and line reference (e.g. `path/to/filename.ext#L10-L15`).
+1. **Where (Location)**: Dual-formatted file and line reference (e.g. `[filename.ext#L10-L15](<accessible-target>) (path/to/filename.ext:10-15)`).
 2. **Rule & Principle**: Applicable standard or guideline from [owasp-secure-coding-guide.md](references/owasp-secure-coding-guide.md) (references/owasp-secure-coding-guide.md).
 3. **Why (Rationale & Threat)**: Detailed explanation of what is vulnerable/suboptimal, the associated attack vector or failure mode, and why the current logic is unsafe.
 4. **How (Recommended Fix)**: Concrete, language-idiomatic code example illustrating how to fix the issue securely.

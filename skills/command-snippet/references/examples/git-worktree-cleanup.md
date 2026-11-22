@@ -98,7 +98,7 @@ Present this notice to the user before running the snippet:
 ```markdown
 ### 📋 Snippet Pre-Execution Notice
 
-- **Script Path**: `[cleanup_pr_worktree.sh](path/to/scratch/cleanup_pr_worktree.sh) (path/to/scratch/cleanup_pr_worktree.sh)`
+- **Script Path**: [cleanup_pr_worktree.sh](path/to/scratch/cleanup_pr_worktree.sh) (path/to/scratch/cleanup_pr_worktree.sh)
 - **Invocation**: `./cleanup_pr_worktree.sh ".git-worktree/feature/sample-update" "feature/sample-update" "/path/to/repo"`
 - **Purpose**: Remove isolated worktree and delete local branch `feature/sample-update`.
 - **Parameters & Arguments**:

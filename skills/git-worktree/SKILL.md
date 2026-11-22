@@ -57,13 +57,12 @@ Verify: WORKTREE_ROOT exists and is writable.
 
 3. Get the branch name from the user or the current context.
 
-4. Compose the worktree path:
+4. Compose the worktree path using either the shared-root or project-local convention:
 
+   ```text
+   <WORKTREE_ROOT>/<owner>/<repo>/<branch-name>   # Shared root (e.g. ~/worktrees/owner/repo/feat-my-feature)
+   .git-worktree/<branch-name>                   # Project-local alternative
    ```
-   <WORKTREE_ROOT>/<owner>/<repo>/<branch-name>
-   ```
-
-   Example: `~/worktrees/berquerant/agent-skills/feat-my-feature`
 
 Verify: The path components are correct and the branch name is valid (no spaces, no special characters).
 

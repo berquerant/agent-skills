@@ -76,5 +76,5 @@ To minimize API consumption and tool latency:
     glab api "projects/:id/merge_requests?state=opened" > candidate_mrs.json
     ```
 - Filter candidates in memory or against the locally saved snapshot (`candidate_prs.json` / `candidate_mrs.json`) instead of querying file diffs or details one PR at a time via remote CLI commands (e.g. avoid running `gh pr diff <id>` or `gh pr view <id>` in loops).
-- For all qualified candidates, proceed to [security-and-reputation-check.md](security-and-reputation-check.md) for context and legitimacy verification before checkout.
+- For all qualified candidates, proceed to [security-and-reputation-check.md](security-and-reputation-check.md) (security-and-reputation-check.md) for context and legitimacy verification before checkout.
 

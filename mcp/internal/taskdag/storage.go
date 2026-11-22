@@ -172,6 +172,9 @@ func (s *Storage) Delete(dagID string) (bool, error) {
 		deleted = true
 		return nil
 	})
+	if err == nil && deleted {
+		s.locks.DeleteLock(dagID)
+	}
 	return deleted, err
 }
 

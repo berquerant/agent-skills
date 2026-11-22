@@ -48,7 +48,7 @@ Use this template to present the findings and actionable proposals at the conclu
   set -euo pipefail
   <parameterized_command_chain>
   \`\`\`
-- **Recommended Hand-off**: [`command-snippet`](skills/command-snippet/SKILL.md)
+- **Recommended Hand-off**: [command-snippet](skills/command-snippet/SKILL.md) (skills/command-snippet/SKILL.md)
 
 ---
 

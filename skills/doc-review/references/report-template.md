@@ -11,7 +11,7 @@ Every finding must include four core components:
 ```markdown
 ### [Severity Badge] Finding Summary
 
-- **Where**: `path/to/document.md#Lxx-Lyy`
+- **Where**: [document.md#Lxx-Lyy](<accessible-target>) (path/to/document.md:xx-yy)
 - **Rule**: [Dimension Name & Checklist Item from doc-review-checklist.md]
 - **Why**: Explanation of the technical divergence, missing context, readability barrier, or security risk.
 - **How**:

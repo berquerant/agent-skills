@@ -13,14 +13,14 @@ Use this skill to extend a work-in-progress change set.
 Read the existing `git diff`, extract the intent and patterns, then
 apply those patterns to the files or sections that haven't been touched yet.
 
-This workflow coordinates [`explore-plan-execute`](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md) to explore the diff, extract patterns, identify targets, and establish an agreed continuation plan before applying edits to remaining files.
+This workflow coordinates [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md) to explore the diff, extract patterns, identify targets, and establish an agreed continuation plan before applying edits to remaining files.
 
 ---
 
 ## Prerequisites
 
 - Working directory is inside a git repository with an active uncommitted diff or specified base diff.
-- **Explore & Plan First**: Do not immediately edit files upon invocation. Adhere to [`explore-plan-execute`](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md) by analyzing the existing diff, cataloging remaining target locations, and presenting a concrete continuation plan for user approval before modifying files.
+- **Explore & Plan First**: Do not immediately edit files upon invocation. Adhere to [explore-plan-execute](../explore-plan-execute/SKILL.md) (../explore-plan-execute/SKILL.md) by analyzing the existing diff, cataloging remaining target locations, and presenting a concrete continuation plan for user approval before modifying files.
 
 ---
 

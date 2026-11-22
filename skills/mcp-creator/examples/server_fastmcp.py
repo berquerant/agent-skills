@@ -4,7 +4,10 @@ Note: For legacy mcp 1.x environments, replace `from mcp.server import MCPServer
 with `from mcp.server.fastmcp import FastMCP`.
 """
 
+from typing import Annotated
+
 from mcp.server import MCPServer
+from pydantic import Field
 
 mcp = MCPServer("my-server")
 
@@ -14,8 +17,11 @@ data_store = {"example": "sample content"}
 
 # Tool
 @mcp.tool()
-async def my_tool(x: int, y: int) -> int:
-    """Add two numbers."""
+async def my_tool(
+    x: Annotated[int, Field(description="First addend", ge=-1_000_000, le=1_000_000)],
+    y: Annotated[int, Field(description="Second addend", ge=-1_000_000, le=1_000_000)],
+) -> int:
+    """Add two bounded numbers."""
     return x + y
 
 
