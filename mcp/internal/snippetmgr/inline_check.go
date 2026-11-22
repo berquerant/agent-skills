@@ -24,10 +24,10 @@ var (
 // CheckInline evaluates an inline command against command-snippet Step 1 avoidance thresholds.
 // Structural complexity, branching (&&/||/if/for), pipelines, inline interpreters, and hazards
 // are delegated to snippet.Analyze so both shell and Python share a single AST analysis engine.
-func CheckInline(in CheckInlineInput) CheckInlineOutput {
+func CheckInline(in CheckInlineInput) (CheckInlineOutput, error) {
 	lang, _, err := NormalizeLanguage(in.Language)
 	if err != nil {
-		lang = "bash"
+		return CheckInlineOutput{}, err
 	}
 
 	cmd := strings.TrimSpace(in.Command)
@@ -36,7 +36,7 @@ func CheckInline(in CheckInlineInput) CheckInlineOutput {
 			ShouldExtract:     false,
 			Reasons:           []string{},
 			SuggestedLanguage: lang,
-		}
+		}, nil
 	}
 
 	charCount := len(cmd)
@@ -88,7 +88,7 @@ func CheckInline(in CheckInlineInput) CheckInlineOutput {
 	if out.ShouldExtract && audit.Level < 3 && !containsBroadOrInterpreter(reasons) {
 		out.LightweightHint = "If strictly read-only and local, consider splitting into simple <120-char commands first; otherwise create a snippet."
 	}
-	return out
+	return out, nil
 }
 
 func inferSuggestedLanguage(lang string, audit snippet.AuditReport) string {

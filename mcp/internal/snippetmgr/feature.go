@@ -53,7 +53,7 @@ func (f *Feature) Register(s *mcp.Server, env feature.Env) error {
 		Name:        "snippet_check_inline",
 		Description: "Evaluate whether an inline shell command exceeds command-snippet avoidance thresholds and should be extracted into a snippet file.",
 	}, func(_ context.Context, _ *mcp.CallToolRequest, in CheckInlineInput) (CheckInlineOutput, error) {
-		return CheckInline(in), nil
+		return CheckInline(in)
 	})
 
 	feature.AddSafeTool(s, env, &mcp.Tool{

@@ -105,7 +105,8 @@ func checkInlineTestCases() []checkInlineTestCase {
 func TestCheckInline(t *testing.T) {
 	for _, tt := range checkInlineTestCases() {
 		t.Run(tt.name, func(t *testing.T) {
-			out := snippetmgr.CheckInline(snippetmgr.CheckInlineInput{Command: tt.cmd, Language: tt.lang})
+			out, err := snippetmgr.CheckInline(snippetmgr.CheckInlineInput{Command: tt.cmd, Language: tt.lang})
+			require.NoError(t, err)
 			assert.Equal(t, tt.wantExtract, out.ShouldExtract)
 			assert.Equal(t, tt.wantLang, out.SuggestedLanguage)
 			assert.True(t, out.Audit.OK)
@@ -117,6 +118,11 @@ func TestCheckInline(t *testing.T) {
 			}
 		})
 	}
+
+	t.Run("rejects unsupported language", func(t *testing.T) {
+		_, err := snippetmgr.CheckInline(snippetmgr.CheckInlineInput{Command: "puts 'hi'", Language: "ruby"})
+		require.ErrorContains(t, err, "unsupported language")
+	})
 }
 
 func TestNamingAndContentValidation(t *testing.T) {
@@ -136,8 +142,10 @@ func TestNamingAndContentValidation(t *testing.T) {
 		require.NoError(t, snippetmgr.ValidateContent(samplePythonSnippet, "python"))
 
 		assert.ErrorContains(t, snippetmgr.ValidateContent("echo hi", "bash"), "shebang")
+		assert.ErrorContains(t, snippetmgr.ValidateContent("#!/usr/bin/env bash\r\n# Description: test\r\n# Usage: ./x.sh\r\nset -euo pipefail\r\n", "bash"), "LF")
 		assert.ErrorContains(t, snippetmgr.ValidateContent("#!/usr/bin/env bash\nset -euo pipefail\necho hi", "bash"), "documentation header")
 		assert.ErrorContains(t, snippetmgr.ValidateContent("#!/usr/bin/env bash\n# Description: test\n# Usage: ./x.sh\necho hi", "bash"), "set -euo pipefail")
+		assert.ErrorContains(t, snippetmgr.ValidateContent("#!/usr/bin/env bash\n# Description: test\n# Usage: ./x.sh\n# set -euo pipefail\necho hi", "bash"), "set -euo pipefail")
 		assert.ErrorContains(t, snippetmgr.ValidateContent(sampleBashV1+"\nTOKEN=ghp_123456789012345678901234567890123456", "bash"), "secret")
 	})
 }

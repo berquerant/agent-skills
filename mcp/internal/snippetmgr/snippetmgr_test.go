@@ -229,6 +229,15 @@ func TestManagerInvocationAndListing(t *testing.T) {
 	assert.Equal(t, 1, recOut.TotalRecorded)
 
 	_, err = mgr.RecordInvocation(snippetmgr.RecordInvocationInput{
+		Name:       "inspect_repo_status",
+		Scope:      snippetmgr.ScopeReusable,
+		DurationMs: -1,
+		Project:    "agent-skills",
+		Branch:     "feat/snippet-mgr",
+	}, t0.Add(2*time.Minute))
+	require.ErrorContains(t, err, "duration_ms")
+
+	_, err = mgr.RecordInvocation(snippetmgr.RecordInvocationInput{
 		Name:    "inspect_repo_status",
 		Scope:   snippetmgr.ScopeReusable,
 		Args:    []string{"ghp_123456789012345678901234567890123456"},

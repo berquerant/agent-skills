@@ -125,7 +125,7 @@ purpose, arguments, usage, and prerequisites.
 
 ## Step 5: Audit Intelligibility & Explain Intent to User
 
-Before executing any snippet, evaluate its cognitive intelligibility and ensure the user understands its operation:
+Before executing any snippet, evaluate its cognitive intelligibility and ensure the user understands its operation (when `agent-skills-mcp` is available, `snippet_create` in Step 6 performs `snippet_audit` and generates the Pre-Execution Notice skeleton atomically, so skip calling `snippet_audit` separately unless auditing an existing file):
 
 1. **Intelligibility Audit & Immutability**:
    - Audit the snippet using [snippet-review](../snippet-review/SKILL.md) (../snippet-review/SKILL.md) against its four-tier rubric (Transparent, Moderate, Complex, Opaque).

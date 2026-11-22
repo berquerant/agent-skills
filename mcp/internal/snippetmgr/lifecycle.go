@@ -88,8 +88,13 @@ func (m *Manager) verifyVersionFile(meta SnippetMeta, ver VersionRecord) VerifyO
 	return out
 }
 
+const maxInvocationHistory = 200
+
 // RecordInvocation appends an execution record to the snippet metadata ledger.
 func (m *Manager) RecordInvocation(in RecordInvocationInput, now time.Time) (RecordInvocationOutput, error) {
+	if in.DurationMs < 0 {
+		return RecordInvocationOutput{}, fmt.Errorf("duration_ms must be >= 0 (got %d)", in.DurationMs)
+	}
 	name, scope, proj, branch, err := resolveSnippetTarget(in.Name, in.Scope, in.Project, in.Branch, in.WorkDir)
 	if err != nil {
 		return RecordInvocationOutput{}, err
@@ -128,6 +133,9 @@ func (m *Manager) RecordInvocation(in RecordInvocationInput, now time.Time) (Rec
 			Note:       strings.TrimSpace(in.Note),
 		}
 		meta.Invocations = append(meta.Invocations, rec)
+		if len(meta.Invocations) > maxInvocationHistory {
+			meta.Invocations = meta.Invocations[len(meta.Invocations)-maxInvocationHistory:]
+		}
 		meta.UpdatedAt = ts
 		if err := m.saveMeta(meta); err != nil {
 			return err

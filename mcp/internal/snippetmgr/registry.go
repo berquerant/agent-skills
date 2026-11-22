@@ -187,6 +187,7 @@ func (m *Manager) saveVersionedSnippet(p createParams) (CreateOutput, error) {
 		meta.Versions = append(meta.Versions, rec)
 
 		if err := m.saveMeta(meta); err != nil {
+			_ = m.removeWithinRoot(relPath)
 			return err
 		}
 

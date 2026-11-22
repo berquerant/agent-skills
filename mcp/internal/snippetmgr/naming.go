@@ -91,6 +91,9 @@ func ValidateContent(code, lang string) error {
 	if err := guard.CheckNoSecrets(code); err != nil {
 		return fmt.Errorf("snippet code failed secret check: %w", err)
 	}
+	if strings.Contains(code, "\r") {
+		return fmt.Errorf("snippet code must use LF (Unix) line endings, not CRLF")
+	}
 
 	lines := strings.Split(code, "\n")
 	if !strings.HasPrefix(lines[0], "#!") {
@@ -121,14 +124,21 @@ func checkShellHardening(code, lang string) error {
 	if lang == "python" {
 		return nil
 	}
+	target := "set -euo pipefail"
 	if lang == "sh" {
-		if strings.Contains(code, "set -eu") {
+		target = "set -eu"
+	}
+	for line := range strings.SplitSeq(code, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+		if strings.Contains(trimmed, target) {
 			return nil
 		}
-		return fmt.Errorf("POSIX sh snippet must include 'set -eu' (or 'set -euo pipefail') for fail-fast hardening")
 	}
-	if strings.Contains(code, "set -euo pipefail") {
-		return nil
+	if lang == "sh" {
+		return fmt.Errorf("POSIX sh snippet must include 'set -eu' (or 'set -euo pipefail') for fail-fast hardening")
 	}
 	return fmt.Errorf("%s snippet must include 'set -euo pipefail' for fail-fast hardening", lang)
 }
