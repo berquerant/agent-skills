@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/berquerant/agent-skills/mcp/internal/pathutil"
 	"github.com/berquerant/agent-skills/mcp/internal/store"
@@ -288,4 +289,15 @@ func buildSnippetSummary(meta SnippetMeta) SnippetSummary {
 func sha256Hex(data []byte) string {
 	sum := sha256.Sum256(data)
 	return hex.EncodeToString(sum[:])
+}
+
+func fileInode(info fs.FileInfo) (uint64, bool) {
+	if info == nil {
+		return 0, false
+	}
+	st, ok := info.Sys().(*syscall.Stat_t)
+	if !ok || st == nil {
+		return 0, false
+	}
+	return st.Ino, true
 }

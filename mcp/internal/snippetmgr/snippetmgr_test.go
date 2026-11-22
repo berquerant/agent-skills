@@ -3,7 +3,6 @@ package snippetmgr_test
 import (
 	"encoding/json"
 	"os"
-	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -149,9 +148,7 @@ func TestManagerVersioningAndVerify(t *testing.T) {
 	assert.Equal(t, 1, v1.Version)
 	assert.Contains(t, v1.DualPath, "](file://")
 	assert.Contains(t, v1.PreExecutionNotice, "### 📋 Snippet Pre-Execution Notice")
-	if runtime.GOOS != "windows" {
-		assert.NotZero(t, v1.Inode)
-	}
+	assert.NotZero(t, v1.Inode)
 
 	infoV1, err := os.Stat(v1.Path)
 	require.NoError(t, err)
