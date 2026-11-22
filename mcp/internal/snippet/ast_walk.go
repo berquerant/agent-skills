@@ -292,8 +292,22 @@ func (c *astCollector) inspectParamExp(pe *syntax.ParamExp) {
 	if n, err := strconv.Atoi(pe.Param.Value); err == nil && n > c.metrics.MaxPositionalArg {
 		c.metrics.MaxPositionalArg = n
 	}
-	if pe.Repl != nil || pe.Exp != nil || pe.Excl {
+	if pe.Repl != nil || pe.Excl || isObscureExpansion(pe.Exp) {
 		c.addHazard(HazardObscureParamExpansion, int(pe.Pos().Line()), fmt.Sprintf("complex parameter expansion ${%s...}", pe.Param.Value), false)
+	}
+}
+
+func isObscureExpansion(exp *syntax.Expansion) bool {
+	if exp == nil {
+		return false
+	}
+	// Standard required-arg (${1:?msg}, ${1?msg}) and default-value (${var:-def}, ${var-def})
+	// guards are recommended by command-snippet and are transparent to human reviewers.
+	switch exp.Op.String() {
+	case ":?", "?", ":-", "-":
+		return false
+	default:
+		return true
 	}
 }
 

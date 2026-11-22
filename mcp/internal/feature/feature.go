@@ -30,6 +30,7 @@ type Env struct {
 	StateDir      string
 	CacheDir      string
 	CheckpointDir string
+	SnippetDir    string
 	MaxOutputSize int
 
 	CacheMaxTTL       int
