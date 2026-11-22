@@ -64,9 +64,13 @@ run = "lizard -w -C 15 -L 100 -s cyclomatic_complexity"
 description = "Run scc code and complexity report"
 run = "scc --by-file -s complexity"
 
+[tasks."mcp:file-lines"]
+description = "Verify Go source files in mcp stay within the per-file line limit"
+run = "./bin/check-file-lines.sh 400 mcp"
+
 [tasks."mcp:lint"]
 description = "Run all lint and doc checks on mcp module"
-depends = ["mcp:fix", "mcp:vet", "mcp:golangci-lint", "mcp:readme-diff", "lizard", "scc"]
+depends = ["mcp:fix", "mcp:vet", "mcp:golangci-lint", "mcp:readme-diff", "mcp:file-lines", "lizard", "scc"]
 
 [tasks."mcp:test"]
 description = "Run agent-skills-mcp tests with coverage and race detector"
