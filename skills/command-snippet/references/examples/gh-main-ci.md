@@ -82,7 +82,7 @@ Present this notice to the user before running the snippet:
 ```markdown
 ### 📋 Snippet Pre-Execution Notice
 
-- **Script Path**: `[check_main_ci.sh](path/to/scratch/check_main_ci.sh) (path/to/scratch/check_main_ci.sh)`
+- **Script Path**: [check_main_ci.sh](path/to/scratch/check_main_ci.sh) (path/to/scratch/check_main_ci.sh)
 - **Invocation**: `./check_main_ci.sh "/path/to/repo" "a1b2c3d"`
 - **Purpose**: Verify GitHub Actions workflow status on `main` branch for commit `a1b2c3d`.
 - **Parameters & Arguments**:

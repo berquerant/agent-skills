@@ -1,6 +1,8 @@
 package guard_test
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/berquerant/agent-skills/mcp/internal/guard"
@@ -21,8 +23,8 @@ func TestIsSensitivePath(t *testing.T) {
 		{name: "dotenv variant .env.custom", path: "config/.env.custom", wantSensitive: true, wantReasonSub: "dotenv"},
 		{name: "private key filename id_ed25519", path: "/home/user/id_ed25519", wantSensitive: true, wantReasonSub: "id_ed25519"},
 		{name: "pem extension", path: "/certs/server.PEM", wantSensitive: true, wantReasonSub: ".pem"},
-		{name: "aws credentials path", path: "/Users/dev/.aws/credentials", wantSensitive: true, wantReasonSub: "AWS"},
-		{name: "ssh config path", path: "/Users/dev/.ssh/config", wantSensitive: true, wantReasonSub: "SSH"},
+		{name: "aws credentials path", path: "/path/to/home/.aws/credentials", wantSensitive: true, wantReasonSub: "AWS"},
+		{name: "ssh config path", path: "/path/to/home/.ssh/config", wantSensitive: true, wantReasonSub: "SSH"},
 		{name: "docker config.json", path: "/root/.docker/config.json", wantSensitive: true, wantReasonSub: "Docker"},
 		{name: "github cli hosts.yml", path: "/home/user/.config/gh/hosts.yml", wantSensitive: true, wantReasonSub: "GitHub CLI"},
 		{name: "etc shadow", path: "/etc/shadow", wantSensitive: true, wantReasonSub: "System auth"},
@@ -95,4 +97,28 @@ func TestSanitizeForLog(t *testing.T) {
 	assert.Equal(t, guard.RedactedMask, nested["database_url"])
 	assert.Contains(t, nested["note"], guard.RedactedMask)
 	assert.NotContains(t, nested["note"], "AKIAIOSFODNN7EXAMPLE")
+}
+
+func TestCheckPathAllowed_Symlink(t *testing.T) {
+	tmp := t.TempDir()
+	sshDir := filepath.Join(tmp, ".ssh")
+	require.NoError(t, os.MkdirAll(sshDir, 0o700))
+	sshCfg := filepath.Join(sshDir, "config")
+	require.NoError(t, os.WriteFile(sshCfg, []byte("Host *"), 0o600))
+
+	safeFile := filepath.Join(tmp, "safe.log")
+	require.NoError(t, os.WriteFile(safeFile, []byte("ok"), 0o600))
+
+	linkToSSHFile := filepath.Join(tmp, "benign.log")
+	require.NoError(t, os.Symlink(sshCfg, linkToSSHFile))
+
+	linkToSSHDir := filepath.Join(tmp, "dir_link")
+	require.NoError(t, os.Symlink(sshDir, linkToSSHDir))
+
+	linkToSafe := filepath.Join(tmp, "safe_link.log")
+	require.NoError(t, os.Symlink(safeFile, linkToSafe))
+
+	require.Error(t, guard.CheckPathAllowed(linkToSSHFile))
+	require.Error(t, guard.CheckPathAllowed(filepath.Join(linkToSSHDir, "nonexistent_file")))
+	require.NoError(t, guard.CheckPathAllowed(linkToSafe))
 }

@@ -8,6 +8,7 @@ package guard
 import (
 	"fmt"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -44,10 +45,38 @@ func IsSensitivePath(filePath string) (bool, string) {
 	return false, ""
 }
 
-// CheckPathAllowed returns an error if filePath matches any sensitive path rule.
+// CheckPathAllowed returns an error if filePath or its resolved symlink target matches any sensitive path rule.
 func CheckPathAllowed(filePath string) error {
 	if sensitive, reason := IsSensitivePath(filePath); sensitive {
 		return fmt.Errorf("access to sensitive path %q is denied (%s)", filePath, reason)
 	}
+	if resolved := resolveSymlinksBestEffort(filePath); resolved != "" && resolved != filePath {
+		if sensitive, reason := IsSensitivePath(resolved); sensitive {
+			return fmt.Errorf("access to sensitive symlink target %q is denied (%s)", filePath, reason)
+		}
+	}
 	return nil
+}
+
+func resolveSymlinksBestEffort(filePath string) string {
+	trimmed := strings.TrimSpace(filePath)
+	if trimmed == "" {
+		return ""
+	}
+	curr := filepath.Clean(trimmed)
+	var suffix []string
+	for {
+		if resolved, err := filepath.EvalSymlinks(curr); err == nil {
+			for _, s := range slices.Backward(suffix) {
+				resolved = filepath.Join(resolved, s)
+			}
+			return resolved
+		}
+		parent := filepath.Dir(curr)
+		if parent == curr {
+			return ""
+		}
+		suffix = append(suffix, filepath.Base(curr))
+		curr = parent
+	}
 }

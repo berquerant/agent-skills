@@ -1,6 +1,6 @@
 # Doctor Report Template
 
-The finding format extends the one in [`code-review`](../../code-review/SKILL.md) Step 3 (Where, Rule, Why, How). The severity labels (🔴 Critical, 🟡 Warning, 🟢 Suggestion, 💡 Positive) are the same.
+The finding format extends the one in [code-review](../../code-review/SKILL.md) (../../code-review/SKILL.md) Step 3 (Where, Rule, Why, How). The severity labels (🔴 Critical, 🟡 Warning, 🟢 Suggestion, 💡 Positive) are the same.
 
 ---
 
@@ -8,11 +8,11 @@ The finding format extends the one in [`code-review`](../../code-review/SKILL.md
 
 Each finding has these fields:
 
-1. **Axis**: A, B, C, or D, as defined in [diagnostic-axes.md](diagnostic-axes.md).
+1. **Axis**: A, B, C, or D, as defined in [diagnostic-axes.md](diagnostic-axes.md) (diagnostic-axes.md).
 2. **Severity**: 🔴 / 🟡 / 🟢 / 💡.
-3. **Where**: relative `path/to/file.ext#Lxx-Lyy`.
+3. **Where**: `[file.ext#Lxx-Lyy](<accessible-target>) (path/to/file.ext:xx-yy)`.
 4. **Evidence (fact)**: what was directly observed, such as a snippet or tool output. No interpretation.
-5. **Reasoning (interpretation)**: why the evidence is a problem, and the failure mode or threat. See the separation rule in [`evidentiary-inquiry`](../../evidentiary-inquiry/references/source-scoping-and-verification.md).
+5. **Reasoning (interpretation)**: why the evidence is a problem, and the failure mode or threat. See the separation rule in [evidentiary-inquiry](../../evidentiary-inquiry/references/source-scoping-and-verification.md) (../../evidentiary-inquiry/references/source-scoping-and-verification.md).
 6. **Rule**: the criterion from the sibling reference that applies.
 7. **Fix**: a concrete recommendation.
 8. **Confidence**: High (directly observed and reproducible), Medium (observed, impact inferred), Low (indirect).

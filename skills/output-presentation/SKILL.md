@@ -78,8 +78,8 @@ Verify: The link is clickable and accessible, and the raw target can be copied c
 
 ## Guidelines
 
-- **Always co-present link and raw string.** Output the clickable Markdown link first, followed by the unadorned raw target in parentheses: `[label](accessible_target) (raw_target)`.
-- **Guarantee link viability.** Never provide broken, dead, or cwd-dependent links in the Markdown link portion. The link must be directly accessible to the user.
-- **Keep the parenthetical raw target clean.** Do not enclose the raw target in backticks or Markdown formatting within `(...)`.
-- **Complementary roles.** Rely on the link for effortless navigation and the raw string for exact, copy-pasteable CLI/editor input.
-- **Preserve exact characters.** Do not escape underscores or special characters within raw paths or URLs with backslashes.
+- **Always co-present link and raw string**: Output the clickable Markdown link first, followed by the unadorned raw target in parentheses (`[label](accessible_target) (raw_target)`), so users get both one-click navigation and clean copy-paste.
+- **Guarantee link viability**: Verify that the Markdown link resolves directly to the actual file or URL without cwd-dependent or broken targets, so the link opens reliably.
+- **Keep the parenthetical raw target clean**: Omit backticks and Markdown formatting inside `(...)` so double-clicking or dragging captures the exact string without extra characters.
+- **Complementary roles**: Rely on the link for effortless navigation and the raw string for exact, copy-pasteable CLI/editor input.
+- **Preserve exact characters**: Keep underscores and special characters unescaped within raw paths and URLs so copied strings work verbatim in shells and editors.

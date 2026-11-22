@@ -16,20 +16,20 @@ flowchart TD
         SR["skill-router<br/>(Analyze intent & propose pipeline)"]
     end
 
-    subgraph Audit ["2. Audit & Inquiry (Read-Only)"]
-        AUD["Audit & Diagnostics<br/>(doctor, code-review, doc-review, sandbox-review, project-audit, evidentiary-inquiry)"]
+    subgraph Planning ["2. Planning & Isolation"]
+        PLAN["Planning & Scheduling<br/>(explore-plan-execute, scrutinize-plan-execute, task-dependency-pipeline, git-worktree)"]
     end
 
-    subgraph Planning ["3. Planning & Scheduling"]
-        PLAN["Planning & Isolation<br/>(explore-plan-execute, scrutinize-plan-execute, task-dependency-pipeline)"]
+    subgraph Execution ["3. Execution, Pacing & Presentation"]
+        EXEC["Setup, Gating & Presentation<br/>(agent-skills-setup, step-gate, edit-paced-execution, checkpoint-log, command-snippet, output-presentation, user-notification)"]
     end
 
-    subgraph Execution ["4. Execution & Pacing"]
-        EXEC["Setup, Gating & Logging<br/>(agent-skills-setup, step-gate, edit-paced-execution, checkpoint-log, command-snippet)"]
+    subgraph Audit ["4. Audit & Inquiry (Read-Only)"]
+        AUD["Audit & Diagnostics<br/>(doctor, evidentiary-inquiry, code-review, doc-review, sandbox-review, project-audit, project-status, snippet-review)"]
     end
 
-    subgraph Remediation ["5. Remediation & Action"]
-        REM["Code & Doc Authoring<br/>(refactor, doc-refactor, structured-writing, resolve-dependency-prs, multi-repo-change)"]
+    subgraph Remediation ["5. Remediation & PR Lifecycle"]
+        REM["Code & Doc Authoring<br/>(refactor, doc-refactor, structured-writing, diff-continue, resolve-dependency-prs, resolve-recent-dependency-prs, multi-repo-change, change-message, review-discussion)"]
     end
 
     subgraph Meta ["6. Meta & Lifecycle"]
@@ -239,7 +239,7 @@ flowchart TD
 ## 6. Interoperability Principles
 
 1. **Intent-Driven Dispatch & Pipeline Routing**: `skill-router` acts as a read-only entrypoint dispatcher to analyze context, map user intent, and present an explicit sequential pipeline for user sign-off before executing any skill.
-2. **Read-Only vs. Mutation Separation**: Audit and investigation skills (`project-audit`, `project-status`, `code-review`, `doc-review`, `skill-review`, `evidentiary-inquiry`, `doctor`, `snippet-review`, `skill-router`, `agent-retrospective`) are strictly read-only and never mutate files. When changes are required, they suggest mutation skills (`refactor`, `doc-refactor`, `step-gate`, `diff-continue`).
+2. **Read-Only vs. Mutation Separation**: Audit and investigation skills (`project-audit`, `project-status`, `code-review`, `doc-review`, `sandbox-review`, `skill-review`, `evidentiary-inquiry`, `doctor`, `snippet-review`, `skill-router`, `agent-retrospective`) are strictly read-only and never mutate files. When changes are required, they suggest mutation skills (`refactor`, `doc-refactor`, `step-gate`, `diff-continue`).
 3. **Sequential Hand-off (User-in-the-Loop)**: Rather than calling other skills directly in a deep nested chain, skills present findings and recommend the next skill for the user to approve.
 4. **Reference Sharing over Duplication**: When audit standards overlap (such as security and public release checklists), skills share references (e.g. `../code-review/references/security-checklist.md`) via relative links instead of duplicating checklist content.
 5. **Gate Ownership**: When a skill's guidance or artifact is used inside another workflow, the calling workflow owns the approval gates; avoid introducing duplicate or redundant approval checkpoints.

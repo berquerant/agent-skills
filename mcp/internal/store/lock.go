@@ -239,6 +239,14 @@ func (p *LockPool) WithLock(key string, fn func() error) error {
 	return fn()
 }
 
+// DeleteLock removes the lock entry and underlying .lock file for key.
+func (p *LockPool) DeleteLock(key string) {
+	p.mu.Lock()
+	delete(p.locks, key)
+	p.mu.Unlock()
+	_ = os.Remove(filepath.Join(p.baseDir, key+".lock"))
+}
+
 // WithRLock executes fn while holding a shared FileLock for key.
 func (p *LockPool) WithRLock(key string, fn func() error) error {
 	lock := p.LockFor(key)

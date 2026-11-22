@@ -35,20 +35,28 @@ func NewManager(rootDir string) (*Manager, error) {
 	if err := os.MkdirAll(absRoot, 0o700); err != nil {
 		return nil, fmt.Errorf("create checkpoint root: %w", err)
 	}
+	locksDir := filepath.Join(absRoot, ".locks")
+	if err := os.MkdirAll(locksDir, 0o700); err != nil {
+		return nil, fmt.Errorf("create checkpoint locks dir: %w", err)
+	}
 	return &Manager{
 		rootDir: absRoot,
-		locks:   store.NewLockPool(absRoot, fileLockTimeout),
+		locks:   store.NewLockPool(locksDir, fileLockTimeout),
 	}, nil
 }
 
+func lockKey(relPath string) string {
+	return strings.ReplaceAll(filepath.ToSlash(relPath), "/", "__")
+}
+
 func (m *Manager) withLockedRoot(relPath string, fn func(root *os.Root) error) error {
-	return m.locks.WithLock(relPath, func() error {
+	return m.locks.WithLock(lockKey(relPath), func() error {
 		return m.withRoot(fn)
 	})
 }
 
 func (m *Manager) withRLockedRoot(relPath string, fn func(root *os.Root) error) error {
-	return m.locks.WithRLock(relPath, func() error {
+	return m.locks.WithRLock(lockKey(relPath), func() error {
 		return m.withRoot(fn)
 	})
 }

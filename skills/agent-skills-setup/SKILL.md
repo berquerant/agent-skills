@@ -91,8 +91,8 @@ Verify: The agent has established its baseline protocols and is ready to process
 
 ## Guidelines
 
-- **Zero Inline Prompt Bloat**: Do not re-paste full rule texts into system prompts; keep startup configuration lightweight by referencing this skill.
+- **Keep startup prompts lightweight**: Reference this skill instead of pasting full rule texts into system prompts, preserving context window budget across sessions.
 - **Platform Agnostic**: Apply these protocols across any agent platform (Antigravity, Claude Code, Cursor, Codex, etc.).
 - **Atomic Operations**: Always couple explanations with action in the same turn when tools are about to run.
-- **Non-Destructive Exploration**: Never execute irreversible modifications without an approved plan.
+- **Require an approved plan before irreversible changes**: Explore freely in read-only mode and obtain explicit user approval before executing destructive or state-mutating operations.
 - **Prioritize Dedicated Tools**: Prefer dedicated MCP tools over generic shell commands or ad-hoc scripts whenever appropriate.

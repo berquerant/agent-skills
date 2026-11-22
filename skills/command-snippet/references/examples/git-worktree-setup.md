@@ -99,7 +99,7 @@ Present this notice to the user before running the snippet:
 ```markdown
 ### 📋 Snippet Pre-Execution Notice
 
-- **Script Path**: `[setup_pr_worktree.sh](path/to/scratch/setup_pr_worktree.sh) (path/to/scratch/setup_pr_worktree.sh)`
+- **Script Path**: [setup_pr_worktree.sh](path/to/scratch/setup_pr_worktree.sh) (path/to/scratch/setup_pr_worktree.sh)
 - **Invocation**: `./setup_pr_worktree.sh "feature/sample-update" "/path/to/repo"`
 - **Purpose**: Fetch branch `feature/sample-update` and create isolated worktree under `.git-worktree/feature/sample-update`.
 - **Parameters & Arguments**:

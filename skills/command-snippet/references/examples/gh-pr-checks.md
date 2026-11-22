@@ -80,7 +80,7 @@ Present this notice to the user before running the snippet:
 ```markdown
 ### 📋 Snippet Pre-Execution Notice
 
-- **Script Path**: `[check_active_prs_status.sh](path/to/scratch/check_active_prs_status.sh) (path/to/scratch/check_active_prs_status.sh)`
+- **Script Path**: [check_active_prs_status.sh](path/to/scratch/check_active_prs_status.sh) (path/to/scratch/check_active_prs_status.sh)
 - **Invocation**: `./check_active_prs_status.sh 42 43 44`
 - **Purpose**: Poll and report CI checks status for PRs #42, #43, and #44.
 - **Parameters & Arguments**:

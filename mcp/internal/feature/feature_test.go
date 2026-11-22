@@ -259,7 +259,7 @@ func parseConfigTestCases(home string) []parseConfigTestCase {
 }
 
 func TestParseConfig(t *testing.T) {
-	home := "/Users/testuser"
+	home := "/path/to/home"
 
 	for _, tt := range parseConfigTestCases(home) {
 		t.Run(tt.name, func(t *testing.T) {

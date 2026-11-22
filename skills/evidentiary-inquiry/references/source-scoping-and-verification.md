@@ -95,7 +95,7 @@ Before including any fact in an investigation report, confirm each item on this 
 - [ ] **Version Pinning & Non-Conflation**: Is every software/tool fact explicitly tied to a specific version or commit hash, ensuring behaviors from older or newer versions are not conflated?
 - [ ] **Neighborhood Delta & Issue Coverage**: Have feature changes (added/removed/changed), unresolved issues, and recently resolved issues around the target version been checked?
 - [ ] **Exit Code & Error Silence**: Did the tool command exit successfully (`0`) without hidden errors or truncated outputs?
-- [ ] **Citation Precision & Dual Presentation**: Are file paths, line ranges, commit hashes, and URLs exact and formatted with both a clickable Markdown link and an unadorned raw string in parentheses per [`output-presentation`](../../output-presentation/SKILL.md)?
+- [ ] **Citation Precision & Dual Presentation**: Are file paths, line ranges, commit hashes, and URLs exact and formatted with both a clickable Markdown link and an unadorned raw string in parentheses per [output-presentation](../../output-presentation/SKILL.md) (../../output-presentation/SKILL.md)?
 - [ ] **Non-Contradiction**: Are there conflicting outputs or opposing data points in other parts of the codebase or release history? If yes, is the discrepancy noted?
 - [ ] **Reproducibility**: If relying on a command output, can the same output be consistently obtained under the same parameters?
 
@@ -149,5 +149,5 @@ Format the final report in Step 4 to ensure clear separation between confirmed p
 #### 6. Conclusions & Recommended Action
 - **Conclusion**: `<Direct answer to the user's inquiry, confirmed root cause, or version recommendation>`
 - **Recommended Next Skill**:
-  - Propose [`refactor`](../../refactor/SKILL.md) / [`step-gate`](../../step-gate/SKILL.md) for code modifications, [`doc-refactor`](../../doc-refactor/SKILL.md) for documentation updates, or [`explore-plan-execute`](../../explore-plan-execute/SKILL.md) / [`scrutinize-plan-execute`](../../scrutinize-plan-execute/SKILL.md) for full implementation planning.
+  - Propose [refactor](../../refactor/SKILL.md) (../../refactor/SKILL.md) / [step-gate](../../step-gate/SKILL.md) (../../step-gate/SKILL.md) for code modifications, [doc-refactor](../../doc-refactor/SKILL.md) (../../doc-refactor/SKILL.md) for documentation updates, or [explore-plan-execute](../../explore-plan-execute/SKILL.md) (../../explore-plan-execute/SKILL.md) / [scrutinize-plan-execute](../../scrutinize-plan-execute/SKILL.md) (../../scrutinize-plan-execute/SKILL.md) for full implementation planning.
 ```

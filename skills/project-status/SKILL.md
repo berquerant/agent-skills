@@ -109,7 +109,7 @@ Verify: Test and lint results are recorded (pass / fail / skipped with reason).
 
 Produce a structured status report using the following format:
 
-```
+```markdown
 ## Project Status Report
 
 ### Git State

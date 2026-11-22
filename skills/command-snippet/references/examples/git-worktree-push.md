@@ -78,7 +78,7 @@ Present this notice to the user before running the snippet:
 ```markdown
 ### 📋 Snippet Pre-Execution Notice
 
-- **Script Path**: `[push_worktree.sh](path/to/scratch/push_worktree.sh) (path/to/scratch/push_worktree.sh)`
+- **Script Path**: [push_worktree.sh](path/to/scratch/push_worktree.sh) (path/to/scratch/push_worktree.sh)
 - **Invocation**: `./push_worktree.sh "/path/to/worktree" "feature/sample-update"`
 - **Purpose**: Push rebased branch `feature/sample-update` to origin with `--force-with-lease`.
 - **Parameters & Arguments**:

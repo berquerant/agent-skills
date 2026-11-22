@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -38,11 +39,21 @@ type pythonASTResponse struct {
 	Hazards []Hazard `json:"hazards"`
 }
 
+func selectPythonBin() string {
+	pyBin := resolvePythonBin()
+	if filepath.IsAbs(pyBin) {
+		if _, err := os.Stat(pyBin); err != nil {
+			return "python3"
+		}
+	}
+	return pyBin
+}
+
 func analyzePythonAST(code string) (analysisResult, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), pythonParseTimeout)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, resolvePythonBin(), "-I", "-c", pythonASTScript)
+	cmd := exec.CommandContext(ctx, selectPythonBin(), "-I", "-c", pythonASTScript)
 	cmd.Stdin = strings.NewReader(code)
 	cmd.Env = []string{
 		"PATH=" + os.Getenv("PATH"),

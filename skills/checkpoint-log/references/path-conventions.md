@@ -12,7 +12,7 @@ All artifact files (checkpoint logs, runbooks, reports) are stored in a hierarch
 <root>/<project>/<branch>/<context>/<doc_type>-<timestamp>.md
 ```
 
-### Components
+### Path Components
 
 | Component | Description | Resolution Method & Examples |
 |---|---|---|

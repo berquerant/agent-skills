@@ -101,7 +101,7 @@ Applies across all projects.
 ## Reference Documentation
 
 For the core specification, refer to the local specification snapshot:
-- [agent-skills-spec.md](agent-skills-spec.md)
+- [agent-skills-spec.md](agent-skills-spec.md) (agent-skills-spec.md)
 
 > [!NOTE]
 > AI agents must rely strictly on local references and must not fetch or access external URLs autonomously.

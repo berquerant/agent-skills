@@ -2,6 +2,7 @@ package cache
 
 import (
 	"cmp"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"slices"
@@ -32,8 +33,8 @@ func isShardDirName(name string) bool {
 	return true
 }
 
-func listShardDirs(rootDir string) []string {
-	entries, err := os.ReadDir(rootDir)
+func listShardDirs(root *os.Root) []string {
+	entries, err := fs.ReadDir(root.FS(), ".")
 	if err != nil {
 		return nil
 	}
@@ -46,8 +47,8 @@ func listShardDirs(rootDir string) []string {
 	return shards
 }
 
-func forEachShardZstEntry(shardDir, shard string, visit func(relPath, fileName string, info os.FileInfo)) {
-	entries, err := os.ReadDir(shardDir)
+func forEachShardZstEntry(root *os.Root, shard string, visit func(relPath, fileName string, info os.FileInfo)) {
+	entries, err := fs.ReadDir(root.FS(), shard)
 	if err != nil {
 		return
 	}
@@ -75,8 +76,8 @@ func (s *Storage) initScanTotalSize() {
 	now := s.config.nowUnix()
 	_ = s.withLockedRoot(func(root *os.Root) {
 		var total int64
-		for _, shard := range listShardDirs(s.config.Dir) {
-			forEachShardZstEntry(filepath.Join(s.config.Dir, shard), shard, func(rel, name string, info os.FileInfo) {
+		for _, shard := range listShardDirs(root) {
+			forEachShardZstEntry(root, shard, func(rel, name string, info os.FileInfo) {
 				if isTmpFile(name) {
 					if isStaleTmpFile(info, now, false) {
 						_ = root.Remove(rel)
@@ -146,11 +147,11 @@ func rsplitN(s, sep string, maxSplits int) []string {
 	return out
 }
 
-func (s *Storage) findFilesByKey(baseKey string) []cacheFileRecord {
+func (s *Storage) findFilesByKey(root *os.Root, baseKey string) []cacheFileRecord {
 	shard := baseKey[:2]
 	prefix := baseKey + "_"
 	var records []cacheFileRecord
-	forEachShardZstEntry(filepath.Join(s.config.Dir, shard), shard, func(rel, name string, info os.FileInfo) {
+	forEachShardZstEntry(root, shard, func(rel, name string, info os.FileInfo) {
 		if !strings.HasPrefix(name, prefix) {
 			return
 		}
@@ -162,7 +163,7 @@ func (s *Storage) findFilesByKey(baseKey string) []cacheFileRecord {
 }
 
 func (s *Storage) findAndCleanFiles(root *os.Root, baseKey string, now int64) ([]cacheFileRecord, []cacheFileRecord) {
-	files := s.findFilesByKey(baseKey)
+	files := s.findFilesByKey(root, baseKey)
 	var valid, expired []cacheFileRecord
 	for _, item := range files {
 		if item.ttlTS <= now {

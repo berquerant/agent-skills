@@ -82,7 +82,7 @@ Present this notice to the user before running the snippet:
 ```markdown
 ### 📋 Snippet Pre-Execution Notice
 
-- **Script Path**: `[merge_pr.sh](path/to/scratch/merge_pr.sh) (path/to/scratch/merge_pr.sh)`
+- **Script Path**: [merge_pr.sh](path/to/scratch/merge_pr.sh) (path/to/scratch/merge_pr.sh)
 - **Invocation**: `./merge_pr.sh "123" "/path/to/repo"`
 - **Purpose**: Squash-merge pull request #123 and delete the remote branch.
 - **Parameters & Arguments**:

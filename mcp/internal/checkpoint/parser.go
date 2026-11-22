@@ -293,7 +293,16 @@ func (m *Manager) List(in ListInput) (ListOutput, error) {
 
 	logs := []LogSummary{}
 	_ = fs.WalkDir(root.FS(), ".", func(relPath string, d fs.DirEntry, walkErr error) error {
-		if walkErr != nil || d.IsDir() || !strings.HasSuffix(d.Name(), ".md") || strings.HasPrefix(d.Name(), ".tmp_") {
+		if walkErr != nil {
+			return nil
+		}
+		if d.IsDir() {
+			if d.Name() == ".locks" {
+				return fs.SkipDir
+			}
+			return nil
+		}
+		if !strings.HasSuffix(d.Name(), ".md") || strings.HasPrefix(d.Name(), ".tmp_") {
 			return nil
 		}
 		summary, ok := m.inspectLogSummary(logInspectContext{root: root, relPath: relPath, entry: d}, in)
@@ -319,7 +328,12 @@ func (m *Manager) inspectLogSummary(ctx logInspectContext, in ListInput) (LogSum
 	if in.DocType != "" && !strings.HasPrefix(ctx.entry.Name(), string(in.DocType)+"-") {
 		return LogSummary{}, false
 	}
-	raw, err := ctx.root.ReadFile(ctx.relPath)
+	var raw []byte
+	err := m.locks.WithRLock(lockKey(ctx.relPath), func() error {
+		var readErr error
+		raw, readErr = ctx.root.ReadFile(ctx.relPath)
+		return readErr
+	})
 	if err != nil {
 		return LogSummary{}, false
 	}

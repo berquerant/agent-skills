@@ -94,7 +94,9 @@ func (s *Storage) Update(dagID string, fn func(dag *DAG) (*JournalEntry, error))
 			return writeErr
 		}
 		if entry != nil {
-			_ = s.appendJournalUnlocked(dagID, *entry)
+			if jErr := s.appendJournalUnlocked(dagID, *entry); jErr != nil {
+				return jErr
+			}
 		}
 		return nil
 	})
@@ -170,6 +172,9 @@ func (s *Storage) Delete(dagID string) (bool, error) {
 		deleted = true
 		return nil
 	})
+	if err == nil && deleted {
+		s.locks.DeleteLock(dagID)
+	}
 	return deleted, err
 }
 

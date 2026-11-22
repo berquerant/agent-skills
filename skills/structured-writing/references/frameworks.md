@@ -35,7 +35,7 @@ Developed by Daniele Procida, **Diataxis** categorizes technical documentation a
 
 Systematized by Barbara Minto (*The Pyramid Principle*, McKinsey & Company), this framework structures complex arguments top-down so busy readers grasp the governing thought first.
 
-### Components
+### Pyramid Components
 1. **Introduction (SCQA)**:
    - **S (Situation)**: Undisputed context the reader already knows.
    - **C (Complication)**: The change, bottleneck, or problem that disrupts the situation.

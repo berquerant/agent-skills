@@ -62,29 +62,22 @@ git worktree move <current-path> <new-path>
 ### Shell snippet to extract owner/repo
 
 ```sh
-url=$(git remote get-url origin)
-
-# Strip protocol prefix and .git suffix, keep the path
-path=$(echo "$url" \
-  | sed 's|git@[^:]*:||' \
-  | sed 's|https://[^/]*/||' \
-  | sed 's|\.git$||')
-
-echo "$path"   # e.g. owner/repo
+git remote get-url origin | sed -E 's#^(git@[^:]+:|https?://[^/]+/)##; s#\.git$##'
 ```
 
 ---
 
 ## Worktree Path Convention
 
-```
-<WORKTREE_ROOT>/<owner>/<repo>/<branch-name>
+```text
+<WORKTREE_ROOT>/<owner>/<repo>/<branch-name>   # Shared root
+.git-worktree/<branch-name>                   # Project-local alternative
 ```
 
 Examples:
 
-```
-~/worktrees/berquerant/agent-skills/feat-my-feature
+```text
+~/worktrees/owner/repo/feat-my-feature
 ~/worktrees/myorg/backend/fix-login-bug
-~/worktrees/myorg/backend/chore-update-deps
+.git-worktree/chore-update-deps
 ```

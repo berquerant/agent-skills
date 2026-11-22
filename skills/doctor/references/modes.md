@@ -16,8 +16,8 @@
 Combine these, in order, and state which one applied:
 
 1. Uncommitted changes: `git status --short`, `git diff HEAD`.
-2. On a topic branch: the diff against the default branch, as described in Step 1 of [`code-review`](../../code-review/SKILL.md) (for example `git diff origin/main...HEAD`).
-3. On the default branch with a clean tree: the commit window used by [`project-audit`](../../project-audit/SKILL.md) Step 1.2, which is the larger of the last 20 commits or the last 1 hour.
+2. On a topic branch: the diff against the default branch, as described in Step 1 of [code-review](../../code-review/SKILL.md) (../../code-review/SKILL.md) (for example `git diff origin/main...HEAD`).
+3. On the default branch with a clean tree: the commit window used by [project-audit](../../project-audit/SKILL.md) (../../project-audit/SKILL.md) Step 1.2, which is the larger of the last 20 commits or the last 1 hour.
 
 For `recent`, read the touched files in full where needed to judge context, but report findings only on lines in or near the change unless a related problem is clearly caused by the change.
 

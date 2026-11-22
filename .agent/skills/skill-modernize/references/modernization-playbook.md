@@ -10,11 +10,11 @@ When a new model generation, agent harness update, or SDK version is released, e
 
 | Axis | Legacy Skill Anti-Pattern | Frontier Model-Aligned Target | Target Review / Check Artifact |
 |---|---|---|---|
-| **1. Reasoning & Step Granularity** | Manual chain-of-thought prompts (`think step by step`) or rigid 12+ micro-step scripts that constrain native reasoning | Concise 3–8 step workflows governed by observable `Verify:` contracts | `skill-review-checklist.md` (Dims 1 & 3), `run-checks.sh` (Check D & Check K) |
-| **2. Context & Token Economy** | Bloated frontmatter `description` (>350 chars), >250-line `SKILL.md` files, or multi-hop reference chains | 100–350 char `description` (Layer 1), 80–250 line top-loaded `SKILL.md` (`## Step 1` $\le$ line 100, Layer 2), and 1-hop `references/` links (Layer 3) | `skill-review-checklist.md` (Dims 2 & 3), `run-checks.sh` (Checks A, C, D) |
+| **1. Reasoning & Step Granularity** | Manual chain-of-thought prompts (`think step by step`) or rigid 12+ micro-step scripts that constrain native reasoning | Concise 3–8 step workflows governed by observable `Verify:` contracts | `skill-review-checklist.md` (Dims 1 & 3), `skill-lint` (Check D & Check K) |
+| **2. Context & Token Economy** | Bloated frontmatter `description` (>350 chars), >250-line `SKILL.md` files, or multi-hop reference chains | 100–350 char `description` (Layer 1), 80–250 line top-loaded `SKILL.md` (`## Step 1` $\le$ line 100, Layer 2), and 1-hop `references/` links (Layer 3) | `skill-review-checklist.md` (Dims 2 & 3), `skill-lint` (Checks A, C, D) |
 | **3. Tool Use & Risk-Proportional Guardrails** | Uniformly high friction on read-only exploration, or per-call counters that penalize parallel read tool batches | Low-friction parallel read batches (counted as 1 turn) paired with strict approval gates on state-mutating, destructive, or external operations | `skill-review-checklist.md` (Dim 1), `edit-paced-execution`, `command-snippet`, `evidentiary-inquiry` |
 | **4. Instruction Framing & Contracts** | All-caps negative prohibition lists (`DO NOT`, `NEVER`) without rationale, causing brittle edge-case generalization | Affirmative, **Why-first** principles in `## Guidelines` explaining the architectural invariant before any boundary | `skill-review-checklist.md` (Dim 3), `skill-creator`, `AGENTS.md` |
-| **5. Ecosystem, SDK & Output Hygiene** | Version-unanchored specs, internal SDK mismatches (e.g., v1 vs. v2 imports), $\ge 120$-char inline shell commands, or single-format links | Version-dated local snapshots, unified SDK examples, $<120$-char shell commands, and dual-formatted links (`[label](path) (path)`) | `skill-review-checklist.md` (Dims 2, 3, 6), `run-checks.sh` (Checks E, J, K) |
+| **5. Ecosystem, SDK & Output Hygiene** | Version-unanchored specs, internal SDK mismatches (e.g., v1 vs. v2 imports), $\ge 120$-char inline shell commands, or single-format links | Version-dated local snapshots, unified SDK examples, $<120$-char shell commands, and dual-formatted links (`[label](path) (path)`) | `skill-review-checklist.md` (Dims 2, 3, 6), `skill-lint` (Checks E, J, K) |
 
 ---
 
@@ -37,7 +37,7 @@ After updating `skill-review` and locking the baseline via self-review, group ba
   - Compress frontmatter `description` fields into the 100–350 char Layer 1 budget.
   - Wrap or extract $\ge 120$-char inline shell commands and fix duplicate reference headings.
   - Register missing skills in `README.md`, `AGENTS.md`, and `intent-matrix.md`.
-- **Verification Gate**: `run-checks.sh --strict` reports `0 errors, 0 warnings` across all modified skills.
+- **Verification Gate**: `agent-skills-mcp skill-lint --strict` (or `lint_all` MCP tool) reports `0 errors, 0 warnings` across all modified skills.
 
 #### Phase 2: Priority 1 — Structural & Risk-Proportional Refactoring (via `refactor`)
 - **Target Skills**: `<list of skills needing structural split or guardrail calibration>`
@@ -53,7 +53,7 @@ After updating `skill-review` and locking the baseline via self-review, group ba
   - Convert negative prohibition lists in `## Guidelines` into affirmative, Why-first principles.
   - Standardize all file, directory, and cross-skill links to `output-presentation` dual format (`[label](path) (path)`).
   - Align root `AGENTS.md` and `README.md` conventions with the modernized baseline.
-- **Verification Gate**: All skills in `skills/*` and `.agent/skills/*` achieve `🟢 PASS (0 [F], 0 [W])` across both `run-checks.sh --strict` and the 6 qualitative review dimensions.
+- **Verification Gate**: All skills in `skills/*` and `.agent/skills/*` achieve `🟢 PASS (0 [F], 0 [W])` across both `agent-skills-mcp skill-lint --strict` and the 6 qualitative review dimensions.
 ```
 
 ---
@@ -63,5 +63,5 @@ After updating `skill-review` and locking the baseline via self-review, group ba
 When applying `skill-modernize` to itself (`.agent/skills/skill-modernize/`):
 
 1. **Delta Check**: Confirm that `modernization-playbook.md` covers all active axes in [skill-review-checklist.md](../../../../skills/skill-review/references/skill-review-checklist.md) (../../../../skills/skill-review/references/skill-review-checklist.md) and all automated checks A–K in [automated-checks.md](../../../../skills/skill-review/references/automated-checks.md) (../../../../skills/skill-review/references/automated-checks.md).
-2. **Mechanical Check**: Run `skills/skill-review/scripts/run-checks.sh --strict .agent/skills/skill-modernize` and verify `PASSED (0 errors, 0 warnings)`.
+2. **Mechanical Check**: Run `agent-skills-mcp skill-lint --strict .agent/skills/skill-modernize` (or `lint_skill`) and verify `PASSED (0 errors, 0 warnings)`.
 3. **Six-Dimension Check**: Evaluate `skill-modernize` across all 6 dimensions in `skill-review` (`1. Scope`, `2. Modularity`, `3. Conventions`, `4. Coupling`, `5. DRY`, `6. Self-Consistency`) and confirm `🟢 PASS (0 [F], 0 [W])`.

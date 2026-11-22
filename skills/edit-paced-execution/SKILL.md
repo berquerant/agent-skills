@@ -27,7 +27,7 @@ For reporting templates and threshold heuristics, refer to [pace-monitoring-guid
 
 Before beginning task execution, analyze the task requirements and propose pacing thresholds and execution modes to the user.
 
-1. **Initialize Session**: Call the `pace_start` MCP tool with the desired `preset` (`localized`, `standard`, `cross_cutting`), `time_limit_sec`, `call_limit`, and `command_mode` (`standard`, `heavy`, `critical`, `unmonitored`). The tool returns the structured proposal block.
+1. **Initialize Session**: Call the `pace_start` MCP tool with the desired `profile` (`quick`, `standard`, `deep`), `time_limit_sec`, `call_limit`, and `mode` (`standard`, `heavy`, `critical`, `unmonitored`). The tool returns the structured proposal block.
 2. **Present Proposal**: Present the proposed limits and rationale to the user for acknowledgment.
 
 If the MCP server is unavailable, refer to [pace-monitoring-guide.md](references/pace-monitoring-guide.md) (references/pace-monitoring-guide.md) to establish thresholds manually:

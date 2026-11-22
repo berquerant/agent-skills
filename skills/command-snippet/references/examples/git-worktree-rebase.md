@@ -85,7 +85,7 @@ Present this notice to the user before running the snippet:
 ```markdown
 ### 📋 Snippet Pre-Execution Notice
 
-- **Script Path**: `[rebase_worktree.sh](path/to/scratch/rebase_worktree.sh) (path/to/scratch/rebase_worktree.sh)`
+- **Script Path**: [rebase_worktree.sh](path/to/scratch/rebase_worktree.sh) (path/to/scratch/rebase_worktree.sh)
 - **Invocation**: `./rebase_worktree.sh "/path/to/worktree"`
 - **Purpose**: Check and rebase local worktree branch onto `origin/main`.
 - **Parameters & Arguments**:

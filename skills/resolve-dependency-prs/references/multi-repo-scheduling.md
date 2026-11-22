@@ -3,7 +3,7 @@
 Guidelines for managing dependency PR resolution across single or multiple repositories without idle blocking, ensuring default branch stability, and tracking external API rate limits and costs.
 
 > [!NOTE]
-> This scheduling model is a domain-specific specialization of the general Directed Acyclic Graph (DAG) and cooperative idle-wait scheduler defined in [`task-dependency-pipeline`](../../task-dependency-pipeline/SKILL.md) and [`dag-scheduling-guide.md`](../../task-dependency-pipeline/references/dag-scheduling-guide.md).
+> This scheduling model is a domain-specific specialization of the general Directed Acyclic Graph (DAG) and cooperative idle-wait scheduler defined in [task-dependency-pipeline](../../task-dependency-pipeline/SKILL.md) (../../task-dependency-pipeline/SKILL.md) and [dag-scheduling-guide.md](../../task-dependency-pipeline/references/dag-scheduling-guide.md) (../../task-dependency-pipeline/references/dag-scheduling-guide.md).
 
 ---
 
@@ -12,7 +12,7 @@ Guidelines for managing dependency PR resolution across single or multiple repos
 When processing dependency PRs across repositories:
 1. **External API Rate Limiting & Cost Accounting**:
    - Platform API queries (`gh`, `glab`, etc.) must respect an agreed rate-limit interval (recommended default: **10 seconds per call**; confirm the appropriate interval with the user during planning).
-   - Treat each API call as a billable resource/cost metric. For repeatable queries, reuse local caches following [`command-cache-protocol.md`](../../explore-plan-execute/references/command-cache-protocol.md) and dedicated caching skills/MCPs (`cache-memoizer` / `cache-mcp`) per `AGENTS.md` Rule 5. For non-cacheable or state-mutating calls, enforce the rate-limit interval.
+   - Treat each API call as a billable resource/cost metric. For repeatable queries, reuse local caches following [command-cache-protocol.md](../../explore-plan-execute/references/command-cache-protocol.md) (../../explore-plan-execute/references/command-cache-protocol.md) and dedicated caching skills/MCPs (`agent-skills-mcp` `cache_*` tools: `cache_get`, `cache_set`, `cache_exist`, `cache_delete`, `cache_purge`, `cache_version`) per `AGENTS.md` Rule 5. For non-cacheable or state-mutating calls, enforce the rate-limit interval.
    - Pacing cooldowns should be filled with local operations (worktree setups, builds, tests, linting, or log analysis) which incur zero API cost.
 2. **Default Branch CI Stability Gate**:
    - Within any single repository, multiple PRs must be processed strictly sequentially.

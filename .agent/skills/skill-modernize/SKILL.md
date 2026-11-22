@@ -20,7 +20,7 @@ For the 5-axis model delta matrix, the 3-phase remediation plan template, and th
 ## Prerequisites
 
 - Read and write access to `skills/`, `.agent/skills/`, and repository index files (`README.md`, `AGENTS.md`).
-- A POSIX-compatible shell to run `./bin/lint.sh check`, `./bin/check-skills.sh`, and [run-checks.sh](../../../skills/skill-review/scripts/run-checks.sh) (../../../skills/skill-review/scripts/run-checks.sh).
+- A POSIX-compatible shell to run `./bin/lint.sh check`, `./bin/check-skills.sh`, and `agent-skills-mcp skill-lint` (or the `lint_skill` / `lint_all` MCP tools; [run-checks.sh](../../../skills/skill-review/scripts/run-checks.sh) (../../../skills/skill-review/scripts/run-checks.sh) is retained only as a frozen legacy fallback).
 
 ---
 
@@ -50,11 +50,11 @@ Update the repository's evaluation ruler and scaffolding templates first so all 
 
 1. **Update `skill-review` Criteria & Automated Checks**:
    - Update [skill-review-checklist.md](../../../skills/skill-review/references/skill-review-checklist.md) (../../../skills/skill-review/references/skill-review-checklist.md) with explicit `[F]` (hard error) and `[W]` (warning) items for the new model-alignment criteria.
-   - Implement reproducible mechanical checks in [run-checks.sh](../../../skills/skill-review/scripts/run-checks.sh) (../../../skills/skill-review/scripts/run-checks.sh) (including `--strict` mode support) and document them in [automated-checks.md](../../../skills/skill-review/references/automated-checks.md) (../../../skills/skill-review/references/automated-checks.md) and [report-template.md](../../../skills/skill-review/references/report-template.md) (../../../skills/skill-review/references/report-template.md).
+   - Implement reproducible mechanical checks in `mcp/internal/skilllint` (with `--strict` mode support, invoked via `agent-skills-mcp skill-lint` and `lint_skill` / `lint_all`) and document them in [automated-checks.md](../../../skills/skill-review/references/automated-checks.md) (../../../skills/skill-review/references/automated-checks.md) and [report-template.md](../../../skills/skill-review/references/report-template.md) (../../../skills/skill-review/references/report-template.md). Leave the deprecated [run-checks.sh](../../../skills/skill-review/scripts/run-checks.sh) (../../../skills/skill-review/scripts/run-checks.sh) frozen.
 2. **Synchronize `skill-creator` & Repository Conventions**:
    - Update generation guidelines in [skill-creator](../../../skills/skill-creator/SKILL.md) (../../../skills/skill-creator/SKILL.md) and convention rules in `AGENTS.md` so new skills automatically inherit the updated standards.
 
-Verify: `skill-review` checklists, `run-checks.sh`, `skill-creator`, and `AGENTS.md` are updated and pass `./bin/lint.sh check`.
+Verify: `skill-review` checklists, `mcp/internal/skilllint`, `skill-creator`, and `AGENTS.md` are updated and pass `./bin/lint.sh check` and `mise run mcp:test`.
 
 ---
 
@@ -64,14 +64,14 @@ Audit the updated meta-skills against their own criteria before reviewing the re
 
 1. **Run Strict Automated Checks on Meta-Skills**:
    ```sh
-   skills/skill-review/scripts/run-checks.sh --strict skills/skill-review
-   skills/skill-review/scripts/run-checks.sh --strict .agent/skills/skill-modernize
+   agent-skills-mcp skill-lint --strict skills/skill-review
+   agent-skills-mcp skill-lint --strict .agent/skills/skill-modernize
    ```
 2. **Evaluate All Six Qualitative Dimensions**:
    - Inspect both `skill-review` and `skill-modernize` against all 6 dimensions in [skill-review-checklist.md](../../../skills/skill-review/references/skill-review-checklist.md) (../../../skills/skill-review/references/skill-review-checklist.md) and the **Self-Modernization Checklist** in [modernization-playbook.md](references/modernization-playbook.md) (references/modernization-playbook.md).
    - Remediate any self-review `[F]` or `[W]` findings immediately until both skills achieve `🟢 PASS (0 errors, 0 warnings)`.
 
-Verify: Both `skill-review` and `skill-modernize` pass `run-checks.sh --strict` with `0 errors, 0 warnings` and score `🟢 PASS` across all 6 dimensions.
+Verify: Both `skill-review` and `skill-modernize` pass `agent-skills-mcp skill-lint --strict` (or `lint_skill`) with `0 errors, 0 warnings` and score `🟢 PASS` across all 6 dimensions.
 
 ---
 
@@ -80,7 +80,7 @@ Verify: Both `skill-review` and `skill-modernize` pass `run-checks.sh --strict` 
 Audit all skills in the repository using the locked `skill-review` baseline and organize fixes into a phased execution plan:
 
 1. **Execute Batch `skill-review`**:
-   - Run `run-checks.sh` and the 6-dimension evaluation across all skills in `skills/*` (and `.agent/skills/*`).
+   - Run `agent-skills-mcp skill-lint` (or `lint_all`) and the 6-dimension evaluation across all skills in `skills/*` (and `.agent/skills/*`).
    - Save the complete batch review report (with a Verdict Matrix, Cross-Skill Issues, and per-skill findings) to a user-confirmed path following [checkpoint-log](../../../skills/checkpoint-log/SKILL.md) (../../../skills/checkpoint-log/SKILL.md).
 2. **Structure the Three-Phase Remediation Plan**:
    - Group all findings using the **Three-Phase Repository Remediation Template** in [modernization-playbook.md](references/modernization-playbook.md) (references/modernization-playbook.md):
@@ -113,8 +113,8 @@ Verify: `./bin/lint.sh check && ./bin/check-skills.sh` exits with `0` (`0 errors
 
 ## Guidelines
 
-- **Update the evaluation ruler before patching individual skills**: Evolve `skill-review` criteria and `run-checks.sh` first so every subsequent skill edit is measured against a single, reproducible standard.
-- **Enforce self-referential baseline verification**: Require `skill-review` and `skill-modernize` to pass `run-checks.sh --strict` with zero warnings before auditing the rest of the catalog.
+- **Update the evaluation ruler before patching individual skills**: Evolve `skill-review` criteria and `mcp/internal/skilllint` first so every subsequent skill edit is measured against a single, reproducible standard.
+- **Enforce self-referential baseline verification**: Require `skill-review` and `skill-modernize` to pass `agent-skills-mcp skill-lint --strict` with zero warnings before auditing the rest of the catalog.
 - **Scale guardrails proportionally to operational risk**: Calibrate skill instructions so read-only local exploration remains low-friction and parallelizable while state-mutating or external actions retain explicit approval gates.
 - **Execute repository-wide changes in reviewable phases**: Separate mechanical/accuracy fixes (Phase 1), structural/guardrail refactoring (Phase 2), and convention/documentation polish (Phase 3) with explicit checkpoints and commits.
 - **Preserve full traceability via dual links and checkpoint logs**: Co-present all file paths and line ranges per [output-presentation](../../../skills/output-presentation/SKILL.md) (../../../skills/output-presentation/SKILL.md) and record every phase outcome in a user-confirmed [checkpoint-log](../../../skills/checkpoint-log/SKILL.md) (../../../skills/checkpoint-log/SKILL.md).

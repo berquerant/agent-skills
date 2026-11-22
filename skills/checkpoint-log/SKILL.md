@@ -39,7 +39,7 @@ Resolve the candidate path following [path-conventions.md](references/path-conve
    - Context: Brief kebab-case task topic (e.g. `doctor-quick`, `refactor-parser`).
    - Document Type: `checkpoint` (milestone log), `runbook` (procedure guide), or `report` (investigation/audit report).
 4. **Propose Candidate Path**:
-   - If starting a new run, propose a new generation path with a timestamp: `<root>/<project>/<branch>/<context>/<doc_type>-<YYYYMMDD-HHMMSS>.md`.
+   - If starting a new run, call `checkpoint_init` with `propose_only: true` (providing `context`, `title`, `objective`, and optional `project`, `branch`, `doc_type`, `work_dir`) to resolve `<root>/<project>/<branch>/<context>/<doc_type>-<YYYYMMDD-HHMMSS>.md` without writing to disk.
    - If resuming or appending to an ongoing run, locate the latest existing generation via `checkpoint_list` (or directory search) and ask whether to append or start a new generation.
 
 > "I propose recording the checkpoint log at:
@@ -56,7 +56,7 @@ Verify: The exact file path is confirmed by the user, and the parent directory i
 
 ## Step 2: Initialize the Checkpoint Log
 
-Initialize the log file using the `checkpoint_init` MCP tool, specifying `path`, `project`, `branch`, `context`, `title`, and `objective`. The server verifies that the path and contents contain no sensitive keys or paths and atomically writes the header.
+Initialize the log file using the `checkpoint_init` MCP tool, specifying `context`, `title`, `objective`, and optional `project`, `branch`, `doc_type`, `work_dir`. The server resolves the generation path, verifies that the path and contents contain no sensitive keys or paths, and atomically writes the header.
 
 If the MCP server is unavailable in the environment, refer to [log-format.md](references/log-format.md) (references/log-format.md) and write the header block manually:
 
@@ -84,7 +84,7 @@ Verify: The header block exists at the start of the log file with correct task m
 
 At each milestone (e.g. at the completion of each step in `explore-plan-execute`, `step-gate`, or other workflows):
 
-1. **Append via MCP**: Call the `checkpoint_append` MCP tool with `path`, `step_title`, `status` (`COMPLETED`, `FAILED`, `BLOCKED`, or `ADJUSTED`), `actions`, `findings`, `decisions`, and `next_step`. The server verifies inputs and atomically appends the entry.
+1. **Append via MCP**: Call the `checkpoint_append` MCP tool with `path`, `title`, `status` (`COMPLETED`, `FAILED`, `BLOCKED`, or `ADJUSTED`), `actions`, `findings`, `decisions`, and `next_steps` (and optional `step`). The server verifies inputs and atomically appends the entry.
 2. **Fallback Manual Append**: If the MCP server is unavailable, format the entry per [log-format.md](references/log-format.md) (references/log-format.md) and append to `<log_path>`.
 3. **Notify the user**: In the chat update, briefly note that the checkpoint has been recorded to `<log_path>` (formatted per [output-presentation](../output-presentation/SKILL.md) (../output-presentation/SKILL.md)).
 

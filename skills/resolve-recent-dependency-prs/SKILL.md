@@ -133,7 +133,7 @@ For each repository to be processed:
    - Respect the user-confirmed API rate limit (recommended default: 10s per call) and account for API call costs.
    - Filter changes to package manifests and lockfiles.
    - Run context, legitimacy, and security audits.
-   - Create isolated worktrees via `git-worktree`.
+   - Create isolated worktrees via [git-worktree](../git-worktree/SKILL.md) (../git-worktree/SKILL.md).
    - Rebase onto default branch and run local tests/linters.
    - Validate remote CI checks and merge safely.
    - Ensure the default branch CI triggered by the merge passes before advancing to subsequent candidate PRs in the same repository.

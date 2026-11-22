@@ -30,8 +30,8 @@ flowchart TD
         Stdio["Stdio Transport (stdout / stderr)"]
         Core["Server Core & Registry (internal/server, internal/feature)"]
         Safe["SafeTool (Panic Catch & Max Output Cap)"]
-        Modules["Features: cache, task-dag, skill-lint, snippet-analyzer, checkpoint, pace-guard, pr-triage"]
-        Guard["Guardrails: internal/guard, internal/store, os.OpenRoot"]
+        Modules["Features: cache, task-dag, skill-lint, snippet-analyzer, snippet-manager, checkpoint, pace-guard, pr-triage"]
+        Guard["Guardrails: internal/guard, internal/store, internal/pathutil, os.OpenRoot"]
 
         Stdio --> Core --> Safe --> Modules --> Guard
     end
@@ -89,6 +89,7 @@ flowchart TD
   | `cache` | `cache_get`, `cache_set`, `cache_exist`, `cache_delete`, `cache_purge`, `cache_version` | [`explore-plan-execute`](../skills/explore-plan-execute/SKILL.md) | [`command-cache-protocol.md`](../skills/explore-plan-execute/references/command-cache-protocol.md) |
   | `skill-lint` | `lint_skill`, `lint_all` | [`skill-review`](../skills/skill-review/SKILL.md) | [`automated-checks.md`](../skills/skill-review/references/automated-checks.md), [`run-checks.sh`](../skills/skill-review/scripts/run-checks.sh) (deprecated) |
   | `snippet-analyzer` | `snippet_audit` | [`snippet-review`](../skills/snippet-review/SKILL.md) | [`intelligibility-rubric.md`](../skills/snippet-review/references/intelligibility-rubric.md) |
+  | `snippet-manager` | `snippet_check_inline`, `snippet_create`, `snippet_get`, `snippet_list`, `snippet_verify`, `snippet_record_invocation`, `snippet_deprecate`, `snippet_cleanup` | [`command-snippet`](../skills/command-snippet/SKILL.md) | [`approvable-patterns.md`](../skills/command-snippet/references/approvable-patterns.md) |
   | `task-dag` | `dag_create`, `dag_next`, `dag_transition`, `dag_status`, `dag_render`, `dag_list`, `dag_delete` | [`task-dependency-pipeline`](../skills/task-dependency-pipeline/SKILL.md) | [`dag-scheduling-guide.md`](../skills/task-dependency-pipeline/references/dag-scheduling-guide.md) |
   | `checkpoint` | `checkpoint_init`, `checkpoint_append`, `checkpoint_resume`, `checkpoint_set_status`, `checkpoint_list` | [`checkpoint-log`](../skills/checkpoint-log/SKILL.md) | [`path-conventions.md`](../skills/checkpoint-log/references/path-conventions.md), [`log-format.md`](../skills/checkpoint-log/references/log-format.md) |
   | `pace-guard` | `pace_start`, `pace_tick`, `pace_status`, `pace_reset`, `pace_watch`, `pace_liveness` | [`edit-paced-execution`](../skills/edit-paced-execution/SKILL.md) | [`pace-monitoring-guide.md`](../skills/edit-paced-execution/references/pace-monitoring-guide.md) |
@@ -114,9 +115,11 @@ flowchart TD
   All changes must pass `mise run check` cleanly:
   - `mise run lint` (`shellcheck` and `shfmt`)
   - `mise run check-skills` (`bin/check-skills.sh`)
+  - `mise run check-skill-publish` (`gh skill publish --dry-run`)
   - `mise run mcp:build` (`go build -o bin/agent-skills-mcp ./cmd/agent-skills-mcp`)
   - `mise run mcp:test` (`go test -cover -race ./...`)
   - `mise run mcp:vet` (`go vet ./...`)
   - `mise run mcp:fix` (`go fix -diff ./...`)
   - `mise run mcp:golangci-lint` (`golangci-lint run --no-config`)
+  - `mise run mcp:file-lines` (`./bin/check-file-lines.sh 400 mcp`)
   - `mise run mcp:readme-gen` / `mise run mcp:readme-diff` (regenerates and checks `mcp/README.md`)

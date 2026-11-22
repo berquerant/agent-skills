@@ -74,7 +74,7 @@ Present this notice to the user before running the snippet:
 ```markdown
 ### 📋 Snippet Pre-Execution Notice
 
-- **Script Path**: `[fetch_repo_prs.sh](path/to/scratch/fetch_repo_prs.sh) (path/to/scratch/fetch_repo_prs.sh)`
+- **Script Path**: [fetch_repo_prs.sh](path/to/scratch/fetch_repo_prs.sh) (path/to/scratch/fetch_repo_prs.sh)
 - **Invocation**: `./fetch_repo_prs.sh "/path/to/target-repo"`
 - **Purpose**: Fetch open pull requests with detailed metadata in structured JSON format.
 - **Parameters & Arguments**:

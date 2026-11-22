@@ -165,16 +165,12 @@ func loadSkillDirectoryFiles(skillDirAbs string) ([]string, map[string]string, m
 	allContents := make(map[string]string)
 	mdContents := make(map[string]string)
 
-	err = filepath.WalkDir(skillDirAbs, func(path string, d fs.DirEntry, walkErr error) error {
+	err = fs.WalkDir(root.FS(), ".", func(rel string, d fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
 		}
 		if d.IsDir() {
 			return nil
-		}
-		rel, relErr := filepath.Rel(skillDirAbs, path)
-		if relErr != nil {
-			return relErr
 		}
 		relSlash := filepath.ToSlash(rel)
 		relFiles = append(relFiles, relSlash)
