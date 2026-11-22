@@ -260,9 +260,14 @@ func hasXargsParallelFlag(args []string) bool {
 	return false
 }
 
+const (
+	denseTextEngineMinChars = 40
+	inlinePayloadMinChars   = 50
+)
+
 func (c *astCollector) checkDenseTextEngine(cmd string, args []string, line int) {
 	for _, arg := range args {
-		if len(arg) >= 40 {
+		if len(arg) >= denseTextEngineMinChars {
 			c.addHazard(HazardDenseTextEngine, line, fmt.Sprintf("dense %s expression (%d chars)", cmd, len(arg)), false)
 			return
 		}
@@ -286,7 +291,7 @@ func (c *astCollector) checkInlineInterpreter(cmd string, args []string, line in
 }
 
 func isComplexInlinePayload(payload string) bool {
-	if len(payload) >= 50 ||
+	if len(payload) >= inlinePayloadMinChars ||
 		strings.Contains(payload, ";") ||
 		strings.Contains(payload, "\n") ||
 		strings.Contains(payload, "import ") ||

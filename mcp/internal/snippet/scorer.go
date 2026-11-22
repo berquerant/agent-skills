@@ -119,15 +119,30 @@ var levelRules = []scoreRule{
 	},
 }
 
+// NormalizeLanguage normalizes and validates a snippet language identifier, defaulting to "bash".
+func NormalizeLanguage(raw string) (string, error) {
+	lang := strings.ToLower(strings.TrimSpace(raw))
+	if lang == "" {
+		return "bash", nil
+	}
+	switch lang {
+	case "bash", "sh", "zsh", "mksh":
+		return lang, nil
+	case "posix":
+		return "sh", nil
+	case "python", "python3", "py":
+		return "python", nil
+	default:
+		return "", fmt.Errorf("unsupported language %q (supported: bash, sh, zsh, mksh, python)", lang)
+	}
+}
+
 // Analyze evaluates snippet source code and returns a deterministic 4-tier AuditReport.
 // For Python snippets, AST parsing uses Python's built-in ast module and fails immediately on syntax errors without heuristic fallback.
 func Analyze(code, language string) AuditReport {
-	lang := strings.ToLower(strings.TrimSpace(language))
-	if lang == "" {
-		lang = "bash"
-	}
-	if !isSupportedLanguage(lang) {
-		return failedReport(lang, fmt.Sprintf("unsupported language %q (supported: bash, sh, zsh, mksh, python)", lang))
+	lang, err := NormalizeLanguage(language)
+	if err != nil {
+		return failedReport(strings.ToLower(strings.TrimSpace(language)), err.Error())
 	}
 
 	if isPythonLanguage(lang) {

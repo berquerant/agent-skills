@@ -51,6 +51,7 @@ type VersionRecord struct {
 	Path         string              `json:"path"`
 	DualPath     string              `json:"dual_path"`
 	SHA256       string              `json:"sha256"`
+	Inode        uint64              `json:"inode,omitempty"`
 	Status       VersionStatus       `json:"status"`
 	AuditLevel   int                 `json:"audit_level"`
 	AuditRating  string              `json:"audit_rating"`
@@ -114,6 +115,7 @@ type CreateOutput struct {
 	Path                 string              `json:"path,omitempty"`
 	DualPath             string              `json:"dual_path,omitempty"`
 	SHA256               string              `json:"sha256,omitempty"`
+	Inode                uint64              `json:"inode,omitempty"`
 	DeprecatedVersions   []int               `json:"deprecated_versions,omitempty"`
 	Audit                snippet.AuditReport `json:"audit"`
 	PreExecutionNotice   string              `json:"pre_execution_notice,omitempty"`
@@ -186,6 +188,8 @@ type VerifyOutput struct {
 	DualPath       string        `json:"dual_path"`
 	ExpectedSHA256 string        `json:"expected_sha256"`
 	ActualSHA256   string        `json:"actual_sha256,omitempty"`
+	ExpectedInode  uint64        `json:"expected_inode,omitempty"`
+	ActualInode    uint64        `json:"actual_inode,omitempty"`
 	Executable     bool          `json:"executable"`
 	Immutable      bool          `json:"immutable"`
 	Issues         []string      `json:"issues"`

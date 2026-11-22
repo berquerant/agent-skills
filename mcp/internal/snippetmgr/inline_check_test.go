@@ -78,27 +78,6 @@ func checkInlineTestCases() []checkInlineTestCase {
 			wantReasonSub: "complexity Level 4",
 			wantLang:      "python",
 		},
-		{
-			name:          "broad CLI tool gh triggers extraction",
-			cmd:           "gh pr list --state open",
-			wantExtract:   true,
-			wantReasonSub: `broad CLI tool "gh"`,
-			wantLang:      "bash",
-		},
-		{
-			name:          "git -C infix argument triggers extraction",
-			cmd:           "git -C /path/to/repo status",
-			wantExtract:   true,
-			wantReasonSub: "infix variable argument",
-			wantLang:      "bash",
-		},
-		{
-			name:          "grep with trailing target file triggers extraction",
-			cmd:           `grep -i "ERROR" /path/to/app.log`,
-			wantExtract:   true,
-			wantReasonSub: "trailing target file argument",
-			wantLang:      "bash",
-		},
 	}
 }
 
@@ -125,27 +104,60 @@ func TestCheckInline(t *testing.T) {
 	})
 }
 
-func TestNamingAndContentValidation(t *testing.T) {
-	t.Run("ValidateName rules", func(t *testing.T) {
-		valid, err := snippetmgr.ValidateName("rebase_and_test_worktree")
-		require.NoError(t, err)
-		assert.Equal(t, "rebase_and_test_worktree", valid)
+func TestValidateName(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		want    string
+		wantErr string
+	}{
+		{name: "valid snake_case name", input: "rebase_and_test_worktree", want: "rebase_and_test_worktree"},
+		{name: "valid kebab-case name", input: "check-active-prs", want: "check-active-prs"},
+		{name: "empty name", input: "", wantErr: "required"},
+		{name: "manual version suffix rejected", input: "my_script_v2", wantErr: "_vN"},
+		{name: "uppercase rejected", input: "BadCase", wantErr: "lowercase"},
+		{name: "path separator rejected", input: "a/b", wantErr: "path separators"},
+		{name: "file extension rejected", input: "foo.sh", wantErr: "file extensions"},
+	}
 
-		for _, bad := range []string{"", "run", "helper", "script", "my_script_v2", "BadCase", "a/b", "foo.sh"} {
-			_, err := snippetmgr.ValidateName(bad)
-			assert.Error(t, err, "expected error for %q", bad)
-		}
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := snippetmgr.ValidateName(tt.input)
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+				return
+			}
+			require.NoError(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
 
-	t.Run("ValidateContent rules", func(t *testing.T) {
-		require.NoError(t, snippetmgr.ValidateContent(sampleBashV1, "bash"))
-		require.NoError(t, snippetmgr.ValidateContent(samplePythonSnippet, "python"))
+func TestValidateContent(t *testing.T) {
+	tests := []struct {
+		name    string
+		code    string
+		lang    string
+		wantErr string
+	}{
+		{name: "valid bash snippet", code: sampleBashV1, lang: "bash"},
+		{name: "valid python snippet", code: samplePythonSnippet, lang: "python"},
+		{name: "missing shebang", code: "echo hi", lang: "bash", wantErr: "shebang"},
+		{name: "CRLF line endings rejected", code: "#!/usr/bin/env bash\r\n# Description: test\r\n# Usage: ./x.sh\r\nset -euo pipefail\r\n", lang: "bash", wantErr: "LF"},
+		{name: "missing documentation header", code: "#!/usr/bin/env bash\nset -euo pipefail\necho hi", lang: "bash", wantErr: "documentation header"},
+		{name: "missing set -euo pipefail", code: "#!/usr/bin/env bash\n# Description: test\n# Usage: ./x.sh\necho hi", lang: "bash", wantErr: "set -euo pipefail"},
+		{name: "commented set -euo pipefail does not count", code: "#!/usr/bin/env bash\n# Description: test\n# Usage: ./x.sh\n# set -euo pipefail\necho hi", lang: "bash", wantErr: "set -euo pipefail"},
+		{name: "embedded secret rejected", code: sampleBashV1 + "\nTOKEN=ghp_123456789012345678901234567890123456", lang: "bash", wantErr: "secret"},
+	}
 
-		assert.ErrorContains(t, snippetmgr.ValidateContent("echo hi", "bash"), "shebang")
-		assert.ErrorContains(t, snippetmgr.ValidateContent("#!/usr/bin/env bash\r\n# Description: test\r\n# Usage: ./x.sh\r\nset -euo pipefail\r\n", "bash"), "LF")
-		assert.ErrorContains(t, snippetmgr.ValidateContent("#!/usr/bin/env bash\nset -euo pipefail\necho hi", "bash"), "documentation header")
-		assert.ErrorContains(t, snippetmgr.ValidateContent("#!/usr/bin/env bash\n# Description: test\n# Usage: ./x.sh\necho hi", "bash"), "set -euo pipefail")
-		assert.ErrorContains(t, snippetmgr.ValidateContent("#!/usr/bin/env bash\n# Description: test\n# Usage: ./x.sh\n# set -euo pipefail\necho hi", "bash"), "set -euo pipefail")
-		assert.ErrorContains(t, snippetmgr.ValidateContent(sampleBashV1+"\nTOKEN=ghp_123456789012345678901234567890123456", "bash"), "secret")
-	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := snippetmgr.ValidateContent(tt.code, tt.lang)
+			if tt.wantErr != "" {
+				require.ErrorContains(t, err, tt.wantErr)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
 }

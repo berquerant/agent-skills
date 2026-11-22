@@ -215,21 +215,21 @@ func (c *Config) ValidateDirs() error {
 			return fmt.Errorf("cache-dir (%s): %w", c.CacheDir, err)
 		}
 	}
-	if c.Enabled["checkpoint"] {
-		if c.CheckpointRoot == "" {
-			return fmt.Errorf("checkpoint-root must not be empty when checkpoint feature is enabled")
-		}
-		if err := ensureWritableDir(c.CheckpointRoot); err != nil {
-			return fmt.Errorf("checkpoint-root (%s): %w", c.CheckpointRoot, err)
-		}
+	if err := ensureFeatureDir(c.Enabled["checkpoint"], "checkpoint-root", c.CheckpointRoot); err != nil {
+		return err
 	}
-	if c.Enabled["snippet-manager"] {
-		if c.SnippetRoot == "" {
-			return fmt.Errorf("snippet-root must not be empty when snippet-manager feature is enabled")
-		}
-		if err := ensureWritableDir(c.SnippetRoot); err != nil {
-			return fmt.Errorf("snippet-root (%s): %w", c.SnippetRoot, err)
-		}
+	return ensureFeatureDir(c.Enabled["snippet-manager"], "snippet-root", c.SnippetRoot)
+}
+
+func ensureFeatureDir(enabled bool, flagName, dir string) error {
+	if !enabled {
+		return nil
+	}
+	if dir == "" {
+		return fmt.Errorf("%s must not be empty when feature is enabled", flagName)
+	}
+	if err := ensureWritableDir(dir); err != nil {
+		return fmt.Errorf("%s (%s): %w", flagName, dir, err)
 	}
 	return nil
 }

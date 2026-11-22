@@ -9,10 +9,13 @@ import (
 	"time"
 
 	"github.com/berquerant/agent-skills/mcp/internal/guard"
+	"github.com/berquerant/agent-skills/mcp/internal/pathutil"
 	"github.com/berquerant/agent-skills/mcp/internal/store"
 )
 
-// Verify checks that a snippet version is active, executable, write-protected, and matches its SHA-256 digest.
+const maxInvocationHistory = 200
+
+// Verify checks that a snippet version is active, executable, write-protected, and matches its SHA-256 digest and inode.
 func (m *Manager) Verify(in VerifyInput) (VerifyOutput, error) {
 	name, scope, proj, branch, err := resolveSnippetTarget(in.Name, in.Scope, in.Project, in.Branch, in.WorkDir)
 	if err != nil {
@@ -21,16 +24,9 @@ func (m *Manager) Verify(in VerifyInput) (VerifyOutput, error) {
 
 	var out VerifyOutput
 	err = m.locks.WithRLock(m.lockKey(proj, branch, scope, name), func() error {
-		meta, exists, err := m.loadMeta(proj, branch, scope, name)
+		meta, ver, err := m.loadTargetVersion(proj, branch, scope, name, in.Version)
 		if err != nil {
 			return err
-		}
-		if !exists {
-			return fmt.Errorf("snippet %q not found under %s/%s/%s", name, proj, branch, scope)
-		}
-		ver := selectVersion(&meta, in.Version)
-		if ver == nil {
-			return fmt.Errorf("snippet %q version %d not found", name, in.Version)
 		}
 		out = m.verifyVersionFile(meta, *ver)
 		return nil
@@ -46,6 +42,7 @@ func (m *Manager) verifyVersionFile(meta SnippetMeta, ver VersionRecord) VerifyO
 		Path:           ver.Path,
 		DualPath:       ver.DualPath,
 		ExpectedSHA256: ver.SHA256,
+		ExpectedInode:  ver.Inode,
 		Issues:         []string{},
 	}
 	if ver.Status != StatusActive {
@@ -53,42 +50,45 @@ func (m *Manager) verifyVersionFile(meta SnippetMeta, ver VersionRecord) VerifyO
 	}
 
 	relPath := filepath.Join(meta.Project, meta.Branch, string(meta.Scope), ver.Filename)
-	root, err := os.OpenRoot(m.rootDir)
-	if err != nil {
+	if err := m.withRoot(func(root *os.Root) error {
+		info, statErr := root.Stat(relPath)
+		if statErr != nil {
+			out.Issues = append(out.Issues, fmt.Sprintf("snippet file missing or unreadable: %v", statErr))
+			return nil
+		}
+		mode := info.Mode().Perm()
+		out.Executable = mode&ownerExecBit != 0
+		out.Immutable = mode&anyWriteBits == 0
+		if !out.Executable {
+			out.Issues = append(out.Issues, fmt.Sprintf("snippet file is not executable (mode %04o)", mode))
+		}
+		if !out.Immutable {
+			out.Issues = append(out.Issues, fmt.Sprintf("snippet file is writable (mode %04o; expected write-protected 0500)", mode))
+		}
+		if ino, ok := fileInode(info); ok {
+			out.ActualInode = ino
+			if ver.Inode > 0 && ino != ver.Inode {
+				out.Issues = append(out.Issues, fmt.Sprintf("inode mismatch (expected %d, got %d; file replaced or moved)", ver.Inode, ino))
+			}
+		}
+
+		raw, readErr := root.ReadFile(relPath)
+		if readErr != nil {
+			out.Issues = append(out.Issues, fmt.Sprintf("read snippet file failed: %v", readErr))
+			return nil
+		}
+		out.ActualSHA256 = sha256Hex(raw)
+		if out.ActualSHA256 != ver.SHA256 {
+			out.Issues = append(out.Issues, "SHA-256 digest mismatch (file modified outside snippet-manager)")
+		}
+		return nil
+	}); err != nil {
 		out.Issues = append(out.Issues, fmt.Sprintf("open snippet root failed: %v", err))
-		return out
-	}
-	defer func() { _ = root.Close() }()
-
-	info, err := root.Stat(relPath)
-	if err != nil {
-		out.Issues = append(out.Issues, fmt.Sprintf("snippet file missing or unreadable: %v", err))
-		return out
-	}
-	mode := info.Mode().Perm()
-	out.Executable = mode&0o100 != 0
-	out.Immutable = mode&0o222 == 0
-	if !out.Executable {
-		out.Issues = append(out.Issues, fmt.Sprintf("snippet file is not executable (mode %04o)", mode))
-	}
-	if !out.Immutable {
-		out.Issues = append(out.Issues, fmt.Sprintf("snippet file is writable (mode %04o; expected write-protected 0500)", mode))
 	}
 
-	raw, err := root.ReadFile(relPath)
-	if err != nil {
-		out.Issues = append(out.Issues, fmt.Sprintf("read snippet file failed: %v", err))
-		return out
-	}
-	out.ActualSHA256 = sha256Hex(raw)
-	if out.ActualSHA256 != ver.SHA256 {
-		out.Issues = append(out.Issues, "SHA-256 digest mismatch (file modified outside snippet-manager)")
-	}
 	out.Valid = len(out.Issues) == 0
 	return out
 }
-
-const maxInvocationHistory = 200
 
 // RecordInvocation appends an execution record to the snippet metadata ledger.
 func (m *Manager) RecordInvocation(in RecordInvocationInput, now time.Time) (RecordInvocationOutput, error) {
@@ -112,16 +112,9 @@ func (m *Manager) RecordInvocation(in RecordInvocationInput, now time.Time) (Rec
 
 	var out RecordInvocationOutput
 	err = m.locks.WithLock(m.lockKey(proj, branch, scope, name), func() error {
-		meta, exists, err := m.loadMeta(proj, branch, scope, name)
+		meta, ver, err := m.loadTargetVersion(proj, branch, scope, name, in.Version)
 		if err != nil {
 			return err
-		}
-		if !exists {
-			return fmt.Errorf("snippet %q not found under %s/%s/%s", name, proj, branch, scope)
-		}
-		ver := selectVersion(&meta, in.Version)
-		if ver == nil {
-			return fmt.Errorf("snippet %q version %d not found", name, in.Version)
 		}
 		ts := now.UTC().Format(time.RFC3339)
 		rec := InvocationRecord{
@@ -170,22 +163,9 @@ func (m *Manager) Deprecate(in DeprecateInput, now time.Time) (DeprecateOutput, 
 			return fmt.Errorf("snippet %q not found under %s/%s/%s", name, proj, branch, scope)
 		}
 		ts := now.UTC().Format(time.RFC3339)
-		var deprecated []int
-		for i := range meta.Versions {
-			v := &meta.Versions[i]
-			if in.Version > 0 && v.Version != in.Version {
-				continue
-			}
-			if v.Status != StatusActive {
-				continue
-			}
-			relPath := filepath.Join(meta.Project, meta.Branch, string(meta.Scope), v.Filename)
-			if err := m.chmodWithinRoot(relPath, deprecatedFilePerm); err != nil && !os.IsNotExist(err) {
-				return err
-			}
-			v.Status = StatusDeprecated
-			v.DeprecatedAt = ts
-			deprecated = append(deprecated, v.Version)
+		deprecated, err := m.deprecateVersions(&meta, in.Version, ts)
+		if err != nil {
+			return err
 		}
 		if in.Version > 0 && len(deprecated) == 0 {
 			return fmt.Errorf("active version %d not found for snippet %q", in.Version, name)
@@ -210,7 +190,14 @@ func (m *Manager) Deprecate(in DeprecateInput, now time.Time) (DeprecateOutput, 
 
 // Cleanup removes deprecated snippet files (and optionally active one-off files) while preserving metadata history.
 func (m *Manager) Cleanup(in CleanupInput, now time.Time) (CleanupOutput, error) {
-	projFilter, branchFilter, scopeFilter, nameFilter, err := normalizeCleanupFilters(in)
+	proj := in.Project
+	if !in.AllProjects && strings.TrimSpace(proj) == "" {
+		var err error
+		if proj, _, err = pathutil.ResolveProjectAndBranch("", "placeholder", in.WorkDir); err != nil {
+			return CleanupOutput{}, err
+		}
+	}
+	flt, err := newSnippetFilter(proj, in.Branch, in.Scope, in.Name, "")
 	if err != nil {
 		return CleanupOutput{}, err
 	}
@@ -224,10 +211,7 @@ func (m *Manager) Cleanup(in CleanupInput, now time.Time) (CleanupOutput, error)
 	var removed []string
 	for _, relMeta := range metaRelPaths {
 		meta, readErr := store.ReadJSONRoot[SnippetMeta](m.rootDir, relMeta)
-		if readErr != nil {
-			continue
-		}
-		if !matchesCleanupTarget(meta, projFilter, branchFilter, scopeFilter, nameFilter) {
+		if readErr != nil || !flt.matches(meta) {
 			continue
 		}
 		cleaned, err := m.cleanupSingleSnippet(meta, in.IncludeActiveOneOff, in.DryRun, ts)

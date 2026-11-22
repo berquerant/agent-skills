@@ -6,11 +6,13 @@ import (
 	"strings"
 
 	"github.com/berquerant/agent-skills/mcp/internal/guard"
+	"github.com/berquerant/agent-skills/mcp/internal/snippet"
 )
 
 const (
 	maxSnippetNameLen   = 80
 	maxSnippetCodeBytes = 1024 * 1024
+	headerScanMaxLines  = 40
 )
 
 var (
@@ -18,15 +20,9 @@ var (
 	versionSuffixRe    = regexp.MustCompile(`_v[0-9]+$`)
 )
 
-// genericSnippetNames lists vague single-word names disallowed by command-snippet naming rules.
-var genericSnippetNames = map[string]struct{}{
-	"run": {}, "script": {}, "helper": {}, "test": {}, "tmp": {}, "temp": {},
-	"cmd": {}, "exec": {}, "tool": {}, "util": {}, "utils": {}, "main": {},
-	"do": {}, "check": {}, "fix": {}, "resolve": {}, "verify": {}, "update": {},
-	"snippet": {}, "foo": {}, "bar": {}, "work": {}, "task": {}, "job": {},
-}
-
-// ValidateName enforces self-descriptive, lowercase, extension-free, version-free snippet names.
+// ValidateName enforces structural and filesystem-safe snippet names
+// (lowercase alphanumeric with _ or -, no path separators, no extensions, no manual _vN suffix).
+// Semantic naming quality (self-descriptive action+target names) is governed by the command-snippet skill.
 func ValidateName(raw string) (string, error) {
 	name := strings.TrimSpace(raw)
 	if name == "" {
@@ -43,9 +39,6 @@ func ValidateName(raw string) (string, error) {
 	}
 	if versionSuffixRe.MatchString(name) {
 		return "", fmt.Errorf("snippet name must not end with a manual _vN version suffix (versioning is managed automatically): %q", name)
-	}
-	if _, generic := genericSnippetNames[name]; generic {
-		return "", fmt.Errorf("snippet name %q is too generic; use a self-descriptive action+target name (e.g. rebase_and_test_worktree)", name)
 	}
 	return name, nil
 }
@@ -64,23 +57,19 @@ func NormalizeScope(raw Scope) (Scope, error) {
 	}
 }
 
-// NormalizeLanguage validates language and returns canonical language name and file extension.
+// NormalizeLanguage validates language via snippet.NormalizeLanguage and returns the canonical language and extension.
 func NormalizeLanguage(raw string) (string, string, error) {
-	lang := strings.ToLower(strings.TrimSpace(raw))
-	if lang == "" {
-		lang = "bash"
+	lang, err := snippet.NormalizeLanguage(raw)
+	if err != nil {
+		return "", "", err
 	}
-	switch lang {
-	case "bash", "sh", "zsh", "mksh":
-		return lang, ".sh", nil
-	case "python", "python3":
-		return "python", ".py", nil
-	default:
-		return "", "", fmt.Errorf("unsupported language %q (supported: bash, sh, zsh, mksh, python)", raw)
+	if lang == "python" {
+		return lang, ".py", nil
 	}
+	return lang, ".sh", nil
 }
 
-// ValidateContent checks secret hygiene, shebang, documentation header, and shell safety flags.
+// ValidateContent checks secret hygiene, LF line endings, shebang, documentation header, and shell safety flags.
 func ValidateContent(code, lang string) error {
 	if strings.TrimSpace(code) == "" {
 		return fmt.Errorf("snippet code must not be empty")
@@ -107,9 +96,8 @@ func ValidateContent(code, lang string) error {
 }
 
 func checkDocumentationHeader(code string) error {
-	// Inspect the leading header block (first 40 lines) for Description/Purpose and Usage.
 	lines := strings.Split(code, "\n")
-	limit := min(len(lines), 40)
+	limit := min(len(lines), headerScanMaxLines)
 	header := strings.ToLower(strings.Join(lines[:limit], "\n"))
 
 	hasDesc := strings.Contains(header, "description:") || strings.Contains(header, "purpose:")

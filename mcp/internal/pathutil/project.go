@@ -13,6 +13,11 @@ import (
 	"github.com/berquerant/agent-skills/mcp/internal/guard"
 )
 
+const (
+	maxSlugLength = 128
+	gitCmdTimeout = 3 * time.Second
+)
+
 var unsafeSlugChars = regexp.MustCompile(`[^a-zA-Z0-9_-]+`)
 
 // SanitizeSlug replaces characters outside [a-zA-Z0-9_-] with '-' and trims leading/trailing hyphens and underscores.
@@ -22,8 +27,8 @@ func SanitizeSlug(raw string) (string, error) {
 	if cleaned == "" {
 		return "", fmt.Errorf("invalid empty identifier after sanitization from %q", raw)
 	}
-	if len(cleaned) > 128 {
-		cleaned = cleaned[:128]
+	if len(cleaned) > maxSlugLength {
+		cleaned = cleaned[:maxSlugLength]
 	}
 	return cleaned, nil
 }
@@ -77,7 +82,7 @@ func ResolveProjectAndBranch(project, branch, workDir string) (string, string, e
 }
 
 func runGit(dir string, args ...string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), gitCmdTimeout)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "git", args...)
 	if dir != "" {

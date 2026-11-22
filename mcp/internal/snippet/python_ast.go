@@ -74,22 +74,5 @@ func analyzePythonAST(code string) (Metrics, []Hazard, error) {
 }
 
 func isPythonLanguage(lang string) bool {
-	switch lang {
-	case "python", "python3", "py":
-		return true
-	default:
-		return false
-	}
-}
-
-func isSupportedLanguage(lang string) bool {
-	if isPythonLanguage(lang) {
-		return true
-	}
-	switch lang {
-	case "bash", "sh", "posix", "zsh", "mksh":
-		return true
-	default:
-		return false
-	}
+	return lang == "python"
 }

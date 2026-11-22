@@ -14,42 +14,52 @@ import (
 	"github.com/berquerant/agent-skills/mcp/internal/store"
 )
 
-func (m *Manager) findMetaFiles() ([]string, error) {
+func (m *Manager) withRoot(fn func(root *os.Root) error) error {
 	root, err := os.OpenRoot(m.rootDir)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("open snippet root: %w", err)
+		return err
 	}
 	defer func() { _ = root.Close() }()
-
-	var paths []string
-	walkErr := fs.WalkDir(root.FS(), ".", func(relPath string, d fs.DirEntry, err error) error {
-		if err != nil {
-			if os.IsNotExist(err) {
-				return nil
-			}
-			return err
-		}
-		if d.IsDir() {
-			if d.Name() == ".locks" {
-				return fs.SkipDir
-			}
-			return nil
-		}
-		if strings.HasSuffix(d.Name(), ".meta.json") {
-			paths = append(paths, relPath)
-		}
-		return nil
-	})
-	return paths, walkErr
+	return fn(root)
 }
 
-func (m *Manager) deprecateActiveVersions(meta *SnippetMeta, ts string) ([]int, error) {
+func (m *Manager) findMetaFiles() ([]string, error) {
+	var paths []string
+	err := m.withRoot(func(root *os.Root) error {
+		return fs.WalkDir(root.FS(), ".", func(relPath string, d fs.DirEntry, walkErr error) error {
+			if walkErr != nil {
+				if os.IsNotExist(walkErr) {
+					return nil
+				}
+				return walkErr
+			}
+			if d.IsDir() {
+				if d.Name() == ".locks" {
+					return fs.SkipDir
+				}
+				return nil
+			}
+			if strings.HasSuffix(d.Name(), ".meta.json") {
+				paths = append(paths, relPath)
+			}
+			return nil
+		})
+	})
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
+	return paths, err
+}
+
+// deprecateVersions marks matching active versions (targetVersion == 0 means all active) as deprecated
+// and strips execute permissions (mode 0400).
+func (m *Manager) deprecateVersions(meta *SnippetMeta, targetVersion int, ts string) ([]int, error) {
 	var deprecated []int
 	for i := range meta.Versions {
 		v := &meta.Versions[i]
+		if targetVersion > 0 && v.Version != targetVersion {
+			continue
+		}
 		if v.Status != StatusActive {
 			continue
 		}
@@ -64,69 +74,66 @@ func (m *Manager) deprecateActiveVersions(meta *SnippetMeta, ts string) ([]int, 
 	return deprecated, nil
 }
 
-func (m *Manager) writeImmutableFile(relPath string, data []byte, perm os.FileMode) error {
+func (m *Manager) writeImmutableFile(relPath string, data []byte, perm os.FileMode) (uint64, error) {
 	parentAbs := filepath.Dir(filepath.Join(m.rootDir, relPath))
 	if err := os.MkdirAll(parentAbs, dirPerm); err != nil {
-		return fmt.Errorf("create snippet directory: %w", err)
+		return 0, fmt.Errorf("create snippet directory: %w", err)
 	}
-	root, err := os.OpenRoot(m.rootDir)
-	if err != nil {
-		return fmt.Errorf("open snippet root: %w", err)
-	}
-	defer func() { _ = root.Close() }()
 
-	f, err := root.OpenFile(relPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, perm)
-	if err != nil {
-		return fmt.Errorf("create immutable snippet %s: %w", relPath, err)
-	}
-	cleanup := func() {
-		_ = f.Close()
-		_ = root.Remove(relPath)
-	}
-	if _, err := f.Write(data); err != nil {
-		cleanup()
-		return fmt.Errorf("write snippet %s: %w", relPath, err)
-	}
-	if err := f.Chmod(perm); err != nil {
-		cleanup()
-		return fmt.Errorf("chmod snippet %s: %w", relPath, err)
-	}
-	if err := f.Sync(); err != nil {
-		cleanup()
-		return fmt.Errorf("sync snippet %s: %w", relPath, err)
-	}
-	return f.Close()
+	var inode uint64
+	err := m.withRoot(func(root *os.Root) error {
+		f, err := root.OpenFile(relPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, perm)
+		if err != nil {
+			return fmt.Errorf("create immutable snippet %s: %w", relPath, err)
+		}
+		cleanup := func() {
+			_ = f.Close()
+			_ = root.Remove(relPath)
+		}
+		if _, err := f.Write(data); err != nil {
+			cleanup()
+			return fmt.Errorf("write snippet %s: %w", relPath, err)
+		}
+		if err := f.Chmod(perm); err != nil {
+			cleanup()
+			return fmt.Errorf("chmod snippet %s: %w", relPath, err)
+		}
+		if info, err := f.Stat(); err == nil {
+			if ino, ok := fileInode(info); ok {
+				inode = ino
+			}
+		}
+		if err := f.Sync(); err != nil {
+			cleanup()
+			return fmt.Errorf("sync snippet %s: %w", relPath, err)
+		}
+		return f.Close()
+	})
+	return inode, err
 }
 
 func (m *Manager) chmodWithinRoot(relPath string, perm os.FileMode) error {
-	root, err := os.OpenRoot(m.rootDir)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = root.Close() }()
-
-	f, err := root.Open(relPath)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = f.Close() }()
-	return f.Chmod(perm)
+	return m.withRoot(func(root *os.Root) error {
+		f, err := root.Open(relPath)
+		if err != nil {
+			return err
+		}
+		defer func() { _ = f.Close() }()
+		return f.Chmod(perm)
+	})
 }
 
 func (m *Manager) removeWithinRoot(relPath string) error {
-	root, err := os.OpenRoot(m.rootDir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil
+	err := m.withRoot(func(root *os.Root) error {
+		if rmErr := root.Remove(relPath); rmErr != nil && !os.IsNotExist(rmErr) {
+			return fmt.Errorf("remove snippet %s: %w", relPath, rmErr)
 		}
-		return err
+		return nil
+	})
+	if os.IsNotExist(err) {
+		return nil
 	}
-	defer func() { _ = root.Close() }()
-
-	if err := root.Remove(relPath); err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("remove snippet %s: %w", relPath, err)
-	}
-	return nil
+	return err
 }
 
 func (m *Manager) loadMeta(proj, branch string, scope Scope, name string) (SnippetMeta, bool, error) {
@@ -139,6 +146,21 @@ func (m *Manager) loadMeta(proj, branch string, scope Scope, name string) (Snipp
 		return SnippetMeta{}, false, err
 	}
 	return meta, true, nil
+}
+
+func (m *Manager) loadTargetVersion(proj, branch string, scope Scope, name string, version int) (SnippetMeta, *VersionRecord, error) {
+	meta, exists, err := m.loadMeta(proj, branch, scope, name)
+	if err != nil {
+		return SnippetMeta{}, nil, err
+	}
+	if !exists {
+		return SnippetMeta{}, nil, fmt.Errorf("snippet %q not found under %s/%s/%s", name, proj, branch, scope)
+	}
+	ver := selectVersion(&meta, version)
+	if ver == nil {
+		return SnippetMeta{}, nil, fmt.Errorf("snippet %q version %d not found", name, version)
+	}
+	return meta, ver, nil
 }
 
 func (m *Manager) saveMeta(meta SnippetMeta) error {
@@ -186,94 +208,59 @@ func selectVersion(meta *SnippetMeta, version int) *VersionRecord {
 	return nil
 }
 
-func normalizeListFilters(in ListInput) (string, string, Scope, error) {
-	var projFilter, branchFilter string
-	var err error
-	if strings.TrimSpace(in.Project) != "" {
-		if projFilter, err = pathutil.SanitizeSlug(in.Project); err != nil {
-			return "", "", "", fmt.Errorf("invalid project filter: %w", err)
-		}
-	}
-	if strings.TrimSpace(in.Branch) != "" {
-		if branchFilter, err = pathutil.SanitizeSlug(in.Branch); err != nil {
-			return "", "", "", fmt.Errorf("invalid branch filter: %w", err)
-		}
-	}
-	var scopeFilter Scope
-	if strings.TrimSpace(string(in.Scope)) != "" {
-		if scopeFilter, err = NormalizeScope(in.Scope); err != nil {
-			return "", "", "", err
-		}
-	}
-	return projFilter, branchFilter, scopeFilter, nil
+type snippetFilter struct {
+	project string
+	branch  string
+	scope   Scope
+	name    string
+	status  VersionStatus
 }
 
-func normalizeCleanupFilters(in CleanupInput) (string, string, Scope, string, error) {
-	var projFilter, branchFilter, nameFilter string
-	var scopeFilter Scope
+func newSnippetFilter(project, branch string, scope Scope, name string, status VersionStatus) (snippetFilter, error) {
+	var f snippetFilter
 	var err error
-
-	if !in.AllProjects {
-		if strings.TrimSpace(in.Project) != "" {
-			if projFilter, err = pathutil.SanitizeSlug(in.Project); err != nil {
-				return "", "", "", "", fmt.Errorf("invalid project filter: %w", err)
-			}
-		} else {
-			projFilter, _, err = pathutil.ResolveProjectAndBranch("", "placeholder", in.WorkDir)
-			if err != nil {
-				return "", "", "", "", err
-			}
+	if strings.TrimSpace(project) != "" {
+		if f.project, err = pathutil.SanitizeSlug(project); err != nil {
+			return snippetFilter{}, fmt.Errorf("invalid project filter: %w", err)
 		}
 	}
-	if strings.TrimSpace(in.Branch) != "" {
-		if branchFilter, err = pathutil.SanitizeSlug(in.Branch); err != nil {
-			return "", "", "", "", fmt.Errorf("invalid branch filter: %w", err)
+	if strings.TrimSpace(branch) != "" {
+		if f.branch, err = pathutil.SanitizeSlug(branch); err != nil {
+			return snippetFilter{}, fmt.Errorf("invalid branch filter: %w", err)
 		}
 	}
-	if strings.TrimSpace(string(in.Scope)) != "" {
-		if scopeFilter, err = NormalizeScope(in.Scope); err != nil {
-			return "", "", "", "", err
+	if strings.TrimSpace(string(scope)) != "" {
+		if f.scope, err = NormalizeScope(scope); err != nil {
+			return snippetFilter{}, err
 		}
 	}
-	if strings.TrimSpace(in.Name) != "" {
-		if nameFilter, err = ValidateName(in.Name); err != nil {
-			return "", "", "", "", err
+	if strings.TrimSpace(name) != "" {
+		if f.name, err = ValidateName(name); err != nil {
+			return snippetFilter{}, err
 		}
 	}
-	return projFilter, branchFilter, scopeFilter, nameFilter, nil
+	f.status = status
+	return f, nil
 }
 
-func matchesListFilter(meta SnippetMeta, proj, branch string, scope Scope, status VersionStatus) bool {
-	if proj != "" && meta.Project != proj {
+func (f snippetFilter) matches(meta SnippetMeta) bool {
+	if f.project != "" && meta.Project != f.project {
 		return false
 	}
-	if branch != "" && meta.Branch != branch {
+	if f.branch != "" && meta.Branch != f.branch {
 		return false
 	}
-	if scope != "" && meta.Scope != scope {
+	if f.scope != "" && meta.Scope != f.scope {
 		return false
 	}
-	if status != "" {
+	if f.name != "" && meta.Name != f.name {
+		return false
+	}
+	if f.status != "" {
 		latest := selectVersion(&meta, 0)
-		if latest == nil || latest.Status != status {
+		if latest == nil || latest.Status != f.status {
 			return false
 		}
-	}
-	return true
-}
-
-func matchesCleanupTarget(meta SnippetMeta, proj, branch string, scope Scope, name string) bool {
-	if proj != "" && meta.Project != proj {
-		return false
-	}
-	if branch != "" && meta.Branch != branch {
-		return false
-	}
-	if scope != "" && meta.Scope != scope {
-		return false
-	}
-	if name != "" && meta.Name != name {
-		return false
 	}
 	return true
 }

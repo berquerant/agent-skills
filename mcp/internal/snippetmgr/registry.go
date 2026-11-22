@@ -2,7 +2,6 @@ package snippetmgr
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"slices"
@@ -20,6 +19,8 @@ const (
 	deprecatedFilePerm os.FileMode = 0o400
 	metaFilePerm       os.FileMode = 0o600
 	dirPerm            os.FileMode = 0o700
+	ownerExecBit       os.FileMode = 0o100
+	anyWriteBits       os.FileMode = 0o222
 	defaultLockTimeout             = 10 * time.Second
 )
 
@@ -80,7 +81,7 @@ func (m *Manager) Create(in CreateInput, now time.Time) (CreateOutput, error) {
 	if !audit.OK {
 		return CreateOutput{}, fmt.Errorf("snippet audit failed: %s", audit.ParseError)
 	}
-	if audit.Level >= 3 && !in.AllowComplex {
+	if audit.Level >= snippet.LevelComplex && !in.AllowComplex {
 		return CreateOutput{
 			Saved:          false,
 			ActionRequired: "simplify_or_consult",
@@ -157,12 +158,14 @@ func (m *Manager) saveVersionedSnippet(p createParams) (CreateOutput, error) {
 		absPath := filepath.Join(m.rootDir, relPath)
 
 		codeBytes := []byte(p.code)
-		if err := m.writeImmutableFile(relPath, codeBytes, activeFilePerm); err != nil {
+		inode, err := m.writeImmutableFile(relPath, codeBytes, activeFilePerm)
+		if err != nil {
 			return err
 		}
 
-		deprecatedVers, err := m.deprecateActiveVersions(&meta, ts)
+		deprecatedVers, err := m.deprecateVersions(&meta, 0, ts)
 		if err != nil {
+			_ = m.removeWithinRoot(relPath)
 			return err
 		}
 
@@ -174,6 +177,7 @@ func (m *Manager) saveVersionedSnippet(p createParams) (CreateOutput, error) {
 			Path:         absPath,
 			DualPath:     dualPath,
 			SHA256:       digest,
+			Inode:        inode,
 			Status:       StatusActive,
 			AuditLevel:   p.audit.Level,
 			AuditRating:  p.audit.Rating,
@@ -202,6 +206,7 @@ func (m *Manager) saveVersionedSnippet(p createParams) (CreateOutput, error) {
 			Path:                 absPath,
 			DualPath:             dualPath,
 			SHA256:               digest,
+			Inode:                inode,
 			DeprecatedVersions:   deprecatedVers,
 			Audit:                p.audit,
 			PreExecutionNotice:   BuildPreExecutionNotice(dualPath, absPath, meta.Purpose, p.audit.Level, p.audit.Rating),
@@ -221,16 +226,9 @@ func (m *Manager) Get(in GetInput) (GetOutput, error) {
 
 	var out GetOutput
 	err = m.locks.WithRLock(m.lockKey(proj, branch, scope, name), func() error {
-		meta, exists, err := m.loadMeta(proj, branch, scope, name)
+		meta, ver, err := m.loadTargetVersion(proj, branch, scope, name, in.Version)
 		if err != nil {
 			return err
-		}
-		if !exists {
-			return fmt.Errorf("snippet %q not found under %s/%s/%s", name, proj, branch, scope)
-		}
-		ver := selectVersion(&meta, in.Version)
-		if ver == nil {
-			return fmt.Errorf("snippet %q version %d not found", name, in.Version)
 		}
 		verCopy := *ver
 		out = GetOutput{
@@ -244,49 +242,23 @@ func (m *Manager) Get(in GetInput) (GetOutput, error) {
 
 // List scans managed snippets matching optional project, branch, scope, and status filters.
 func (m *Manager) List(in ListInput) (ListOutput, error) {
-	projFilter, branchFilter, scopeFilter, err := normalizeListFilters(in)
+	flt, err := newSnippetFilter(in.Project, in.Branch, in.Scope, "", in.Status)
 	if err != nil {
 		return ListOutput{}, err
 	}
 
-	root, err := os.OpenRoot(m.rootDir)
+	metaRelPaths, err := m.findMetaFiles()
 	if err != nil {
-		if os.IsNotExist(err) {
-			return ListOutput{Snippets: []SnippetSummary{}, Total: 0}, nil
-		}
-		return ListOutput{}, fmt.Errorf("open snippet root: %w", err)
+		return ListOutput{}, err
 	}
-	defer func() { _ = root.Close() }()
 
 	var summaries []SnippetSummary
-	walkErr := fs.WalkDir(root.FS(), ".", func(relPath string, d fs.DirEntry, err error) error {
-		if err != nil {
-			if os.IsNotExist(err) {
-				return nil
-			}
-			return err
-		}
-		if d.IsDir() {
-			if d.Name() == ".locks" {
-				return fs.SkipDir
-			}
-			return nil
-		}
-		if !strings.HasSuffix(d.Name(), ".meta.json") {
-			return nil
-		}
+	for _, relPath := range metaRelPaths {
 		meta, readErr := store.ReadJSONRoot[SnippetMeta](m.rootDir, relPath)
-		if readErr != nil {
-			return nil
-		}
-		if !matchesListFilter(meta, projFilter, branchFilter, scopeFilter, in.Status) {
-			return nil
+		if readErr != nil || !flt.matches(meta) {
+			continue
 		}
 		summaries = append(summaries, buildSnippetSummary(meta))
-		return nil
-	})
-	if walkErr != nil {
-		return ListOutput{}, fmt.Errorf("scan snippet root: %w", walkErr)
 	}
 
 	slices.SortFunc(summaries, func(a, b SnippetSummary) int {

@@ -9,6 +9,14 @@
 //   - Tier Classification: Maps metrics against the 4-level Intelligibility Rubric (Level 1 to 4).
 package snippet
 
+// Intelligibility complexity tiers defined by the 4-level snippet-review rubric.
+const (
+	LevelTransparent = 1
+	LevelModerate    = 2
+	LevelComplex     = 3
+	LevelOpaque      = 4
+)
+
 // Confidence indicates whether metrics were extracted via full AST parsing or heuristic fallback.
 type Confidence string
 
