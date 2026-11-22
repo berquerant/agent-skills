@@ -234,11 +234,18 @@ func (f *Feature) handleCreate(in CreateInput) (CreateOutput, error) {
 }
 
 func (f *Feature) handleNext(in NextInput) (NextOutput, error) {
-	var out NextOutput
-	_, err := f.storage.Update(in.DAGID, func(dag *DAG) (*JournalEntry, error) {
-		var mutated bool
-		out, mutated = SelectNext(dag, f.clock.Now())
-		if !mutated || out.Task == nil {
+	dag, err := f.storage.Load(in.DAGID)
+	if err != nil {
+		return NextOutput{}, err
+	}
+	out, mutated := SelectNext(&dag, f.clock.Now())
+	if !mutated || out.Task == nil {
+		return out, nil
+	}
+	_, err = f.storage.Update(in.DAGID, func(locked *DAG) (*JournalEntry, error) {
+		var stillMutated bool
+		out, stillMutated = SelectNext(locked, f.clock.Now())
+		if !stillMutated || out.Task == nil {
 			return nil, nil
 		}
 		return &JournalEntry{

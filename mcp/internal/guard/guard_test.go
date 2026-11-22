@@ -1,6 +1,8 @@
 package guard_test
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/berquerant/agent-skills/mcp/internal/guard"
@@ -95,4 +97,28 @@ func TestSanitizeForLog(t *testing.T) {
 	assert.Equal(t, guard.RedactedMask, nested["database_url"])
 	assert.Contains(t, nested["note"], guard.RedactedMask)
 	assert.NotContains(t, nested["note"], "AKIAIOSFODNN7EXAMPLE")
+}
+
+func TestCheckPathAllowed_Symlink(t *testing.T) {
+	tmp := t.TempDir()
+	sshDir := filepath.Join(tmp, ".ssh")
+	require.NoError(t, os.MkdirAll(sshDir, 0o700))
+	sshCfg := filepath.Join(sshDir, "config")
+	require.NoError(t, os.WriteFile(sshCfg, []byte("Host *"), 0o600))
+
+	safeFile := filepath.Join(tmp, "safe.log")
+	require.NoError(t, os.WriteFile(safeFile, []byte("ok"), 0o600))
+
+	linkToSSHFile := filepath.Join(tmp, "benign.log")
+	require.NoError(t, os.Symlink(sshCfg, linkToSSHFile))
+
+	linkToSSHDir := filepath.Join(tmp, "dir_link")
+	require.NoError(t, os.Symlink(sshDir, linkToSSHDir))
+
+	linkToSafe := filepath.Join(tmp, "safe_link.log")
+	require.NoError(t, os.Symlink(safeFile, linkToSafe))
+
+	require.Error(t, guard.CheckPathAllowed(linkToSSHFile))
+	require.Error(t, guard.CheckPathAllowed(filepath.Join(linkToSSHDir, "nonexistent_file")))
+	require.NoError(t, guard.CheckPathAllowed(linkToSafe))
 }

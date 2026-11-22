@@ -272,7 +272,7 @@ func (s *Storage) Set(key string, entry CacheEntry) (StorageResult, error) {
 	err = s.withLockedRoot(func(root *os.Root) {
 		now := s.config.nowUnix()
 		newVersion := 1
-		for _, f := range s.findFilesByKey(baseKey) {
+		for _, f := range s.findFilesByKey(root, baseKey) {
 			if f.version >= newVersion {
 				newVersion = f.version + 1
 			}

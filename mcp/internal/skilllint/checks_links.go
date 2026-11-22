@@ -27,6 +27,15 @@ func checkELinksAndPortability(skillDirAbs string, mdContents map[string]string)
 		mdAbsDir := filepath.Dir(filepath.Join(skillDirAbs, rel))
 		for _, target := range extractRelativeLinkTargets(lines) {
 			resolved := filepath.Join(mdAbsDir, target)
+			if guardErr := guard.CheckPathAllowed(resolved); guardErr != nil {
+				findings = append(findings, Finding{
+					Check:    CheckE,
+					Severity: SeverityError,
+					File:     rel,
+					Message:  fmt.Sprintf("SENSITIVE link target: %s -> %s (%v)", rel, target, guardErr),
+				})
+				continue
+			}
 			if _, err := os.Stat(resolved); err != nil {
 				findings = append(findings, Finding{
 					Check:    CheckE,
@@ -67,6 +76,12 @@ func checkELinksAndPortability(skillDirAbs string, mdContents map[string]string)
 }
 
 func checkFScriptPermissions(skillDirAbs string, relFiles []string) []Finding {
+	root, err := os.OpenRoot(skillDirAbs)
+	if err != nil {
+		return nil
+	}
+	defer func() { _ = root.Close() }()
+
 	var findings []Finding
 	sortedRel := slices.Clone(relFiles)
 	slices.Sort(sortedRel)
@@ -74,8 +89,8 @@ func checkFScriptPermissions(skillDirAbs string, relFiles []string) []Finding {
 		if !strings.HasPrefix(rel, "scripts/") && !strings.HasPrefix(rel, "scripts\\") {
 			continue
 		}
-		info, err := os.Stat(filepath.Join(skillDirAbs, rel))
-		if err != nil || info.IsDir() {
+		info, statErr := root.Stat(rel)
+		if statErr != nil || info.IsDir() {
 			continue
 		}
 		if info.Mode()&0o100 == 0 {

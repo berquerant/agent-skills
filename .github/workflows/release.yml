@@ -6,6 +6,7 @@ on:
   push:
     tags:
       - 'v*'
+      - 'mcp/v*'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

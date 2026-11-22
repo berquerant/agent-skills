@@ -3,7 +3,6 @@ package cache
 import (
 	"cmp"
 	"os"
-	"path/filepath"
 	"slices"
 )
 
@@ -20,7 +19,7 @@ func (s *Storage) Delete(key string, version *int) (DeleteResult, error) {
 
 	var out DeleteResult
 	err := s.withLockedRoot(func(root *os.Root) {
-		files := s.findFilesByKey(baseKey)
+		files := s.findFilesByKey(root, baseKey)
 		if len(files) == 0 {
 			var verOut *int
 			if targetVer.Kind == VersionSpecific {
@@ -130,16 +129,18 @@ func (s *Storage) Purge(all bool) (PurgeResult, error) {
 		now := s.config.nowUnix()
 		deletedCount := 0
 		var freedBytes int64
+		var trackedFreedBytes int64
 
-		for _, shard := range listShardDirs(s.config.Dir) {
-			c, b := s.purgeShard(root, shard, all, now)
+		for _, shard := range listShardDirs(root) {
+			c, b, tb := s.purgeShard(root, shard, all, now)
 			deletedCount += c
 			freedBytes += b
+			trackedFreedBytes += tb
 			_ = root.Remove(shard) // Removes shard directory only if empty
 		}
 
 		if all {
-			s.totalCompressedSize = max(0, s.totalCompressedSize-freedBytes)
+			s.totalCompressedSize = max(0, s.totalCompressedSize-trackedFreedBytes)
 		}
 
 		out = PurgeResult{
@@ -152,11 +153,12 @@ func (s *Storage) Purge(all bool) (PurgeResult, error) {
 	return out, err
 }
 
-func (s *Storage) purgeShard(root *os.Root, shard string, all bool, now int64) (int, int64) {
+func (s *Storage) purgeShard(root *os.Root, shard string, all bool, now int64) (int, int64, int64) {
 	deletedCount := 0
 	var freedBytes int64
+	var trackedFreedBytes int64
 
-	forEachShardZstEntry(filepath.Join(s.config.Dir, shard), shard, func(rel, name string, info os.FileInfo) {
+	forEachShardZstEntry(root, shard, func(rel, name string, info os.FileInfo) {
 		sz := info.Size()
 		if isTmpFile(name) {
 			if isStaleTmpFile(info, now, all) && root.Remove(rel) == nil {
@@ -169,6 +171,7 @@ func (s *Storage) purgeShard(root *os.Root, shard string, all bool, now int64) (
 			if root.Remove(rel) == nil {
 				deletedCount++
 				freedBytes += sz
+				trackedFreedBytes += sz
 			}
 			return
 		}
@@ -179,7 +182,7 @@ func (s *Storage) purgeShard(root *os.Root, shard string, all bool, now int64) (
 			}
 		}
 	})
-	return deletedCount, freedBytes
+	return deletedCount, freedBytes, trackedFreedBytes
 }
 
 func (s *Storage) ensureCapacity(root *os.Root, newSize, now int64) bool {
@@ -207,8 +210,8 @@ func (s *Storage) ensureCapacity(root *os.Root, newSize, now int64) bool {
 func (s *Storage) evictExpiredAcrossShards(root *os.Root, now int64) []cacheFileRecord {
 	var valid []cacheFileRecord
 	var currentTotalSize int64
-	for _, shard := range listShardDirs(s.config.Dir) {
-		forEachShardZstEntry(filepath.Join(s.config.Dir, shard), shard, func(rel, name string, info os.FileInfo) {
+	for _, shard := range listShardDirs(root) {
+		forEachShardZstEntry(root, shard, func(rel, name string, info os.FileInfo) {
 			if isTmpFile(name) {
 				if isStaleTmpFile(info, now, false) {
 					_ = root.Remove(rel)
