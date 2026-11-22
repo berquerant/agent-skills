@@ -5,19 +5,28 @@ import (
 	"strings"
 )
 
+// NoticeParams holds inputs for formatting a Snippet Pre-Execution Notice skeleton.
+type NoticeParams struct {
+	DualPath    string
+	AbsPath     string
+	Purpose     string
+	AuditLevel  int
+	AuditRating string
+}
+
 // BuildPreExecutionNotice formats the mandatory Pre-Execution Notice skeleton
 // conforming to command-snippet and output-presentation conventions.
-func BuildPreExecutionNotice(dualPath, absPath, purpose string, auditLevel int, auditRating string) string {
-	purposeText := strings.TrimSpace(purpose)
+func BuildPreExecutionNotice(p NoticeParams) string {
+	purposeText := strings.TrimSpace(p.Purpose)
 	if purposeText == "" {
 		purposeText = "<Explain what the script does and why a snippet was necessary>"
 	}
 
 	var b strings.Builder
 	b.WriteString("### 📋 Snippet Pre-Execution Notice\n\n")
-	fmt.Fprintf(&b, "- **Script Path**: %s\n", dualPath)
-	fmt.Fprintf(&b, "- **Invocation**: `%s [arguments...]`\n", absPath)
-	fmt.Fprintf(&b, "- **Intelligibility Audit**: Level %d (%s)\n", auditLevel, auditRating)
+	fmt.Fprintf(&b, "- **Script Path**: %s\n", p.DualPath)
+	fmt.Fprintf(&b, "- **Invocation**: `%s [arguments...]`\n", p.AbsPath)
+	fmt.Fprintf(&b, "- **Intelligibility Audit**: Level %d (%s)\n", p.AuditLevel, p.AuditRating)
 	fmt.Fprintf(&b, "- **Purpose**: %s\n", purposeText)
 	b.WriteString("- **Parameters & Arguments**:\n")
 	b.WriteString("  - <List each positional argument or flag and its value>\n")

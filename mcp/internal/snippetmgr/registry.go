@@ -51,19 +51,21 @@ func NewManager(rootDir string) (*Manager, error) {
 
 // Create validates, audits, and saves an immutable versioned snippet under the XDG snippet root.
 func (m *Manager) Create(in CreateInput, now time.Time) (CreateOutput, error) {
-	name, err := ValidateName(in.Name)
+	target, err := resolveSnippetTarget(targetRefInput{
+		Name:    in.Name,
+		Scope:   in.Scope,
+		Project: in.Project,
+		Branch:  in.Branch,
+		WorkDir: in.WorkDir,
+	})
 	if err != nil {
 		return CreateOutput{}, err
 	}
-	scope, err := NormalizeScope(in.Scope)
+	langSpec, err := NormalizeLanguage(in.Language)
 	if err != nil {
 		return CreateOutput{}, err
 	}
-	lang, ext, err := NormalizeLanguage(in.Language)
-	if err != nil {
-		return CreateOutput{}, err
-	}
-	if err := ValidateContent(in.Code, lang); err != nil {
+	if err := ValidateContent(in.Code, langSpec.Name); err != nil {
 		return CreateOutput{}, err
 	}
 	if in.Purpose != "" {
@@ -72,12 +74,7 @@ func (m *Manager) Create(in CreateInput, now time.Time) (CreateOutput, error) {
 		}
 	}
 
-	proj, branch, err := pathutil.ResolveProjectAndBranch(in.Project, in.Branch, in.WorkDir)
-	if err != nil {
-		return CreateOutput{}, err
-	}
-
-	audit := snippet.Analyze(in.Code, lang)
+	audit := snippet.Analyze(in.Code, langSpec.Name)
 	if !audit.OK {
 		return CreateOutput{}, fmt.Errorf("snippet audit failed: %s", audit.ParseError)
 	}
@@ -85,22 +82,18 @@ func (m *Manager) Create(in CreateInput, now time.Time) (CreateOutput, error) {
 		return CreateOutput{
 			Saved:          false,
 			ActionRequired: "simplify_or_consult",
-			Name:           name,
-			Project:        proj,
-			Branch:         branch,
-			Scope:          scope,
-			Language:       lang,
+			Name:           target.Name,
+			Project:        target.Project,
+			Branch:         target.Branch,
+			Scope:          target.Scope,
+			Language:       langSpec.Name,
 			Audit:          audit,
 		}, nil
 	}
 
 	return m.saveVersionedSnippet(createParams{
-		name:         name,
-		scope:        scope,
-		lang:         lang,
-		ext:          ext,
-		proj:         proj,
-		branch:       branch,
+		target:       target,
+		langSpec:     langSpec,
 		code:         in.Code,
 		purpose:      strings.TrimSpace(in.Purpose),
 		allowComplex: in.AllowComplex,
@@ -110,12 +103,8 @@ func (m *Manager) Create(in CreateInput, now time.Time) (CreateOutput, error) {
 }
 
 type createParams struct {
-	name         string
-	scope        Scope
-	lang         string
-	ext          string
-	proj         string
-	branch       string
+	target       snippetTarget
+	langSpec     LanguageSpec
 	code         string
 	purpose      string
 	allowComplex bool
@@ -124,46 +113,47 @@ type createParams struct {
 }
 
 func (m *Manager) saveVersionedSnippet(p createParams) (CreateOutput, error) {
-	lockKey := m.lockKey(p.proj, p.branch, p.scope, p.name)
 	var out CreateOutput
 
-	err := m.locks.WithLock(lockKey, func() error {
-		meta, exists, err := m.loadMeta(p.proj, p.branch, p.scope, p.name)
+	err := m.locks.WithLock(p.target.lockKey(), func() error {
+		loaded, err := m.loadMeta(p.target)
 		if err != nil {
 			return err
 		}
 		ts := p.now.UTC().Format(time.RFC3339)
-		if !exists {
+		var meta SnippetMeta
+		if loaded == nil {
 			meta = SnippetMeta{
-				Name:      p.name,
-				Project:   p.proj,
-				Branch:    p.branch,
-				Scope:     p.scope,
-				Language:  p.lang,
-				Extension: p.ext,
+				Name:      p.target.Name,
+				Project:   p.target.Project,
+				Branch:    p.target.Branch,
+				Scope:     p.target.Scope,
+				Language:  p.langSpec.Name,
+				Extension: p.langSpec.Extension,
 				Purpose:   p.purpose,
 				CreatedAt: ts,
 			}
 		} else {
+			meta = *loaded
 			if p.purpose != "" {
 				meta.Purpose = p.purpose
 			}
-			meta.Language = p.lang
-			meta.Extension = p.ext
+			meta.Language = p.langSpec.Name
+			meta.Extension = p.langSpec.Extension
 		}
 
 		nextVer := meta.LatestVersion + 1
-		filename := fmt.Sprintf("%s_v%d%s", p.name, nextVer, p.ext)
-		relPath := filepath.Join(p.proj, p.branch, string(p.scope), filename)
+		filename := fmt.Sprintf("%s_v%d%s", p.target.Name, nextVer, p.langSpec.Extension)
+		relPath := filepath.Join(p.target.Project, p.target.Branch, string(p.target.Scope), filename)
 		absPath := filepath.Join(m.rootDir, relPath)
 
 		codeBytes := []byte(p.code)
-		inode, err := m.writeImmutableFile(relPath, codeBytes, activeFilePerm)
+		inode, err := m.writeImmutableFile(relPath, codeBytes)
 		if err != nil {
 			return err
 		}
 
-		deprecatedVers := markVersionsDeprecated(&meta, 0, ts)
+		deprecatedVers := meta.markVersionsDeprecated(0, ts)
 
 		digest := sha256Hex(codeBytes)
 		dualPath := pathutil.FormatDualPath(absPath)
@@ -195,20 +185,26 @@ func (m *Manager) saveVersionedSnippet(p createParams) (CreateOutput, error) {
 		}
 
 		out = CreateOutput{
-			Saved:                true,
-			Name:                 p.name,
-			Project:              p.proj,
-			Branch:               p.branch,
-			Scope:                p.scope,
-			Language:             p.lang,
-			Version:              nextVer,
-			Path:                 absPath,
-			DualPath:             dualPath,
-			SHA256:               digest,
-			Inode:                inode,
-			DeprecatedVersions:   deprecatedVers,
-			Audit:                p.audit,
-			PreExecutionNotice:   BuildPreExecutionNotice(dualPath, absPath, meta.Purpose, p.audit.Level, p.audit.Rating),
+			Saved:              true,
+			Name:               p.target.Name,
+			Project:            p.target.Project,
+			Branch:             p.target.Branch,
+			Scope:              p.target.Scope,
+			Language:           p.langSpec.Name,
+			Version:            nextVer,
+			Path:               absPath,
+			DualPath:           dualPath,
+			SHA256:             digest,
+			Inode:              inode,
+			DeprecatedVersions: deprecatedVers,
+			Audit:              p.audit,
+			PreExecutionNotice: BuildPreExecutionNotice(NoticeParams{
+				DualPath:    dualPath,
+				AbsPath:     absPath,
+				Purpose:     meta.Purpose,
+				AuditLevel:  p.audit.Level,
+				AuditRating: p.audit.Rating,
+			}),
 			DirectInvocationHint: absPath,
 		}
 		return nil
@@ -218,20 +214,26 @@ func (m *Manager) saveVersionedSnippet(p createParams) (CreateOutput, error) {
 
 // Get retrieves metadata and the requested (or latest) version record for a snippet.
 func (m *Manager) Get(in GetInput) (GetOutput, error) {
-	name, scope, proj, branch, err := resolveSnippetTarget(in.Name, in.Scope, in.Project, in.Branch, in.WorkDir)
+	target, err := resolveSnippetTarget(targetRefInput{
+		Name:    in.Name,
+		Scope:   in.Scope,
+		Project: in.Project,
+		Branch:  in.Branch,
+		WorkDir: in.WorkDir,
+	})
 	if err != nil {
 		return GetOutput{}, err
 	}
 
 	var out GetOutput
-	err = m.locks.WithRLock(m.lockKey(proj, branch, scope, name), func() error {
-		meta, ver, err := m.loadTargetVersion(proj, branch, scope, name, in.Version)
+	err = m.locks.WithRLock(target.lockKey(), func() error {
+		res, err := m.loadTargetVersion(target, in.Version)
 		if err != nil {
 			return err
 		}
-		verCopy := *ver
+		verCopy := *res.Version
 		out = GetOutput{
-			Meta:            meta,
+			Meta:            res.Meta,
 			SelectedVersion: &verCopy,
 		}
 		return nil
@@ -241,7 +243,12 @@ func (m *Manager) Get(in GetInput) (GetOutput, error) {
 
 // List scans managed snippets matching optional project, branch, scope, and status filters.
 func (m *Manager) List(in ListInput) (ListOutput, error) {
-	flt, err := newSnippetFilter(in.Project, in.Branch, in.Scope, "", in.Status)
+	flt, err := newSnippetFilter(snippetFilterInput{
+		Project: in.Project,
+		Branch:  in.Branch,
+		Scope:   in.Scope,
+		Status:  in.Status,
+	})
 	if err != nil {
 		return ListOutput{}, err
 	}

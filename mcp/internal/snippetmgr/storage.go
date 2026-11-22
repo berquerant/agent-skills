@@ -15,6 +15,34 @@ import (
 	"github.com/berquerant/agent-skills/mcp/internal/store"
 )
 
+type targetRefInput struct {
+	Name    string
+	Scope   Scope
+	Project string
+	Branch  string
+	WorkDir string
+}
+
+type snippetTarget struct {
+	Name    string
+	Scope   Scope
+	Project string
+	Branch  string
+}
+
+func (t snippetTarget) lockKey() string {
+	return fmt.Sprintf("%s__%s__%s__%s", t.Project, t.Branch, t.Scope, t.Name)
+}
+
+func (t snippetTarget) metaRelPath() string {
+	return filepath.Join(t.Project, t.Branch, string(t.Scope), t.Name+".meta.json")
+}
+
+type targetVersionResult struct {
+	Meta    SnippetMeta
+	Version *VersionRecord
+}
+
 func (m *Manager) withRoot(fn func(root *os.Root) error) error {
 	root, err := os.OpenRoot(m.rootDir)
 	if err != nil {
@@ -54,7 +82,7 @@ func (m *Manager) findMetaFiles() ([]string, error) {
 
 // markVersionsDeprecated marks matching active versions (targetVersion == 0 means all active)
 // as deprecated in meta and returns the newly deprecated version numbers.
-func markVersionsDeprecated(meta *SnippetMeta, targetVersion int, ts string) []int {
+func (meta *SnippetMeta) markVersionsDeprecated(targetVersion int, ts string) []int {
 	var deprecated []int
 	for i := range meta.Versions {
 		v := &meta.Versions[i]
@@ -86,7 +114,7 @@ func (m *Manager) chmodDeprecatedFiles(meta SnippetMeta, versions []int) error {
 	return nil
 }
 
-func (m *Manager) writeImmutableFile(relPath string, data []byte, perm os.FileMode) (uint64, error) {
+func (m *Manager) writeImmutableFile(relPath string, data []byte) (uint64, error) {
 	parentAbs := filepath.Dir(filepath.Join(m.rootDir, relPath))
 	if err := os.MkdirAll(parentAbs, dirPerm); err != nil {
 		return 0, fmt.Errorf("create snippet directory: %w", err)
@@ -94,7 +122,7 @@ func (m *Manager) writeImmutableFile(relPath string, data []byte, perm os.FileMo
 
 	var inode uint64
 	err := m.withRoot(func(root *os.Root) error {
-		f, err := root.OpenFile(relPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, perm)
+		f, err := root.OpenFile(relPath, os.O_CREATE|os.O_EXCL|os.O_WRONLY, activeFilePerm)
 		if err != nil {
 			return fmt.Errorf("create immutable snippet %s: %w", relPath, err)
 		}
@@ -106,7 +134,7 @@ func (m *Manager) writeImmutableFile(relPath string, data []byte, perm os.FileMo
 			cleanup()
 			return fmt.Errorf("write snippet %s: %w", relPath, err)
 		}
-		if err := f.Chmod(perm); err != nil {
+		if err := f.Chmod(activeFilePerm); err != nil {
 			cleanup()
 			return fmt.Errorf("chmod snippet %s: %w", relPath, err)
 		}
@@ -148,60 +176,69 @@ func (m *Manager) removeWithinRoot(relPath string) error {
 	return err
 }
 
-func (m *Manager) loadMeta(proj, branch string, scope Scope, name string) (SnippetMeta, bool, error) {
-	relMeta := filepath.Join(proj, branch, string(scope), name+".meta.json")
-	meta, err := store.ReadJSONRoot[SnippetMeta](m.rootDir, relMeta)
+func (m *Manager) loadMeta(t snippetTarget) (*SnippetMeta, error) {
+	meta, err := store.ReadJSONRoot[SnippetMeta](m.rootDir, t.metaRelPath())
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return SnippetMeta{}, false, nil
+			return nil, nil
 		}
-		return SnippetMeta{}, false, err
+		return nil, err
 	}
-	return meta, true, nil
+	return &meta, nil
 }
 
-func (m *Manager) loadTargetVersion(proj, branch string, scope Scope, name string, version int) (SnippetMeta, *VersionRecord, error) {
-	meta, exists, err := m.loadMeta(proj, branch, scope, name)
+func (m *Manager) loadTargetVersion(t snippetTarget, version int) (targetVersionResult, error) {
+	loaded, err := m.loadMeta(t)
 	if err != nil {
-		return SnippetMeta{}, nil, err
+		return targetVersionResult{}, err
 	}
-	if !exists {
-		return SnippetMeta{}, nil, fmt.Errorf("snippet %q not found under %s/%s/%s", name, proj, branch, scope)
+	if loaded == nil {
+		return targetVersionResult{}, fmt.Errorf("snippet %q not found under %s/%s/%s", t.Name, t.Project, t.Branch, t.Scope)
 	}
-	ver := selectVersion(&meta, version)
+	ver := selectVersion(loaded, version)
 	if ver == nil {
-		return SnippetMeta{}, nil, fmt.Errorf("snippet %q version %d not found", name, version)
+		return targetVersionResult{}, fmt.Errorf("snippet %q version %d not found", t.Name, version)
 	}
-	return meta, ver, nil
+	return targetVersionResult{Meta: *loaded, Version: ver}, nil
 }
 
 func (m *Manager) saveMeta(meta SnippetMeta) error {
-	target := m.metaAbsPath(meta.Project, meta.Branch, meta.Scope, meta.Name)
+	target := m.metaAbsPath(snippetTarget{
+		Name:    meta.Name,
+		Scope:   meta.Scope,
+		Project: meta.Project,
+		Branch:  meta.Branch,
+	})
 	return store.WriteJSONAtomic(target, meta, metaFilePerm)
 }
 
-func (m *Manager) metaAbsPath(proj, branch string, scope Scope, name string) string {
-	return filepath.Join(m.rootDir, proj, branch, string(scope), name+".meta.json")
+func (m *Manager) metaAbsPath(t snippetTarget) string {
+	return filepath.Join(m.rootDir, t.metaRelPath())
 }
 
-func (m *Manager) lockKey(proj, branch string, scope Scope, name string) string {
-	return fmt.Sprintf("%s__%s__%s__%s", proj, branch, scope, name)
-}
-
-func resolveSnippetTarget(rawName string, rawScope Scope, project, branch, workDir string) (string, Scope, string, string, error) {
-	name, err := ValidateName(rawName)
+func resolveSnippetTarget(in targetRefInput) (snippetTarget, error) {
+	name, err := ValidateName(in.Name)
 	if err != nil {
-		return "", "", "", "", err
+		return snippetTarget{}, err
 	}
-	scope, err := NormalizeScope(rawScope)
+	scope, err := NormalizeScope(in.Scope)
 	if err != nil {
-		return "", "", "", "", err
+		return snippetTarget{}, err
 	}
-	proj, br, err := pathutil.ResolveProjectAndBranch(project, branch, workDir)
+	pb, err := pathutil.ResolveProjectBranch(pathutil.ProjectBranchInput{
+		Project: in.Project,
+		Branch:  in.Branch,
+		WorkDir: in.WorkDir,
+	})
 	if err != nil {
-		return "", "", "", "", err
+		return snippetTarget{}, err
 	}
-	return name, scope, proj, br, nil
+	return snippetTarget{
+		Name:    name,
+		Scope:   scope,
+		Project: pb.Project,
+		Branch:  pb.Branch,
+	}, nil
 }
 
 func selectVersion(meta *SnippetMeta, version int) *VersionRecord {
@@ -220,6 +257,14 @@ func selectVersion(meta *SnippetMeta, version int) *VersionRecord {
 	return nil
 }
 
+type snippetFilterInput struct {
+	Project string
+	Branch  string
+	Scope   Scope
+	Name    string
+	Status  VersionStatus
+}
+
 type snippetFilter struct {
 	project string
 	branch  string
@@ -228,30 +273,30 @@ type snippetFilter struct {
 	status  VersionStatus
 }
 
-func newSnippetFilter(project, branch string, scope Scope, name string, status VersionStatus) (snippetFilter, error) {
+func newSnippetFilter(in snippetFilterInput) (snippetFilter, error) {
 	var f snippetFilter
 	var err error
-	if strings.TrimSpace(project) != "" {
-		if f.project, err = pathutil.SanitizeSlug(project); err != nil {
+	if strings.TrimSpace(in.Project) != "" {
+		if f.project, err = pathutil.SanitizeSlug(in.Project); err != nil {
 			return snippetFilter{}, fmt.Errorf("invalid project filter: %w", err)
 		}
 	}
-	if strings.TrimSpace(branch) != "" {
-		if f.branch, err = pathutil.SanitizeSlug(branch); err != nil {
+	if strings.TrimSpace(in.Branch) != "" {
+		if f.branch, err = pathutil.SanitizeSlug(in.Branch); err != nil {
 			return snippetFilter{}, fmt.Errorf("invalid branch filter: %w", err)
 		}
 	}
-	if strings.TrimSpace(string(scope)) != "" {
-		if f.scope, err = NormalizeScope(scope); err != nil {
+	if strings.TrimSpace(string(in.Scope)) != "" {
+		if f.scope, err = NormalizeScope(in.Scope); err != nil {
 			return snippetFilter{}, err
 		}
 	}
-	if strings.TrimSpace(name) != "" {
-		if f.name, err = ValidateName(name); err != nil {
+	if strings.TrimSpace(in.Name) != "" {
+		if f.name, err = ValidateName(in.Name); err != nil {
 			return snippetFilter{}, err
 		}
 	}
-	if f.status, err = NormalizeStatus(status); err != nil {
+	if f.status, err = NormalizeStatus(in.Status); err != nil {
 		return snippetFilter{}, err
 	}
 	return f, nil

@@ -33,13 +33,26 @@ func SanitizeSlug(raw string) (string, error) {
 	return cleaned, nil
 }
 
-// ResolveProjectAndBranch resolves and sanitizes project and branch slugs from explicit inputs
-// or by inspecting git metadata in workDir (defaulting to the current working directory).
-func ResolveProjectAndBranch(project, branch, workDir string) (string, string, error) {
-	dir := strings.TrimSpace(workDir)
+// ProjectBranchInput specifies optional overrides and working directory for git resolution.
+type ProjectBranchInput struct {
+	Project string
+	Branch  string
+	WorkDir string
+}
+
+// ProjectBranch holds sanitized project and branch slugs.
+type ProjectBranch struct {
+	Project string
+	Branch  string
+}
+
+// ResolveProjectBranch resolves and sanitizes project and branch slugs from explicit inputs
+// or by inspecting git metadata in WorkDir (defaulting to the current working directory).
+func ResolveProjectBranch(in ProjectBranchInput) (ProjectBranch, error) {
+	dir := strings.TrimSpace(in.WorkDir)
 	if dir != "" {
 		if err := guard.CheckPathAllowed(dir); err != nil {
-			return "", "", err
+			return ProjectBranch{}, err
 		}
 	} else {
 		if wd, err := os.Getwd(); err == nil {
@@ -47,16 +60,16 @@ func ResolveProjectAndBranch(project, branch, workDir string) (string, string, e
 		}
 	}
 
-	rawProj := strings.TrimSpace(project)
+	rawProj := strings.TrimSpace(in.Project)
 	if rawProj == "" {
 		top, err := runGit(dir, "rev-parse", "--show-toplevel")
 		if err != nil {
-			return "", "", fmt.Errorf("auto-derive project via git failed (provide project explicitly): %w", err)
+			return ProjectBranch{}, fmt.Errorf("auto-derive project via git failed (provide project explicitly): %w", err)
 		}
 		rawProj = filepath.Base(top)
 	}
 
-	rawBranch := strings.TrimSpace(branch)
+	rawBranch := strings.TrimSpace(in.Branch)
 	if rawBranch == "" {
 		br, err := runGit(dir, "branch", "--show-current")
 		if err == nil && br != "" {
@@ -64,7 +77,7 @@ func ResolveProjectAndBranch(project, branch, workDir string) (string, string, e
 		} else {
 			sha, shaErr := runGit(dir, "rev-parse", "--short", "HEAD")
 			if shaErr != nil {
-				return "", "", fmt.Errorf("auto-derive branch via git failed (provide branch explicitly): %w", shaErr)
+				return ProjectBranch{}, fmt.Errorf("auto-derive branch via git failed (provide branch explicitly): %w", shaErr)
 			}
 			rawBranch = sha
 		}
@@ -72,13 +85,26 @@ func ResolveProjectAndBranch(project, branch, workDir string) (string, string, e
 
 	projSlug, err := SanitizeSlug(rawProj)
 	if err != nil {
-		return "", "", fmt.Errorf("invalid project: %w", err)
+		return ProjectBranch{}, fmt.Errorf("invalid project: %w", err)
 	}
 	branchSlug, err := SanitizeSlug(rawBranch)
 	if err != nil {
-		return "", "", fmt.Errorf("invalid branch: %w", err)
+		return ProjectBranch{}, fmt.Errorf("invalid branch: %w", err)
 	}
-	return projSlug, branchSlug, nil
+	return ProjectBranch{Project: projSlug, Branch: branchSlug}, nil
+}
+
+// ResolveProjectAndBranch is a compatibility wrapper around ResolveProjectBranch.
+func ResolveProjectAndBranch(project, branch, workDir string) (string, string, error) {
+	pb, err := ResolveProjectBranch(ProjectBranchInput{
+		Project: project,
+		Branch:  branch,
+		WorkDir: workDir,
+	})
+	if err != nil {
+		return "", "", err
+	}
+	return pb.Project, pb.Branch, nil
 }
 
 func runGit(dir string, args ...string) (string, error) {

@@ -215,16 +215,20 @@ func (c *Config) ValidateDirs() error {
 			return fmt.Errorf("cache-dir (%s): %w", c.CacheDir, err)
 		}
 	}
-	if err := ensureFeatureDir(c.Enabled["checkpoint"], "checkpoint-root", c.CheckpointRoot); err != nil {
-		return err
+	if c.Enabled["checkpoint"] {
+		if err := ensureNamedDir("checkpoint-root", c.CheckpointRoot); err != nil {
+			return err
+		}
 	}
-	return ensureFeatureDir(c.Enabled["snippet-manager"], "snippet-root", c.SnippetRoot)
+	if c.Enabled["snippet-manager"] {
+		if err := ensureNamedDir("snippet-root", c.SnippetRoot); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func ensureFeatureDir(enabled bool, flagName, dir string) error {
-	if !enabled {
-		return nil
-	}
+func ensureNamedDir(flagName, dir string) error {
 	if dir == "" {
 		return fmt.Errorf("%s must not be empty when feature is enabled", flagName)
 	}

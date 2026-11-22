@@ -71,16 +71,22 @@ func NormalizeStatus(raw VersionStatus) (VersionStatus, error) {
 	}
 }
 
-// NormalizeLanguage validates language via snippet.NormalizeLanguage and returns the canonical language and extension.
-func NormalizeLanguage(raw string) (string, string, error) {
+// LanguageSpec pairs a canonical snippet language identifier with its file extension.
+type LanguageSpec struct {
+	Name      string
+	Extension string
+}
+
+// NormalizeLanguage validates language via snippet.NormalizeLanguage and returns its LanguageSpec.
+func NormalizeLanguage(raw string) (LanguageSpec, error) {
 	lang, err := snippet.NormalizeLanguage(raw)
 	if err != nil {
-		return "", "", err
+		return LanguageSpec{}, err
 	}
 	if lang == "python" {
-		return lang, ".py", nil
+		return LanguageSpec{Name: lang, Extension: ".py"}, nil
 	}
-	return lang, ".sh", nil
+	return LanguageSpec{Name: lang, Extension: ".sh"}, nil
 }
 
 // ValidateContent checks secret hygiene, LF line endings, shebang, documentation header, and shell safety flags.

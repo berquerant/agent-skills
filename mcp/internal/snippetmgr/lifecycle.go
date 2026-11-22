@@ -17,18 +17,24 @@ const maxInvocationHistory = 200
 
 // Verify checks that a snippet version is active, executable, write-protected, and matches its SHA-256 digest and inode.
 func (m *Manager) Verify(in VerifyInput) (VerifyOutput, error) {
-	name, scope, proj, branch, err := resolveSnippetTarget(in.Name, in.Scope, in.Project, in.Branch, in.WorkDir)
+	target, err := resolveSnippetTarget(targetRefInput{
+		Name:    in.Name,
+		Scope:   in.Scope,
+		Project: in.Project,
+		Branch:  in.Branch,
+		WorkDir: in.WorkDir,
+	})
 	if err != nil {
 		return VerifyOutput{}, err
 	}
 
 	var out VerifyOutput
-	err = m.locks.WithRLock(m.lockKey(proj, branch, scope, name), func() error {
-		meta, ver, err := m.loadTargetVersion(proj, branch, scope, name, in.Version)
+	err = m.locks.WithRLock(target.lockKey(), func() error {
+		res, err := m.loadTargetVersion(target, in.Version)
 		if err != nil {
 			return err
 		}
-		out = m.verifyVersionFile(meta, *ver)
+		out = m.verifyVersionFile(res.Meta, *res.Version)
 		return nil
 	})
 	return out, err
@@ -95,7 +101,13 @@ func (m *Manager) RecordInvocation(in RecordInvocationInput, now time.Time) (Rec
 	if in.DurationMs < 0 {
 		return RecordInvocationOutput{}, fmt.Errorf("duration_ms must be >= 0 (got %d)", in.DurationMs)
 	}
-	name, scope, proj, branch, err := resolveSnippetTarget(in.Name, in.Scope, in.Project, in.Branch, in.WorkDir)
+	target, err := resolveSnippetTarget(targetRefInput{
+		Name:    in.Name,
+		Scope:   in.Scope,
+		Project: in.Project,
+		Branch:  in.Branch,
+		WorkDir: in.WorkDir,
+	})
 	if err != nil {
 		return RecordInvocationOutput{}, err
 	}
@@ -111,11 +123,13 @@ func (m *Manager) RecordInvocation(in RecordInvocationInput, now time.Time) (Rec
 	}
 
 	var out RecordInvocationOutput
-	err = m.locks.WithLock(m.lockKey(proj, branch, scope, name), func() error {
-		meta, ver, err := m.loadTargetVersion(proj, branch, scope, name, in.Version)
+	err = m.locks.WithLock(target.lockKey(), func() error {
+		res, err := m.loadTargetVersion(target, in.Version)
 		if err != nil {
 			return err
 		}
+		meta := res.Meta
+		ver := res.Version
 		ts := now.UTC().Format(time.RFC3339)
 		rec := InvocationRecord{
 			Version:    ver.Version,
@@ -139,7 +153,7 @@ func (m *Manager) RecordInvocation(in RecordInvocationInput, now time.Time) (Rec
 			Version:         ver.Version,
 			TotalRecorded:   len(meta.Invocations),
 			LastInvocation:  rec,
-			MetaStoragePath: m.metaAbsPath(proj, branch, scope, name),
+			MetaStoragePath: m.metaAbsPath(target),
 		}
 		return nil
 	})
@@ -148,24 +162,31 @@ func (m *Manager) RecordInvocation(in RecordInvocationInput, now time.Time) (Rec
 
 // Deprecate marks one or all active versions of a snippet as deprecated and strips execute permissions.
 func (m *Manager) Deprecate(in DeprecateInput, now time.Time) (DeprecateOutput, error) {
-	name, scope, proj, branch, err := resolveSnippetTarget(in.Name, in.Scope, in.Project, in.Branch, in.WorkDir)
+	target, err := resolveSnippetTarget(targetRefInput{
+		Name:    in.Name,
+		Scope:   in.Scope,
+		Project: in.Project,
+		Branch:  in.Branch,
+		WorkDir: in.WorkDir,
+	})
 	if err != nil {
 		return DeprecateOutput{}, err
 	}
 
 	var out DeprecateOutput
-	err = m.locks.WithLock(m.lockKey(proj, branch, scope, name), func() error {
-		meta, exists, err := m.loadMeta(proj, branch, scope, name)
+	err = m.locks.WithLock(target.lockKey(), func() error {
+		loaded, err := m.loadMeta(target)
 		if err != nil {
 			return err
 		}
-		if !exists {
-			return fmt.Errorf("snippet %q not found under %s/%s/%s", name, proj, branch, scope)
+		if loaded == nil {
+			return fmt.Errorf("snippet %q not found under %s/%s/%s", target.Name, target.Project, target.Branch, target.Scope)
 		}
+		meta := *loaded
 		ts := now.UTC().Format(time.RFC3339)
-		deprecated := markVersionsDeprecated(&meta, in.Version, ts)
+		deprecated := meta.markVersionsDeprecated(in.Version, ts)
 		if in.Version > 0 && len(deprecated) == 0 {
-			return fmt.Errorf("active version %d not found for snippet %q", in.Version, name)
+			return fmt.Errorf("active version %d not found for snippet %q", in.Version, target.Name)
 		}
 		if len(deprecated) > 0 {
 			meta.UpdatedAt = ts
@@ -180,7 +201,7 @@ func (m *Manager) Deprecate(in DeprecateInput, now time.Time) (DeprecateOutput, 
 			deprecated = []int{}
 		}
 		out = DeprecateOutput{
-			Name:               name,
+			Name:               target.Name,
 			DeprecatedVersions: deprecated,
 		}
 		return nil
@@ -192,12 +213,21 @@ func (m *Manager) Deprecate(in DeprecateInput, now time.Time) (DeprecateOutput, 
 func (m *Manager) Cleanup(in CleanupInput, now time.Time) (CleanupOutput, error) {
 	proj := in.Project
 	if !in.AllProjects && strings.TrimSpace(proj) == "" {
-		var err error
-		if proj, _, err = pathutil.ResolveProjectAndBranch("", "placeholder", in.WorkDir); err != nil {
+		pb, err := pathutil.ResolveProjectBranch(pathutil.ProjectBranchInput{
+			Branch:  "placeholder",
+			WorkDir: in.WorkDir,
+		})
+		if err != nil {
 			return CleanupOutput{}, err
 		}
+		proj = pb.Project
 	}
-	flt, err := newSnippetFilter(proj, in.Branch, in.Scope, in.Name, "")
+	flt, err := newSnippetFilter(snippetFilterInput{
+		Project: proj,
+		Branch:  in.Branch,
+		Scope:   in.Scope,
+		Name:    in.Name,
+	})
 	if err != nil {
 		return CleanupOutput{}, err
 	}
@@ -207,14 +237,18 @@ func (m *Manager) Cleanup(in CleanupInput, now time.Time) (CleanupOutput, error)
 		return CleanupOutput{}, err
 	}
 
-	ts := now.UTC().Format(time.RFC3339)
+	opts := cleanupOpts{
+		IncludeActiveOneOff: in.IncludeActiveOneOff,
+		DryRun:              in.DryRun,
+		Timestamp:           now.UTC().Format(time.RFC3339),
+	}
 	var removed []string
 	for _, relMeta := range metaRelPaths {
 		meta, readErr := store.ReadJSONRoot[SnippetMeta](m.rootDir, relMeta)
 		if readErr != nil || !flt.matches(meta) {
 			continue
 		}
-		cleaned, err := m.cleanupSingleSnippet(meta, in.IncludeActiveOneOff, in.DryRun, ts)
+		cleaned, err := m.cleanupSingleSnippet(meta, opts)
 		if err != nil {
 			return CleanupOutput{}, err
 		}
@@ -231,34 +265,47 @@ func (m *Manager) Cleanup(in CleanupInput, now time.Time) (CleanupOutput, error)
 	}, nil
 }
 
-func (m *Manager) cleanupSingleSnippet(meta SnippetMeta, includeActiveOneOff, dryRun bool, ts string) ([]string, error) {
+type cleanupOpts struct {
+	IncludeActiveOneOff bool
+	DryRun              bool
+	Timestamp           string
+}
+
+func (m *Manager) cleanupSingleSnippet(meta SnippetMeta, opts cleanupOpts) ([]string, error) {
+	target := snippetTarget{
+		Name:    meta.Name,
+		Scope:   meta.Scope,
+		Project: meta.Project,
+		Branch:  meta.Branch,
+	}
 	var removed []string
-	err := m.locks.WithLock(m.lockKey(meta.Project, meta.Branch, meta.Scope, meta.Name), func() error {
-		cur, exists, err := m.loadMeta(meta.Project, meta.Branch, meta.Scope, meta.Name)
-		if err != nil || !exists {
+	err := m.locks.WithLock(target.lockKey(), func() error {
+		loaded, err := m.loadMeta(target)
+		if err != nil || loaded == nil {
 			return err
 		}
+		cur := *loaded
 		changed := false
 		for i := range cur.Versions {
 			v := &cur.Versions[i]
-			shouldRemove := v.Status == StatusDeprecated || (includeActiveOneOff && cur.Scope == ScopeOneOff && v.Status == StatusActive)
+			shouldRemove := v.Status == StatusDeprecated || (opts.IncludeActiveOneOff && cur.Scope == ScopeOneOff && v.Status == StatusActive)
 			if !shouldRemove {
 				continue
 			}
 			relPath := filepath.Join(cur.Project, cur.Branch, string(cur.Scope), v.Filename)
 			removed = append(removed, v.Path)
-			if dryRun {
+			if opts.DryRun {
 				continue
 			}
 			if err := m.removeWithinRoot(relPath); err != nil {
 				return err
 			}
 			v.Status = StatusCleaned
-			v.CleanedAt = ts
+			v.CleanedAt = opts.Timestamp
 			changed = true
 		}
 		if changed {
-			cur.UpdatedAt = ts
+			cur.UpdatedAt = opts.Timestamp
 			return m.saveMeta(cur)
 		}
 		return nil

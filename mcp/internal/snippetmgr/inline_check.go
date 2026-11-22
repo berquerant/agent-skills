@@ -19,10 +19,11 @@ const (
 // (character length, line count, chained command count) and delegates AST complexity
 // and hazard analysis to snippet.Analyze for both shell and Python.
 func CheckInline(in CheckInlineInput) (CheckInlineOutput, error) {
-	lang, _, err := NormalizeLanguage(in.Language)
+	langSpec, err := NormalizeLanguage(in.Language)
 	if err != nil {
 		return CheckInlineOutput{}, err
 	}
+	lang := langSpec.Name
 
 	cmd := strings.TrimSpace(in.Command)
 	if cmd == "" {
