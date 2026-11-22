@@ -16,15 +16,15 @@ This workflow coordinates [snippet-review](../snippet-review/SKILL.md) (../snipp
 ## Prerequisites
 
 - An intended shell or interpreter command ready for evaluation and execution.
-- Optional: Access to the companion MCP server (`agent-skills-mcp`) providing the `snippet-manager` tools (`snippet_check_inline`, `snippet_create`, `snippet_get`, `snippet_list`, `snippet_verify`, `snippet_record_invocation`, `snippet_deprecate`, `snippet_cleanup`). When available, prefer these MCP tools for deterministic naming, write-once immutable `0500` storage, automatic versioning, SHA-256 verification, and invocation tracking; otherwise follow the manual fallback procedures in each step.
+- Optional: Access to the companion MCP server (`agent-skills-mcp`) providing the `snippet-manager` tools (`snippet_check_inline`, `snippet_create`, `snippet_get`, `snippet_list`, `snippet_verify`, `snippet_record_invocation`, `snippet_deprecate`, `snippet_cleanup`). When available, prefer these MCP tools for structural naming validation, write-once immutable `0500` storage, automatic versioning, SHA-256 and `inode` verification, and invocation tracking; otherwise follow the manual fallback procedures in each step.
 
 ---
 
 ## Step 1: Detect Long, Complex, or Inline Interpreter Commands
 
-When `agent-skills-mcp` is available, invoke `snippet_check_inline` with the intended `command` (and optional `language`) to evaluate all extraction thresholds and AST complexity deterministically. If `should_extract` is `true`, halt inline execution and proceed to Step 2.
+When `agent-skills-mcp` is available, invoke `snippet_check_inline` with the intended `command` (and optional `language`) to evaluate structural thresholds (character length, line count, chained command count) and AST complexity deterministically, and also check the command against the approval-friction patterns below (infix variable arguments, trailing target files, broad CLI scope). If `should_extract` is `true` or an approval-friction pattern applies, halt inline execution and proceed to Step 2.
 
-If the MCP server is unavailable, inspect the intended command manually against the avoidance thresholds:
+If the MCP server is unavailable, inspect the intended command manually against all avoidance thresholds:
 
 - **Chained commands**: 4 or more commands chained with operators such as `;`, `&&`, `||`, or `|`.
 - **Character length**: 120 characters or longer, counting the entire command line including flags, options, and quoted payload strings.
@@ -166,9 +166,9 @@ Verify: The snippet's intelligibility is audited, any high complexity is simplif
 ## Step 6: Save, Execute, and Verify
 
 1. **Save Snippet File as Immutable**:
-   - **With `agent-skills-mcp` (Preferred)**: Invoke `snippet_create` with `name`, `code`, `language`, `scope`, and `purpose`. It enforces self-descriptive naming, shebang/header/hardening checks, secret scanning, and `snippet_audit` atomically, writes the file as write-protected executable (`0500`) with automatic `_vN` versioning, deprecates prior active versions (`0400`), and returns the formatted `pre_execution_notice` skeleton and `direct_invocation_hint`.
+   - **With `agent-skills-mcp` (Preferred)**: Invoke `snippet_create` with a self-descriptive `name` (chosen per Step 3), `code`, `language`, `scope`, and `purpose`. It validates structural naming (`[a-z0-9_-]`, no manual `_vN` suffix), shebang/header/hardening, secret hygiene, and `snippet_audit` atomically, writes the file as write-protected executable (`0500`) with automatic `_vN` versioning, deprecates prior active versions (`0400`), and returns the formatted `pre_execution_notice` skeleton and `direct_invocation_hint`.
      - If `saved: false` (`action_required: "simplify_or_consult"`), simplify the code and retry `snippet_create`, or open the User Consultation Gate from Step 5 before passing `allow_complex: true`.
-     - Before re-executing an existing snippet, optionally run `snippet_verify` to confirm active status, `0500` permissions, and SHA-256 integrity.
+     - Before re-executing an existing snippet, optionally run `snippet_verify` to confirm active status, `0500` permissions, and SHA-256 / `inode` integrity.
    - **Manual fallback**: Write the script to the determined path with execute permissions (`+x`) set upon saving. Once saved, treat the file as **strictly immutable**. Never apply in-place edits. If a fix is needed during verification, create a new file (e.g., `_v2`).
 2. **Execute via Direct Script Binary (No Interpreter Prefix or Chmod Compound)**:
    - **Direct Script-Binary Invocation**:

@@ -57,6 +57,20 @@ func NormalizeScope(raw Scope) (Scope, error) {
 	}
 }
 
+// NormalizeStatus validates and normalizes a non-empty version status filter.
+func NormalizeStatus(raw VersionStatus) (VersionStatus, error) {
+	s := strings.ToLower(strings.TrimSpace(string(raw)))
+	if s == "" {
+		return "", nil
+	}
+	switch VersionStatus(s) {
+	case StatusActive, StatusDeprecated, StatusCleaned:
+		return VersionStatus(s), nil
+	default:
+		return "", fmt.Errorf("unsupported status %q (expected 'active', 'deprecated', or 'cleaned')", raw)
+	}
+}
+
 // NormalizeLanguage validates language via snippet.NormalizeLanguage and returns the canonical language and extension.
 func NormalizeLanguage(raw string) (string, string, error) {
 	lang, err := snippet.NormalizeLanguage(raw)

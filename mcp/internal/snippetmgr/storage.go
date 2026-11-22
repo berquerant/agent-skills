@@ -52,9 +52,9 @@ func (m *Manager) findMetaFiles() ([]string, error) {
 	return paths, err
 }
 
-// deprecateVersions marks matching active versions (targetVersion == 0 means all active) as deprecated
-// and strips execute permissions (mode 0400).
-func (m *Manager) deprecateVersions(meta *SnippetMeta, targetVersion int, ts string) ([]int, error) {
+// markVersionsDeprecated marks matching active versions (targetVersion == 0 means all active)
+// as deprecated in meta and returns the newly deprecated version numbers.
+func markVersionsDeprecated(meta *SnippetMeta, targetVersion int, ts string) []int {
 	var deprecated []int
 	for i := range meta.Versions {
 		v := &meta.Versions[i]
@@ -64,15 +64,26 @@ func (m *Manager) deprecateVersions(meta *SnippetMeta, targetVersion int, ts str
 		if v.Status != StatusActive {
 			continue
 		}
-		relPath := filepath.Join(meta.Project, meta.Branch, string(meta.Scope), v.Filename)
-		if err := m.chmodWithinRoot(relPath, deprecatedFilePerm); err != nil && !os.IsNotExist(err) {
-			return nil, err
-		}
 		v.Status = StatusDeprecated
 		v.DeprecatedAt = ts
 		deprecated = append(deprecated, v.Version)
 	}
-	return deprecated, nil
+	return deprecated
+}
+
+// chmodDeprecatedFiles strips execute permissions (mode 0400) from the specified versions on disk.
+func (m *Manager) chmodDeprecatedFiles(meta SnippetMeta, versions []int) error {
+	for _, verNum := range versions {
+		v := selectVersion(&meta, verNum)
+		if v == nil {
+			continue
+		}
+		relPath := filepath.Join(meta.Project, meta.Branch, string(meta.Scope), v.Filename)
+		if err := m.chmodWithinRoot(relPath, deprecatedFilePerm); err != nil && !os.IsNotExist(err) {
+			return err
+		}
+	}
+	return nil
 }
 
 func (m *Manager) writeImmutableFile(relPath string, data []byte, perm os.FileMode) (uint64, error) {
@@ -240,7 +251,9 @@ func newSnippetFilter(project, branch string, scope Scope, name string, status V
 			return snippetFilter{}, err
 		}
 	}
-	f.status = status
+	if f.status, err = NormalizeStatus(status); err != nil {
+		return snippetFilter{}, err
+	}
 	return f, nil
 }
 

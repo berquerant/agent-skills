@@ -163,16 +163,16 @@ func (m *Manager) Deprecate(in DeprecateInput, now time.Time) (DeprecateOutput, 
 			return fmt.Errorf("snippet %q not found under %s/%s/%s", name, proj, branch, scope)
 		}
 		ts := now.UTC().Format(time.RFC3339)
-		deprecated, err := m.deprecateVersions(&meta, in.Version, ts)
-		if err != nil {
-			return err
-		}
+		deprecated := markVersionsDeprecated(&meta, in.Version, ts)
 		if in.Version > 0 && len(deprecated) == 0 {
 			return fmt.Errorf("active version %d not found for snippet %q", in.Version, name)
 		}
 		if len(deprecated) > 0 {
 			meta.UpdatedAt = ts
 			if err := m.saveMeta(meta); err != nil {
+				return err
+			}
+			if err := m.chmodDeprecatedFiles(meta, deprecated); err != nil {
 				return err
 			}
 		}

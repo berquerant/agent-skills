@@ -163,11 +163,7 @@ func (m *Manager) saveVersionedSnippet(p createParams) (CreateOutput, error) {
 			return err
 		}
 
-		deprecatedVers, err := m.deprecateVersions(&meta, 0, ts)
-		if err != nil {
-			_ = m.removeWithinRoot(relPath)
-			return err
-		}
+		deprecatedVers := markVersionsDeprecated(&meta, 0, ts)
 
 		digest := sha256Hex(codeBytes)
 		dualPath := pathutil.FormatDualPath(absPath)
@@ -192,6 +188,9 @@ func (m *Manager) saveVersionedSnippet(p createParams) (CreateOutput, error) {
 
 		if err := m.saveMeta(meta); err != nil {
 			_ = m.removeWithinRoot(relPath)
+			return err
+		}
+		if err := m.chmodDeprecatedFiles(meta, deprecatedVers); err != nil {
 			return err
 		}
 

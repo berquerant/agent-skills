@@ -102,6 +102,15 @@ func TestCheckInline(t *testing.T) {
 		_, err := snippetmgr.CheckInline(snippetmgr.CheckInlineInput{Command: "puts 'hi'", Language: "ruby"})
 		require.ErrorContains(t, err, "unsupported language")
 	})
+
+	t.Run("NormalizeStatus rejects unknown status", func(t *testing.T) {
+		st, err := snippetmgr.NormalizeStatus("active")
+		require.NoError(t, err)
+		assert.Equal(t, snippetmgr.StatusActive, st)
+
+		_, err = snippetmgr.NormalizeStatus("actve")
+		require.ErrorContains(t, err, "unsupported status")
+	})
 }
 
 func TestValidateName(t *testing.T) {
