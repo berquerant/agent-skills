@@ -179,4 +179,3 @@ func TestSkillLintSubcommandExecution(t *testing.T) {
 		assert.Contains(t, out.String(), "## Findings")
 	})
 }
-

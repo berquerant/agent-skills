@@ -29,9 +29,11 @@ var levelRules = []scoreRule{
 		driver: func(m Metrics, _ []Hazard) string { return fmt.Sprintf("functions=%d (>= 3)", m.FunctionCount) },
 	},
 	{
-		level:  4,
-		match:  func(m Metrics, _ []Hazard) bool { return m.MaxNestingDepth >= 3 },
-		driver: func(m Metrics, _ []Hazard) string { return fmt.Sprintf("max_nesting_depth=%d (>= 3)", m.MaxNestingDepth) },
+		level: 4,
+		match: func(m Metrics, _ []Hazard) bool { return m.MaxNestingDepth >= 3 },
+		driver: func(m Metrics, _ []Hazard) string {
+			return fmt.Sprintf("max_nesting_depth=%d (>= 3)", m.MaxNestingDepth)
+		},
 	},
 	{
 		level:  4,
@@ -39,14 +41,18 @@ var levelRules = []scoreRule{
 		driver: func(m Metrics, _ []Hazard) string { return fmt.Sprintf("branch_count=%d (>= 6)", m.BranchCount) },
 	},
 	{
-		level:  4,
-		match:  func(m Metrics, _ []Hazard) bool { return m.MaxPipelineLength >= 3 },
-		driver: func(m Metrics, _ []Hazard) string { return fmt.Sprintf("max_pipeline_length=%d (>= 3 pipes)", m.MaxPipelineLength) },
+		level: 4,
+		match: func(m Metrics, _ []Hazard) bool { return m.MaxPipelineLength >= 3 },
+		driver: func(m Metrics, _ []Hazard) string {
+			return fmt.Sprintf("max_pipeline_length=%d (>= 3 pipes)", m.MaxPipelineLength)
+		},
 	},
 	{
-		level:  4,
-		match:  func(m Metrics, _ []Hazard) bool { return m.BackgroundCount > 0 || m.TrapCount > 0 },
-		driver: func(m Metrics, _ []Hazard) string { return fmt.Sprintf("async/concurrency constructs (background=%d, traps=%d)", m.BackgroundCount, m.TrapCount) },
+		level: 4,
+		match: func(m Metrics, _ []Hazard) bool { return m.BackgroundCount > 0 || m.TrapCount > 0 },
+		driver: func(m Metrics, _ []Hazard) string {
+			return fmt.Sprintf("async/concurrency constructs (background=%d, traps=%d)", m.BackgroundCount, m.TrapCount)
+		},
 	},
 	{
 		level: 4,
@@ -61,9 +67,11 @@ var levelRules = []scoreRule{
 		driver: func(m Metrics, _ []Hazard) string { return fmt.Sprintf("SLOC=%d (21-25)", m.SLOC) },
 	},
 	{
-		level:  3,
-		match:  func(m Metrics, _ []Hazard) bool { return m.FunctionCount == 2 || m.MaxFunctionLines > 15 },
-		driver: func(m Metrics, _ []Hazard) string { return fmt.Sprintf("functions=%d (max_lines=%d)", m.FunctionCount, m.MaxFunctionLines) },
+		level: 3,
+		match: func(m Metrics, _ []Hazard) bool { return m.FunctionCount == 2 || m.MaxFunctionLines > 15 },
+		driver: func(m Metrics, _ []Hazard) string {
+			return fmt.Sprintf("functions=%d (max_lines=%d)", m.FunctionCount, m.MaxFunctionLines)
+		},
 	},
 	{
 		level:  3,
@@ -86,9 +94,11 @@ var levelRules = []scoreRule{
 		driver: func(m Metrics, _ []Hazard) string { return fmt.Sprintf("subshell_count=%d", m.SubshellCount) },
 	},
 	{
-		level:  3,
-		match:  func(m Metrics, _ []Hazard) bool { return m.MaxPositionalArg >= 4 },
-		driver: func(m Metrics, _ []Hazard) string { return fmt.Sprintf("max_positional_arg=$%d (>= 4)", m.MaxPositionalArg) },
+		level: 3,
+		match: func(m Metrics, _ []Hazard) bool { return m.MaxPositionalArg >= 4 },
+		driver: func(m Metrics, _ []Hazard) string {
+			return fmt.Sprintf("max_positional_arg=$%d (>= 4)", m.MaxPositionalArg)
+		},
 	},
 	{
 		level: 3,

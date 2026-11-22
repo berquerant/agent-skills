@@ -8,11 +8,11 @@ import (
 )
 
 type archetypeDef struct {
-	archetype  FailureArchetype
-	title      string
-	patterns   []*regexp.Regexp
-	rootCause  string
-	playbook   []string
+	archetype FailureArchetype
+	title     string
+	patterns  []*regexp.Regexp
+	rootCause string
+	playbook  []string
 }
 
 var archetypeDefinitions = []archetypeDef{

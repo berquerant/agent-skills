@@ -19,8 +19,14 @@ description = "Run shellcheck and shfmt checks"
 run = "./bin/lint.sh check"
 
 [tasks.fmt]
-description = "Format shell scripts with shfmt"
+description = "Format shell scripts with shfmt and Go code with go fmt"
+depends = ["mcp:fmt"]
 run = "./bin/lint.sh fmt"
+
+[tasks."mcp:fmt"]
+description = "Run go fmt on mcp module"
+dir = "mcp"
+run = "go fmt ./..."
 
 [tasks.check-skills]
 description = "Run automated quality checks across all skills"
