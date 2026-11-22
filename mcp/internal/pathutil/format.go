@@ -1,5 +1,6 @@
-// Package pathutil provides formatting utilities for file paths conforming to
-// repository output-presentation conventions.
+// Package pathutil provides shared path utilities including dual-path formatting
+// conforming to repository output-presentation conventions, identifier slug
+// sanitization, and git-backed project/branch resolution.
 package pathutil
 
 import (
